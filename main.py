@@ -7,7 +7,7 @@ import LBO_functions
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    wlm = WLM_functions.WavelengthMeter()
+    wlm = WLM_functions.WavelengthMeter(debug=True)
     # TODO: Was soll passieren wenn gar kein WLM angeschlossen ist?
     window = GUI.MainWindow(
         dfb=DFB_functions.DFB(ip="192.168.12.38"),
