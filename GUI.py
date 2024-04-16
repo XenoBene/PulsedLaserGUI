@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore, uic
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, dfb):
+    def __init__(self, dfb, lbo):
         """_summary_
 
         Args:
@@ -14,6 +14,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = uic.loadUi("pulsed_laser_interface.ui", self)
 
         self.dfb = dfb
+        self.lbo = lbo
 
     def connect_buttons(self):
         """
@@ -38,6 +39,9 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb.change_wideScan_scanSpeed(self.dfb_lineEdit_scanSpeed.text()))
         self.dfb_button_startScan.clicked.connect(self.start_wideScan_loop)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
+
+        # LBO Tab buttons:
+        self.lbo_button_connectLBO.clicked.connect(self.lbo.get_wavelength)
 
     def dfb_update_values(self):
         """Updates the GUI with the last known attributes of the set temperature,

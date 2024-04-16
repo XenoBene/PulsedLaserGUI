@@ -3,10 +3,13 @@ import sys
 import GUI
 import DFB_functions
 import WLM_functions
+import LBO_functions
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    window = GUI.MainWindow(dfb=DFB_functions.DFB(ip="192.168.12.38"), wlm=WLM_functions.WavelengthMeter())
+    window = GUI.MainWindow(
+        dfb=DFB_functions.DFB(ip="192.168.12.38"),
+        lbo=LBO_functions.LBO(wlm=WLM_functions.WavelengthMeter()))
     window.connect_buttons()
     window.show()
     app.exec()
