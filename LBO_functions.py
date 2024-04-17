@@ -9,6 +9,8 @@ class WorkerLBO(QtCore.QObject):
         self.wlm = wlm
         self.oc = oc
         self.finished = QtCore.pyqtSignal()
+        self.update_actTemp = QtCore.pyqtSignal()
+        self.update_setTemp = QtCore.pyqtSignal(float)
 
     def temperature_auto(self):
         self.keep_running = True
@@ -18,6 +20,8 @@ class WorkerLBO(QtCore.QObject):
                 needed_temperature = np.round(1357.13 - wl * 1.1369, 2)
                 if 1028 < wl < 1032:
                     self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
+                    self.update_actTemp.emit()
+                    self.update_setTemp.emit(needed_temperature)
                     time.sleep(1)
         except pyvisa.errors.InvalidSession as e:
             print(f"LBO scan stopped working: {e}")
@@ -25,7 +29,7 @@ class WorkerLBO(QtCore.QObject):
             self.finished.emit()
 
     def stop(self):
-        pass
+        self.keep_running = False
 
 
 class LBO:
@@ -40,8 +44,10 @@ class LBO:
                 self.oc = self.rm.open_resource(port, baud_rate=19200, data_bits=8,
                                                 parity=pyvisa.Parity.none, flow_control=0,
                                                 stop_bits=pyvisa.StopBits.one)
+                print("Covesion oven connected")
+                self.read_values()
             except pyvisa.errors.VisaIOError as e:
-                print(f"Error: {e}")
+                print(f"Device not supported: {e}")
             finally:
                 self._connect_button_is_checked = True
         else:
@@ -50,7 +56,7 @@ class LBO:
                 try:
                     self.oc.session
                 except pyvisa.errors.InvalidSession:
-                    pass
+                    print("Device closed")
             except pyvisa.errors.InvalidSession:
                 # TODO: Richtiger Fehler wenn Disconnect obwohl nie Connected
                 pass
@@ -78,19 +84,20 @@ class LBO:
         act_temp = float(values[1])
         return act_temp
 
-    def get_setTemp(self):
+    def read_values(self):
         values = self.get_status_q()
-        set_temp = values[1]
-        rate = float(values[4] * 60)
-        return set_temp, rate
+        self.set_temp = values[1]
+        self.rate = float(values[4] * 60)
+        return self.set_temp, self.rate
 
-    def toggle_lbo_autoscan(self):
+    def toggle_autoscan(self):
         if not self._autoscan_button_is_checked:
             self.threadLBO = QtCore.QThread()
             self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
             self.workerLBO.moveToThread(self.threadLBO)
             self.threadLBO.started.connect(self.workerLBO.temperature_auto)
-            # TODO: GUI updaten mit T_act und T_set
+            self.workerLBO.update_actTemp.connect(self.get_actTemp)
+            self.workerLBO.update_setTemp.connect()
             self.workerLBO.finished.connect(self.threadLBO.quit)
             self.workerLBO.finished.connect(self.workerLBO.deleteLater)
             self.threadLBO.finished.connect(self.threadLBO.deleteLater)

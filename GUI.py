@@ -37,11 +37,40 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb.change_wideScan_endTemp(self.dfb_lineEdit_scanEndTemp.text()))
         self.dfb_lineEdit_scanSpeed.editingFinished.connect(
             lambda: self.dfb.change_wideScan_scanSpeed(self.dfb_lineEdit_scanSpeed.text()))
+        # TODO: Lieber einen "Set value" Knopf einbauen mit print Bestätigung statt dem editingFinished,
+        # dann ist das alles konsistenter
         self.dfb_button_startScan.clicked.connect(self.start_wideScan_loop)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
         # LBO Tab buttons:
-        self.lbo_button_connectLBO.clicked.connect(self.lbo.get_wavelength)
+        self.lbo_button_connectLBO.clicked.connect(self.lbo.connect_covesion(
+            lambda: self.lbo_comboBox_visa.currentText())
+        )
+        self.lbo_button_connectLBO.clicked.connect(self.lbo_update_values)
+        self.lbo_button_readValues.clicked.connect(self.lbo.read_values)
+        self.lbo_button_readValues.clicked.connect(self.lbo_update_values)
+        self.lbo_button_setTemp.clicked.connect(
+            lambda: self.lbo.set_temperature(float(self.lbo_lineEdit_targetTemp.text()),
+                                             float(self.lbo_lineEdit_rampSpeed.text()))
+        )
+        self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
+
+    def lbo_update_values(self):
+        try:
+            self.lbo_lineEdit_rampSpeed.setText(str(self.lbo.rate))
+            self.lbo_lineEdit_targetTemp.setText(str(self.lbo.set_temp))
+        except AttributeError as e:
+            print(f"Covesion oven is not connected: {e}")
+
+    def lbo_start_autoscan_loop(self):
+        self.lbo_loopTimer_autoscan = QtCore.QTimer()
+        self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
+        self.lbo.toggle_autoscan()
+        self.status_checkBox_lbo.setChecked(True)
+        self.lbo_loopTimer_autoscan.start()
+
+    def lbo_update_actTemp(self):
+        pass
 
     def dfb_update_values(self):
         """Updates the GUI with the last known attributes of the set temperature,
@@ -87,7 +116,7 @@ class MainWindow(QtWidgets.QMainWindow):
             elif False:
                 # TODO: Hier muss Überprüfung hin, ob die ASE-Filter nicht einen Error
                 # geworfen haben.
-                self.status_checkBox_wideScan.setChecked(True)
+                self.status_checkBox_wideScan.setChecked(False)
                 pass
         except TypeError as e:
             self.dfb_loopTimer_wideScan.stop()
