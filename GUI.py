@@ -1,21 +1,17 @@
 from PyQt6 import QtWidgets, QtCore, uic
-from LBO_functions import WorkerLBO
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, dfb, lbo):
-        """_summary_
-
-        Args:
-            dfb (_type_): _description_
-        """
+    def __init__(self, rm, dfb, lbo, worker_lbo):
         super().__init__()
 
         # Load the ui
         self.ui = uic.loadUi("pulsed_laser_interface.ui", self)
 
+        self.rm = rm
         self.dfb = dfb
         self.lbo = lbo
+        self.workerLBO = worker_lbo
 
     def connect_buttons(self):
         """
@@ -44,8 +40,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
         # LBO Tab buttons:
-        self.lbo_button_connectLBO.clicked.connect(self.lbo.connect_covesion(
-            lambda: self.lbo_comboBox_visa.currentText())
+        self.lbo_comboBox_visa.addItems(self.rm.list_resources())
+        self.lbo_button_connectLBO.clicked.connect(
+            lambda: self.lbo.connect_covesion(rm=self.rm, port=self.lbo_comboBox_visa.currentText())
         )
         self.lbo_button_connectLBO.clicked.connect(self.lbo_update_values)
         self.lbo_button_readValues.clicked.connect(self.lbo.read_values)
@@ -54,8 +51,9 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.lbo.set_temperature(float(self.lbo_lineEdit_targetTemp.text()),
                                              float(self.lbo_lineEdit_rampSpeed.text()))
         )
-        self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
-        self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
+        # self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
+        # self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
+        self.lbo_button_autoScan.clicked.connect(self.start_workerLBO)
 
     def lbo_update_values(self):
         try:
@@ -64,20 +62,42 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
 
+    def start_workerLBO(self):
+        if not self.lbo._autoscan_button_is_checked:
+            self.threadLBO = QtCore.QThread()
+            # self.workerLBO = WorkerLBO()
+            self.workerLBO.moveToThread(self.threadLBO)
+            self.threadLBO.started.connect(self.workerLBO.temperature_auto)
+            # self.workerLBO.update_actTemp.connect(self.get_actTemp)
+            self.workerLBO.update_actTemp.connect(lambda: print(self.lbo.get_actTemp()))
+            self.workerLBO.update_setTemp.connect(lambda x: self.lbo.set_needed_temperature(x))
+            self.workerLBO.finished.connect(self.threadLBO.quit)
+            self.workerLBO.finished.connect(self.workerLBO.deleteLater)
+            self.threadLBO.finished.connect(self.threadLBO.deleteLater)
+            self.threadLBO.start()
+            self.lbo._autoscan_button_is_checked = True
+        else:
+            self.workerLBO.stop()
+            self.lbo_autoscan_button_is_checked = False
+
     def lbo_start_autoscan_loop(self):
         if not self.lbo._autoscan_button_is_checked:
             self.lbo_loopTimer_autoscan = QtCore.QTimer()
             self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
-            self.status_checkBox_autoscan.setChecked(True)
+            # self.status_checkBox_lbo.setChecked(True)
             self.lbo_loopTimer_autoscan.start(1000)
+            print("Looptimer started")
+            self.lbo._autoscan_button_is_checked = True
         else:
             self.lbo_loopTimer_autoscan.stop()
+            # self.status_checkBox_lbo.setChecked(False)
             self.lbo_label_setTemp.setText("Set temperature [°C]: ")
             self.lbo_label_actTemp.setText("Actual temperature [°C]: ")
+            self.lbo_autoscan_button_is_checked = False
 
     def lbo_update_actTemp(self):
         self.lbo_label_setTemp.setText(f"Set temperature [°C]: {self.lbo.needed_temperature}")
-        self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.actual_temperature}")
+        self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.act_temp}")
 
     def dfb_update_values(self):
         """Updates the GUI with the last known attributes of the set temperature,
