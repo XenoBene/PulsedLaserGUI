@@ -41,9 +41,9 @@ class LBO:
     def connect_covesion(self, port):
         if not self._connect_button_is_checked:
             try:
-                self.oc = self.rm.open_resource(port, baud_rate=19200, data_bits=8,
-                                                parity=pyvisa.Parity.none, flow_control=0,
-                                                stop_bits=pyvisa.StopBits.one)
+                self.oc = pyvisa.ResourceManager.open_resource(port, baud_rate=19200, data_bits=8,
+                                                               parity=pyvisa.Parity.none, flow_control=0,
+                                                               stop_bits=pyvisa.StopBits.one)
                 print("Covesion oven connected")
                 self.read_values()
             except pyvisa.errors.VisaIOError as e:
@@ -81,8 +81,11 @@ class LBO:
 
     def get_actTemp(self):
         values = self.get_status()
-        act_temp = float(values[1])
-        return act_temp
+        self.act_temp = float(values[1])
+        return self.act_temp
+
+    def set_needed_temperature(self, needed_temperature):
+        self.needed_temperature = needed_temperature
 
     def read_values(self):
         values = self.get_status_q()
@@ -97,11 +100,12 @@ class LBO:
             self.workerLBO.moveToThread(self.threadLBO)
             self.threadLBO.started.connect(self.workerLBO.temperature_auto)
             self.workerLBO.update_actTemp.connect(self.get_actTemp)
-            self.workerLBO.update_setTemp.connect(lambda x: x)
-            # TODO: Es würde alles funktionieren, nur die Ausgabe des Signals bekomme ich nicht hin
+            self.workerLBO.update_setTemp.connect(lambda x: self.set_needed_temperature(x))
             self.workerLBO.finished.connect(self.threadLBO.quit)
             self.workerLBO.finished.connect(self.workerLBO.deleteLater)
             self.threadLBO.finished.connect(self.threadLBO.deleteLater)
             self.threadLBO.start()
+            self._autoscan_button_is_checked = True
         else:
             self.workerLBO.stop()
+            self._autoscan_button_is_checked = False

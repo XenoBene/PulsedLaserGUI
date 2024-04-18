@@ -54,6 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.lbo.set_temperature(float(self.lbo_lineEdit_targetTemp.text()),
                                              float(self.lbo_lineEdit_rampSpeed.text()))
         )
+        self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
         self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
 
     def lbo_update_values(self):
@@ -63,11 +64,20 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
 
-    def lbo_start_autoscan(self):
-        pass
+    def lbo_start_autoscan_loop(self):
+        if not self.lbo._autoscan_button_is_checked:
+            self.lbo_loopTimer_autoscan = QtCore.QTimer()
+            self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
+            self.status_checkBox_autoscan.setChecked(True)
+            self.lbo_loopTimer_autoscan.start(1000)
+        else:
+            self.lbo_loopTimer_autoscan.stop()
+            self.lbo_label_setTemp.setText("Set temperature [°C]: ")
+            self.lbo_label_actTemp.setText("Actual temperature [°C]: ")
 
     def lbo_update_actTemp(self):
-        pass
+        self.lbo_label_setTemp.setText(f"Set temperature [°C]: {self.lbo.needed_temperature}")
+        self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.actual_temperature}")
 
     def dfb_update_values(self):
         """Updates the GUI with the last known attributes of the set temperature,

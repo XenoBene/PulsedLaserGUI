@@ -4,7 +4,7 @@ import GUI
 import DFB_functions
 import WLM_functions
 import LBO_functions
-from pylablib.devices import HighFinesse
+# from pylablib.devices import HighFinesse
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
