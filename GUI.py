@@ -1,4 +1,5 @@
 from PyQt6 import QtWidgets, QtCore, uic
+from LBO_functions import WorkerLBO
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -62,12 +63,8 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
 
-    def lbo_start_autoscan_loop(self):
-        self.lbo_loopTimer_autoscan = QtCore.QTimer()
-        self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
-        self.lbo.toggle_autoscan()
-        self.status_checkBox_lbo.setChecked(True)
-        self.lbo_loopTimer_autoscan.start()
+    def lbo_start_autoscan(self):
+        pass
 
     def lbo_update_actTemp(self):
         pass

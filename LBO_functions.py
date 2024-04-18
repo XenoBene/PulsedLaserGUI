@@ -97,7 +97,8 @@ class LBO:
             self.workerLBO.moveToThread(self.threadLBO)
             self.threadLBO.started.connect(self.workerLBO.temperature_auto)
             self.workerLBO.update_actTemp.connect(self.get_actTemp)
-            self.workerLBO.update_setTemp.connect()
+            self.workerLBO.update_setTemp.connect(lambda x: x)
+            # TODO: Es würde alles funktionieren, nur die Ausgabe des Signals bekomme ich nicht hin
             self.workerLBO.finished.connect(self.threadLBO.quit)
             self.workerLBO.finished.connect(self.workerLBO.deleteLater)
             self.threadLBO.finished.connect(self.threadLBO.deleteLater)
