@@ -16,6 +16,7 @@ class WorkerLBO(QtCore.QObject):
         super().__init__()
         self.wlm = wlm
 
+    # Funktion vorerst auskommentiert, um eine simplere Funktion zu testen
     """def temperature_auto(self, wlm, oc):
         self.keep_running = True
         try:

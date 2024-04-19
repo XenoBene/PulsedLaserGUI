@@ -56,6 +56,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo_button_autoScan.clicked.connect(self.start_workerLBO)
 
     def lbo_update_values(self):
+        """Updates the GUI with the latest values for the
+        ramp rate and the set temperature.
+        """
         try:
             self.lbo_lineEdit_rampSpeed.setText(str(self.lbo.rate))
             self.lbo_lineEdit_targetTemp.setText(str(self.lbo.set_temp))
@@ -96,6 +99,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.lbo_autoscan_button_is_checked = False
 
     def lbo_update_actTemp(self):
+        """Updates the GUI with the latest values for the actual and the set temperature
+        during a LBO automatic temperature scan.
+        """
         self.lbo_label_setTemp.setText(f"Set temperature [°C]: {self.lbo.needed_temperature}")
         self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.act_temp}")
 
