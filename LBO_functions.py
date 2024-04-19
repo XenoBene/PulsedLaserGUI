@@ -112,15 +112,18 @@ class LBO:
 
     def toggle_autoscan(self):
         if not self._autoscan_button_is_checked:
-            self.threadLBO = QtCore.QThread()
-            self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
-            self.workerLBO.moveToThread(self.threadLBO)
-            self.threadLBO.started.connect(self.workerLBO.temperature_auto)
-            self.workerLBO.update_actTemp.connect(self.get_actTemp)
-            self.workerLBO.update_setTemp.connect(lambda x: self.set_needed_temperature(x))
-            self.workerLBO.finished.connect(self.threadLBO.quit)
-            self.workerLBO.finished.connect(self.workerLBO.deleteLater)
-            self.threadLBO.finished.connect(self.threadLBO.deleteLater)
-            self.threadLBO.start()
+            try:
+                self.threadLBO = QtCore.QThread()
+                self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
+                self.workerLBO.moveToThread(self.threadLBO)
+                self.threadLBO.started.connect(self.workerLBO.temperature_auto)
+                self.workerLBO.update_actTemp.connect(self.get_actTemp)
+                self.workerLBO.update_setTemp.connect(lambda x: self.set_needed_temperature(x))
+                self.workerLBO.finished.connect(self.threadLBO.quit)
+                self.workerLBO.finished.connect(self.workerLBO.deleteLater)
+                self.threadLBO.finished.connect(self.threadLBO.deleteLater)
+                self.threadLBO.start()
+            except AttributeError as e:
+                print(f"Error: {e}")
         else:
             self.workerLBO.stop()
