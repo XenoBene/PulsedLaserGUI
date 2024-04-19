@@ -1278,6 +1278,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="status_checkBox_bbo">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="font">
         <font>
          <weight>50</weight>
@@ -1297,17 +1300,20 @@
         <string>BBO Autoscan</string>
        </property>
        <property name="checkable">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QCheckBox" name="status_checkBox_lbo">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>LBO Autoscan</string>
        </property>
        <property name="checkable">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -1326,6 +1332,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="status_checkBox_ase">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="font">
         <font>
          <weight>50</weight>
@@ -1336,7 +1345,7 @@
         <string>ASE Filter Scan</string>
        </property>
        <property name="checkable">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
