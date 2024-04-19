@@ -16,8 +16,9 @@ if __name__ == "__main__":
         rm=pyvisa.ResourceManager(),
         # TODO: Hier wlm=Blabla hin, dann kann das von der Gui über Funktionen verteilt werden
         dfb=DFB_functions.DFB(ip="192.168.12.38"),  # TODO: IP nicht hardcoden!
-        lbo=LBO_functions.LBO(),
-        worker_lbo=LBO_functions.WorkerLBO(wlm=wlm))
+        lbo=LBO_functions.LBO(wlm=wlm)
+        # worker_lbo=LBO_functions.WorkerLBO(wlm=wlm)
+        )
     window.connect_buttons()
     window.show()
     app.exec()

@@ -12,19 +12,20 @@ class WorkerLBO(QtCore.QObject):
     update_actTemp = QtCore.pyqtSignal()
     update_setTemp = QtCore.pyqtSignal(float)
 
-    def __init__(self, wlm):
+    def __init__(self, wlm, oc):
         super().__init__()
         self.wlm = wlm
+        self.oc = oc
 
     # Funktion vorerst auskommentiert, um eine simplere Funktion zu testen
-    """def temperature_auto(self, wlm, oc):
+    def temperature_auto(self):
         self.keep_running = True
         try:
             while self.keep_running:
-                wl = np.round(wlm.GetWavelength(1), 6)
+                wl = np.round(self.wlm.GetWavelength(1), 6)
                 needed_temperature = np.round(1357.13 - wl * 1.1369, 2)
                 if 1028 < wl < 1032:
-                    oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
+                    self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                     self.update_actTemp.emit()
                     self.update_setTemp.emit(needed_temperature)
                     print(f"Set temp: {needed_temperature}")
@@ -32,15 +33,7 @@ class WorkerLBO(QtCore.QObject):
         except pyvisa.errors.InvalidSession as e:
             print(f"LBO scan stopped working: {e}")
         finally:
-            self.finished.emit()"""
-
-    def temperature_auto(self):
-        self.keep_running = True
-        while self.keep_running:
-            wl = np.round(self.wlm.GetWavelength(1), 6)
-            print(wl)
-            time.sleep(1)
-        self.finished.emit()
+            self.finished.emit()
 
     def stop(self):
         self.keep_running = False
@@ -48,7 +41,8 @@ class WorkerLBO(QtCore.QObject):
 
 
 class LBO:
-    def __init__(self):
+    def __init__(self, wlm):
+        self.wlm = wlm
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
 
@@ -86,17 +80,26 @@ class LBO:
                 "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
 
     def get_status(self):
-        status = self.oc.query("!j00CB").split(";")
-        return status
+        try:
+            status = self.oc.query("!j00CB").split(";")
+            return status
+        except pyvisa.errors.InvalidSession as e:
+            print(f"Device closed: {e}")
 
     def get_status_q(self):
-        status = self.oc.query("!q").split(";")
-        return status
+        try:
+            status = self.oc.query("!q").split(";")
+            return status
+        except pyvisa.errors.InvalidSession as e:
+            print(f"Device closed: {e}")
 
     def get_actTemp(self):
-        values = self.get_status()
-        self.act_temp = float(values[1])
-        return self.act_temp
+        try:
+            values = self.get_status()
+            self.act_temp = float(values[1])
+            return self.act_temp
+        except pyvisa.errors.InvalidSession as e:
+            print(f"Device closed: {e}")
 
     def set_needed_temperature(self, needed_temperature):
         self.needed_temperature = needed_temperature
@@ -110,19 +113,14 @@ class LBO:
     def toggle_autoscan(self):
         if not self._autoscan_button_is_checked:
             self.threadLBO = QtCore.QThread()
-            self.workerLBO = WorkerLBO()
+            self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
             self.workerLBO.moveToThread(self.threadLBO)
-            self.threadLBO.started.connect(
-                lambda: self.workerLBO.temperature_auto(self.wlm, self.oc)
-            )
-            # self.workerLBO.update_actTemp.connect(self.get_actTemp)
-            self.workerLBO.update_actTemp.connect(lambda: print(self.get_actTemp()))
+            self.threadLBO.started.connect(self.workerLBO.temperature_auto)
+            self.workerLBO.update_actTemp.connect(self.get_actTemp)
             self.workerLBO.update_setTemp.connect(lambda x: self.set_needed_temperature(x))
             self.workerLBO.finished.connect(self.threadLBO.quit)
             self.workerLBO.finished.connect(self.workerLBO.deleteLater)
             self.threadLBO.finished.connect(self.threadLBO.deleteLater)
             self.threadLBO.start()
-            self._autoscan_button_is_checked = True
         else:
             self.workerLBO.stop()
-            self._autoscan_button_is_checked = False
