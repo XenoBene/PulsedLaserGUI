@@ -9,7 +9,7 @@ import LBO_functions
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    wlm = WLM_functions.WavelengthMeter(debug=False)
+    wlm = WLM_functions.WavelengthMeter(debug=True)
     # TODO: Was soll passieren wenn gar kein WLM angeschlossen ist?
     # TODO: pylablib für WLM benutzen
     window = GUI.MainWindow(
@@ -17,7 +17,6 @@ if __name__ == "__main__":
         # TODO: Hier wlm=Blabla hin, dann kann das von der Gui über Funktionen verteilt werden
         dfb=DFB_functions.DFB(ip="192.168.12.38"),  # TODO: IP nicht hardcoden!
         lbo=LBO_functions.LBO(wlm=wlm)
-        # worker_lbo=LBO_functions.WorkerLBO(wlm=wlm)
         )
     window.connect_buttons()
     window.show()

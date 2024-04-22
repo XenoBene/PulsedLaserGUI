@@ -52,7 +52,6 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
         self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
-        # self.lbo_button_autoScan.clicked.connect(self.start_workerLBO)
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the

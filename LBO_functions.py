@@ -7,6 +7,15 @@ import pyvisa.constants
 
 
 class WorkerLBO(QtCore.QObject):
+    """Class to start as a thread later.
+
+    Attributes
+    ----------
+    wlm : class WavelengthMeter
+        Device which measures the wavelength
+    oc : ResourceManager.open_resource()
+        Covesion oven
+    """
     # Signals need to be class variables, not instance variables:
     finished = QtCore.pyqtSignal()
     update_actTemp = QtCore.pyqtSignal()
@@ -17,43 +26,67 @@ class WorkerLBO(QtCore.QObject):
         self.wlm = wlm
         self.oc = oc
 
-    # Funktion vorerst auskommentiert, um eine simplere Funktion zu testen
     def temperature_auto(self):
+        """Loop that measures the wavelength and calculates the needed LBO temperature
+        for maximum conversion efficiency. The calculation is based on empirical data.
+
+        The method emits signals to tell the classes outside of the QThread, where
+        this class will run, the current calculated needed temperature.
+        The "while"-loop only finished when keep_running equals False, which is
+        being controlled ith another method.
+        """
         self.keep_running = True
         try:
             while self.keep_running:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
-                needed_temperature = np.round(1357.13 - wl * 1.1369, 2)
+                needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
                 if 1028 < wl < 1032:
                     self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                     self.update_actTemp.emit()
                     self.update_setTemp.emit(needed_temperature)
                     print(f"Set temp: {needed_temperature}")
-                    time.sleep(1)
+                    time.sleep(1)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
             print(f"LBO scan stopped working: {e}")
         finally:
-            self.finished.emit()
+            self.finished.emit()  # Needed to exit the QThread
 
     def stop(self):
+        """Sets the attribute keep_running to False. This is needed
+        to end the temperature_auto method to end the QThread.
+        """
         self.keep_running = False
         print("LBO Autoscan stopped by hand")
 
 
 class LBO:
     def __init__(self, wlm):
+        """Class to control the OC2 oven controller by Covesion.
+
+        Args:
+            wlm (class WavelengthMeter): Device to measure the wavelength.
+                We use a WS7 by HighFinesse.
+        """
         self.wlm = wlm
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
 
     def connect_covesion(self, rm, port):
+        """Connects | Disconnects the covesion oven OC2 depending on if the
+        connect button was already in a checked state or not.
+
+        Args:
+            rm (ResourceManager()): The ResourceManager-Class is needed to
+            find all connected devices
+            port (str): Port number that the oven has on the connected PC
+        """
         if not self._connect_button_is_checked:
             try:
                 self.oc = rm.open_resource(port, baud_rate=19200, data_bits=8,
                                            parity=pyvisa.constants.Parity.none, flow_control=0,
                                            stop_bits=pyvisa.constants.StopBits.one)
                 print("Covesion oven connected")
-                self.read_values()
+                self.read_values()  # Read values as the first thing after connecting
             except pyvisa.errors.VisaIOError as e:
                 print(f"Device not supported: {e}")
             finally:
@@ -62,7 +95,7 @@ class LBO:
             try:
                 self.oc.close()  # disables the remote control
                 try:
-                    self.oc.session
+                    self.oc.session  # Checks if the oven is really disconnected
                 except pyvisa.errors.InvalidSession:
                     print("Device closed")
             except pyvisa.errors.InvalidSession:
@@ -72,6 +105,16 @@ class LBO:
                 self._connect_button_is_checked = False
 
     def set_temperature(self, set_temp, rate):
+        """Sets the desired temperature and the speed of the ramp of the
+        covesion oven.
+
+        Args:
+            set_temp (float): Set temperature [°C]. Only values between 15°C and 200°C are allowed.
+            rate (float): Temperature ramp speed [°C/min]. Only values under 2 °C/min are allowed.
+
+        Raises:
+            ValueError: Gets raised if the input values are not in the allowed bounds.
+        """
         if ((set_temp <= 200) and (set_temp >= 15) and (rate <= 2)):
             self.oc.write("!i191;"+str(set_temp)+";0;0;" +
                           str(np.round(rate/60, 3))+";0;0;BF")
@@ -80,6 +123,12 @@ class LBO:
                 "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
 
     def get_status(self):
+        """Returns the status of the covesion controller.
+
+        Returns:
+            tuple: Status of the OC2 depicting values in the following order:
+            (Setpoint, Actual Temp, Control, Output, Alarm, Status, Faults, Temp, Supply V, Version, Test Cycles)
+        """
         try:
             status = self.oc.query("!j00CB").split(";")
             return status
@@ -87,6 +136,12 @@ class LBO:
             print(f"Device closed: {e}")
 
     def get_status_q(self):
+        """Returns the q-status (different than the j-status of get_status) of the covesion controller.
+
+        Returns:
+            tuple: q-Status of the OC2 depicting values in the following order (only few are known):
+            (Setpoint, ???, ???, Rate in °C/s, ???, ???)
+        """
         try:
             status = self.oc.query("!q").split(";")
             return status
@@ -94,6 +149,11 @@ class LBO:
             print(f"Device closed: {e}")
 
     def get_actTemp(self):
+        """Gets the current temperature of the covesion oven.
+
+        Returns:
+            float: Current temperature [°C].
+        """
         try:
             values = self.get_status()
             self.act_temp = float(values[1])
@@ -102,26 +162,47 @@ class LBO:
             print(f"Device closed: {e}")
 
     def set_needed_temperature(self, needed_temperature):
+        """Assigns the input variable to an instance variable. This is needed
+        to hand over the signal from the WorkerLBO class to the GUI.
+
+        Args:
+            needed_temperature (float): LBO Temperature that corresponds to the current wavelength.
+        """
         self.needed_temperature = needed_temperature
 
     def read_values(self):
+        """Reads out the set temperature and ramp speed of the oven.
+
+        Returns:
+            tuple: Set temp [°C] and ramp speed [°C/min] as a float tuple.
+        """
         values = self.get_status_q()
         self.set_temp = values[1]
         self.rate = float(values[4]) * 60
         return self.set_temp, self.rate
 
     def toggle_autoscan(self):
+        """Starts|Stops the automatic temperature scan of the LBO depending on the
+        state of the "Autoscan" button in the GUI. This process
+        gets started in a QThread because otherwise there would be problems
+        when too many processes run at the same time.
+        """
         if not self._autoscan_button_is_checked:
             try:
+                # Initiate QThread and WorkerLBO class:
                 self.threadLBO = QtCore.QThread()
                 self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
                 self.workerLBO.moveToThread(self.threadLBO)
+
+                # Connect different methods to the signals of the thread:
                 self.threadLBO.started.connect(self.workerLBO.temperature_auto)
                 self.workerLBO.update_actTemp.connect(self.get_actTemp)
                 self.workerLBO.update_setTemp.connect(lambda x: self.set_needed_temperature(x))
                 self.workerLBO.finished.connect(self.threadLBO.quit)
                 self.workerLBO.finished.connect(self.workerLBO.deleteLater)
                 self.threadLBO.finished.connect(self.threadLBO.deleteLater)
+
+                # Start the thread:
                 self.threadLBO.start()
             except AttributeError as e:
                 print(f"Error: {e}")
