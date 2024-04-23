@@ -18,17 +18,24 @@ class WorkerBBO(QtCore.QObject):
 
 
 class BBO:
-    def __init__(self, wlm):
-        self.wlm = wlm
+    def __init__(self):
+        # self.wlm = wlm
         self._connect_button_is_checked = False
         self.stage = Newport.Picomotor8742
 
     def connect_piezos(self):
         """Soll Piezos verbinden bzw. disconnecten"""
         if not self._connect_button_is_checked:
-            self.stage = Newport.Picomotor8742(0)
+            print(Newport.get_usb_devices_number_picomotor())
+            self.stage = Newport.Picomotor8742()
+            # self.stage.move_by(axis=1, addr=1, steps=-100)
+            print("an")
+            self._connect_button_is_checked = True
         else:
+            # self.stage.close()
+            print("aus")
             self.stage.close()
+            self._connect_button_is_checked = False
 
     def toogle_autoscan(self):
         """Startet den WorkerBBO für den Autoscan"""

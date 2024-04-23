@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore, uic
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rm, dfb, lbo):
+    def __init__(self, rm, dfb, lbo, bbo):
         super().__init__()
 
         # Load the ui
@@ -11,6 +11,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rm = rm
         self.dfb = dfb
         self.lbo = lbo
+        self.bbo = bbo
 
     def connect_buttons(self):
         """
@@ -52,6 +53,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
         self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
+
+        # BBO Tab buttons:
+        self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the
