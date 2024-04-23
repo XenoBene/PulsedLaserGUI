@@ -85,8 +85,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """Updates the GUI with the latest values for the actual and the set temperature
         during a LBO automatic temperature scan.
         """
-        self.lbo_label_setTemp.setText(f"Set temperature [°C]: {self.lbo.needed_temperature}")
-        self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.act_temp}")
+        try:
+            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {self.lbo.needed_temperature}")
+            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.act_temp}")
+        except AttributeError as e:
+            print(e)
 
     def dfb_update_values(self):
         """Updates the GUI with the last known attributes of the set temperature,

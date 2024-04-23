@@ -4,6 +4,7 @@ import numpy as np
 import time
 
 import pyvisa.constants
+from pylablib.devices.HighFinesse.wlmData_lib import WlmDataLibError
 
 
 class WorkerLBO(QtCore.QObject):
@@ -39,8 +40,9 @@ class WorkerLBO(QtCore.QObject):
         try:
             while self.keep_running:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
-                needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
+                # wl = self.wlm.get_wavelength(channel=1, wait=False)  # PyLabLib
                 if 1028 < wl < 1032:
+                    needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
                     self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                     self.update_actTemp.emit()
                     self.update_setTemp.emit(needed_temperature)
@@ -48,6 +50,8 @@ class WorkerLBO(QtCore.QObject):
                     time.sleep(1)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
             print(f"LBO scan stopped working: {e}")
+        except WlmDataLibError as e:  # Needed when PyLabLib is used
+            print(e)
         finally:
             self.finished.emit()  # Needed to exit the QThread
 
@@ -188,6 +192,7 @@ class LBO:
         when too many processes run at the same time.
         """
         if not self._autoscan_button_is_checked:
+            print("Start Autoscan")
             try:
                 # Initiate QThread and WorkerLBO class:
                 self.threadLBO = QtCore.QThread()
@@ -207,4 +212,5 @@ class LBO:
             except AttributeError as e:
                 print(f"Error: {e}")
         else:
+            print("Stop Autoscan")
             self.workerLBO.stop()
