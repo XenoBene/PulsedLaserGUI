@@ -70,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.lbo._autoscan_button_is_checked:
             self.lbo_loopTimer_autoscan = QtCore.QTimer()
             self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
+            self.lbo_loopTimer_autoscan.start.connect()
             self.status_checkBox_lbo.setChecked(True)
             self.lbo_loopTimer_autoscan.start(1000)
             print("Looptimer started")

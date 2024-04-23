@@ -2,8 +2,6 @@ from PyQt6 import QtCore
 import pyvisa
 import numpy as np
 import time
-
-import pyvisa.constants
 from pylablib.devices.HighFinesse.wlmData_lib import WlmDataLibError
 
 
@@ -34,7 +32,7 @@ class WorkerLBO(QtCore.QObject):
         The method emits signals to tell the classes outside of the QThread, where
         this class will run, the current calculated needed temperature.
         The "while"-loop only finished when keep_running equals False, which is
-        being controlled ith another method.
+        being controlled with another method.
         """
         self.keep_running = True
         try:
@@ -53,6 +51,8 @@ class WorkerLBO(QtCore.QObject):
         except WlmDataLibError as e:  # Needed when PyLabLib is used
             print(e)
         finally:
+            # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
+            # die GUI bekommt davon nichts mit.
             self.finished.emit()  # Needed to exit the QThread
 
     def stop(self):
