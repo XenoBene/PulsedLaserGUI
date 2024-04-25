@@ -105,24 +105,21 @@ class BBO:
         self.addr = addr
         self._connect_button_is_checked = False
         self._connect_rp_button_is_checked = False
-        self.stage = Newport.Picomotor8742
 
     def connect_piezos(self):
         """Soll Piezos verbinden bzw. disconnecten"""
         if not self._connect_button_is_checked:
             try:
-                # print(Newport.get_usb_devices_number_picomotor())
                 self.stage = Newport.Picomotor8742()
-                # self.stage.move_by(axis=1, addr=1, steps=-100)
                 print("an")
                 self._connect_button_is_checked = True
             except NewportBackendError as e:
                 print(e)
                 self._connect_button_is_checked = False
         else:
-            # self.stage.close()
             print("aus")
             self.stage.close()
+            # TODO: Das disconnected den Motor nicht wirklich, man kann ihn immer noch ansteuern
             self._connect_button_is_checked = False
 
     def connect_red_pitaya(self, ip):
@@ -141,7 +138,10 @@ class BBO:
 
     def move_by(self, steps):
         """Bewegt den Motor um steps (+ oder -)"""
-        self.stage.move_by(axis=self.axis, addr=self.addr, steps=steps)
+        try:
+            self.stage.move_by(axis=self.axis, addr=self.addr, steps=steps)
+        except AttributeError:
+            print("Picomotor not connected!")
 
     def change_autoscan_parameters(self, velocity, steps, wait):
         self.autoscan_velocity = velocity
@@ -149,7 +149,10 @@ class BBO:
         self.autoscan_wait = wait
 
     def change_velocity(self, velocity):
-        self.stage.setup_velocity(axis=self.axis, addr=self.addr, speed=velocity)
+        try:
+            self.stage.setup_velocity(axis=self.axis, addr=self.addr, speed=velocity)
+        except AttributeError:
+            print("Picomotor not connected!")
 
     def update_uv_diode_voltage(self, voltage):
         self.diode_voltage = voltage

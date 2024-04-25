@@ -759,6 +759,9 @@
         <height>21</height>
        </rect>
       </property>
+      <property name="text">
+       <string>100</string>
+      </property>
      </widget>
      <widget class="QLabel" name="label_38">
       <property name="geometry">
@@ -810,6 +813,9 @@
         <width>71</width>
         <height>21</height>
        </rect>
+      </property>
+      <property name="text">
+       <string>500</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_3">
