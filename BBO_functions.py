@@ -1,5 +1,6 @@
 from PyQt6 import QtCore
 from pylablib.devices import Newport
+from pylablib.devices.Newport.base import NewportBackendError
 import time
 import math
 import numpy as np
@@ -18,9 +19,17 @@ class WorkerBBO(QtCore.QObject):
         self.stage = stage
         self.axis = axis
         self.addr = addr
-        self.steps = steps
-        self.velocity = velocity
-        self.wait = wait
+        self.steps = int(steps)
+        self.velocity = float(velocity)
+        self.wait = float(wait)
+
+        self.going_right = True
+        self.old_power = 0
+        self.old_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
+        self.iterator_steps = 0
+        self.delta_wl_start = np.round(self.wlm.GetWavelength(1), 6)
+        self.threshold_power = 0
+        self.start_pos = self.old_pos
 
     def autoscan(self):
         """Gesamte Logik des UV-Autoscans"""
@@ -30,20 +39,16 @@ class WorkerBBO(QtCore.QObject):
                 self.stage.move_by(axis=self.axis, addr=self.addr, steps=self.steps)
             else:
                 self.stage.move_by(axis=self.axis, addr=self.addr, steps=-self.steps)
-            time.sleep(math.ceil(self.steps / self.velocity))
-            time.sleep(int(self.wait))
-
+            time.sleep(float(self.steps / self.velocity))
+            time.sleep(float(self.wait))
             self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
-            buff_string = self.rp_s.rx_txt()
+            buff_string = self.rp.rx_txt()
             buff_string = buff_string.strip(
                 '{}\n\r').replace("  ", "").split(',')
             buff = list(map(float, buff_string))
             uv_power = np.round(np.mean(buff), 4)
-
             self.update_diodeVoltage.emit(uv_power)
-
             new_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
-
             slope = (uv_power - self.old_power) / (new_pos - self.old_pos)
             if slope > 0:
                 self.going_right = True
@@ -68,7 +73,7 @@ class WorkerBBO(QtCore.QObject):
 
             # compare steps to calculated steps and move the necessary steps to the theoretical position,
             # if current power is a lot lower than control power
-            if self.threshold_power * 0.8 > uv_power:
+            if (self.threshold_power * 0.8 > uv_power > 0):
                 if delta_wl > 0:
                     print(f"Position vor Korr1: {new_pos}")
                     calculated_steps = -delta_wl * 3233
@@ -105,11 +110,15 @@ class BBO:
     def connect_piezos(self):
         """Soll Piezos verbinden bzw. disconnecten"""
         if not self._connect_button_is_checked:
-            # print(Newport.get_usb_devices_number_picomotor())
-            self.stage = Newport.Picomotor8742()
-            # self.stage.move_by(axis=1, addr=1, steps=-100)
-            print("an")
-            self._connect_button_is_checked = True
+            try:
+                # print(Newport.get_usb_devices_number_picomotor())
+                self.stage = Newport.Picomotor8742()
+                # self.stage.move_by(axis=1, addr=1, steps=-100)
+                print("an")
+                self._connect_button_is_checked = True
+            except NewportBackendError as e:
+                print(e)
+                self._connect_button_is_checked = False
         else:
             # self.stage.close()
             print("aus")

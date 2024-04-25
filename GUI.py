@@ -68,15 +68,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_back.clicked.connect(
             lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps.text())))
 
-        self.bbo_button_startUvScan.connect(
+        self.bbo_button_startUvScan.clicked.connect(
             lambda: self.bbo.change_autoscan_parameters(
                 velocity=self.bbo_lineEdit_scanVelocity.text(),
                 steps=self.bbo_lineEdit_steps.text(),
                 wait=self.bbo_lineEdit_break.text()))
-        self.bbo_button_startUvScan.connect(self.bbo.start_autoscan)
-        self.bbo_button_startUvScan.connect(self.bbo_start_autoscan_loop)
-        self.bbo_button_stopUvScan.connect(self.bbo.stop_autoscan)
-        self.bbo_button_stopUvScan.connect(self.bbo_stop_autoscan_loop)
+        self.bbo_button_startUvScan.clicked.connect(self.bbo.start_autoscan)
+        # self.bbo_button_startUvScan.clicked.connect(self.bbo_start_autoscan_loop)
+        self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
+        # self.bbo_button_stopUvScan.clicked.connect(self.bbo_stop_autoscan_loop)
 
     def bbo_update_voltage(self):
         try:
@@ -87,7 +87,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def bbo_start_autoscan_loop(self):
         self.bbo_loopTimer_autoscan = QtCore.QTimer()
         self.bbo_loopTimer_autoscan.timeout.connect(self.bbo_update_voltage)
-        self.bbo_loopTimer_autoscan.start.connect()
         self.status_checkBox_bbo.setChecked(True)
         self.bbo_loopTimer_autoscan.start(100)
         print("Looptimer started")
@@ -114,7 +113,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.lbo._autoscan_button_is_checked:
             self.lbo_loopTimer_autoscan = QtCore.QTimer()
             self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
-            self.lbo_loopTimer_autoscan.start.connect()
             self.status_checkBox_lbo.setChecked(True)
             self.lbo_loopTimer_autoscan.start(1000)
             print("Looptimer started")
