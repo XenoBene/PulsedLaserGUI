@@ -3,6 +3,7 @@ from pylablib.devices import Newport
 import time
 import math
 import numpy as np
+import redpitaya_scpi as scpi
 
 
 class WorkerBBO(QtCore.QObject):
@@ -32,7 +33,13 @@ class WorkerBBO(QtCore.QObject):
             time.sleep(math.ceil(self.steps / self.velocity))
             time.sleep(int(self.wait))
 
-            uv_power = self.rp.measure_power()
+            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
+            buff_string = self.rp_s.rx_txt()
+            buff_string = buff_string.strip(
+                '{}\n\r').replace("  ", "").split(',')
+            buff = list(map(float, buff_string))
+            uv_power = np.round(np.mean(buff), 4)
+
             self.update_diodeVoltage.emit(uv_power)
 
             new_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
@@ -87,13 +94,12 @@ class WorkerBBO(QtCore.QObject):
 
 
 class BBO:
-    def __init__(self, wlm, rp, axis, addr):
+    def __init__(self, wlm, axis, addr):
         self.wlm = wlm
-        self.rp = rp
         self.axis = axis
         self.addr = addr
         self._connect_button_is_checked = False
-        self._autoscan_button_is_checked = False
+        self._connect_rp_button_is_checked = False
         self.stage = Newport.Picomotor8742
 
     def connect_piezos(self):
@@ -109,6 +115,20 @@ class BBO:
             print("aus")
             self.stage.close()
             self._connect_button_is_checked = False
+
+    def connect_red_pitaya(self, ip):
+        if not self._connect_rp_button_is_checked:
+            self.rp = scpi.scpi(ip)
+            self.rp.tx_txt('ACQ:RST')
+            self.rp.acq_set(1)
+            self.rp.tx_txt('ACQ:DATA:FORMAT ASCII')
+            self.rp.tx_txt('ACQ:DATA:UNITS VOLTS')
+            self.rp.tx_txt('ACQ:START')
+
+            self._connect_rp_button_is_checked = True
+        else:
+            # TODO: Disconnect Red Pitaya
+            self._connect_rp_button_is_checked = False
 
     def move_by(self, steps):
         """Bewegt den Motor um steps (+ oder -)"""

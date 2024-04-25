@@ -56,6 +56,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """BBO Tab buttons:"""
         self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
+        self.bbo_button_connectRP.clicked.connect(
+            lambda: self.bbo.connect_red_pitaya(ip=str(self.bbo_lineEdit_ipRedPitaya.text())))
+
         self.bbo_button_forwards.clicked.connect(
             lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text())))
         self.bbo_button_forwards.clicked.connect(

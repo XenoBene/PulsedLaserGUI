@@ -19,7 +19,7 @@ if __name__ == "__main__":
         # TODO: Hier wlm=Blabla hin, dann kann das von der Gui über Funktionen verteilt werden
         dfb=DFB_functions.DFB(ip="192.168.12.38"),  # TODO: IP nicht hardcoden!
         lbo=LBO_functions.LBO(wlm=wlm),
-        bbo=BBO_functions.BBO()
+        bbo=BBO_functions.BBO(wlm=wlm, axis=1, addr=1)
         )
     window.connect_buttons()
     window.show()
