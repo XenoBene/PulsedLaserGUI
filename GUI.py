@@ -79,12 +79,17 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.bbo_button_stopUvScan.clicked.connect(self.bbo_stop_autoscan_loop)
 
     def bbo_update_voltage(self):
+        """Updates the GUI with the latest value of the uv diode voltage
+        """
         try:
             self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {self.bbo.diode_voltage}")
         except AttributeError as e:
             print(e)
 
     def bbo_start_autoscan_loop(self):
+        """Starts a QTimer loop so that the method "bbo_update_voltage" gets called
+        repeatedly to update the GUI.
+        """
         self.bbo_loopTimer_autoscan = QtCore.QTimer()
         self.bbo_loopTimer_autoscan.timeout.connect(self.bbo_update_voltage)
         self.status_checkBox_bbo.setChecked(True)
@@ -92,6 +97,8 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Looptimer started")
 
     def bbo_stop_autoscan_loop(self):
+        """Stops the QTimer loop.
+        """
         self.bbo_loopTimer_autoscan.stop()
         self.status_checkBox_bbo.setChecked(False)
         self.bbo_label_diodeVoltage.setText("UV Diode Voltage [V]:")
