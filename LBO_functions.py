@@ -16,6 +16,7 @@ class WorkerLBO(QtCore.QObject):
         Covesion oven
     """
     # Signals need to be class variables, not instance variables:
+    status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
     update_actTemp = QtCore.pyqtSignal()
     update_setTemp = QtCore.pyqtSignal(float)
@@ -35,6 +36,7 @@ class WorkerLBO(QtCore.QObject):
         being controlled with another method.
         """
         self.keep_running = True
+        self.status.emit(True)
         try:
             while self.keep_running:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
@@ -53,6 +55,7 @@ class WorkerLBO(QtCore.QObject):
         finally:
             # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
             # die GUI bekommt davon nichts mit.
+            self.status.emit(False)
             self.finished.emit()  # Needed to exit the QThread
 
     def stop(self):
@@ -63,7 +66,11 @@ class WorkerLBO(QtCore.QObject):
         print("LBO Autoscan stopped by hand")
 
 
-class LBO:
+class LBO(QtCore.QObject):
+    autoscan_status = QtCore.pyqtSignal(bool)
+    update_needed_temperature = QtCore.pyqtSignal(float)
+    update_actual_temperature = QtCore.pyqtSignal(float)
+
     def __init__(self, wlm):
         """Class to control the OC2 oven controller by Covesion.
 
@@ -71,6 +78,7 @@ class LBO:
             wlm (class WavelengthMeter): Device to measure the wavelength.
                 We use a WS7 by HighFinesse.
         """
+        super().__init__()
         self.wlm = wlm
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
@@ -201,8 +209,9 @@ class LBO:
 
                 # Connect different methods to the signals of the thread:
                 self.threadLBO.started.connect(self.workerLBO.temperature_auto)
-                self.workerLBO.update_actTemp.connect(self.get_actTemp)
-                self.workerLBO.update_setTemp.connect(lambda x: self.set_needed_temperature(x))
+                self.workerLBO.update_actTemp.connect(self.update_actual_temperature(self.get_actTemp))
+                self.workerLBO.update_setTemp.connect(self.update_needed_temperature)
+                self.workerLBO.status.connect(self.autoscan_status.emit)
                 self.workerLBO.finished.connect(self.threadLBO.quit)
                 self.workerLBO.finished.connect(self.workerLBO.deleteLater)
                 self.threadLBO.finished.connect(self.threadLBO.deleteLater)

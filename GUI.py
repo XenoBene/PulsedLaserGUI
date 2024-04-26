@@ -17,6 +17,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
         self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
 
+        self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
+        self.lbo.update_actual_temperature.connect(self.lbo_update_actTemp)
+        self.lbo.update_needed_temperature.connect(self.lbo_update_setTemp)
+
     def connect_buttons(self):
         """
         Connect the buttons from the UI with the methods.
@@ -87,7 +91,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         try:
             print("Voltage updated")
-            # self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {self.bbo.diode_voltage}")
             self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}")
         except AttributeError as e:
             print(e)
@@ -95,22 +98,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def bbo_status_checkbox(self, boolean):
         self.status_checkBox_bbo.setChecked(boolean)
 
-    def bbo_start_autoscan_loop(self):
-        """Starts a QTimer loop so that the method "bbo_update_voltage" gets called
-        repeatedly to update the GUI.
-        """
-        self.bbo_loopTimer_autoscan = QtCore.QTimer()
-        self.bbo_loopTimer_autoscan.timeout.connect(self.bbo_update_voltage)
-        self.status_checkBox_bbo.setChecked(True)
-        self.bbo_loopTimer_autoscan.start(200)
-        print("Looptimer started")
-
-    def bbo_stop_autoscan_loop(self):
-        """Stops the QTimer loop.
-        """
-        self.bbo_loopTimer_autoscan.stop()
-        self.status_checkBox_bbo.setChecked(False)
-        self.bbo_label_diodeVoltage.setText("UV Diode Voltage [V]:")
+    def lbo_status_checkbox(self, boolean):
+        self.status_checkBox_lbo.setChecked(boolean)
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the
@@ -122,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
 
-    def lbo_start_autoscan_loop(self):
+    '''def lbo_start_autoscan_loop(self):
         """Start a QTimer event so that every second the function "lbo_update_actTemp"
         gets called to visually update the GUI with the LBO oven temperatures.
         """
@@ -138,15 +127,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self.status_checkBox_lbo.setChecked(False)
             self.lbo_label_setTemp.setText("Set temperature [°C]: ")
             self.lbo_label_actTemp.setText("Actual temperature [°C]: ")
-            self.lbo._autoscan_button_is_checked = False
+            self.lbo._autoscan_button_is_checked = False'''
 
-    def lbo_update_actTemp(self):
-        """Updates the GUI with the latest values for the actual and the set temperature
+    def lbo_update_actTemp(self, value):
+        """Updates the GUI with the latest values for the actual temperature
         during a LBO automatic temperature scan.
         """
         try:
-            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {self.lbo.needed_temperature}")
-            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {self.lbo.act_temp}")
+            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {value}")
+        except AttributeError as e:
+            print(e)
+
+    def lbo_update_setTemp(self, value):
+        """Updates the GUI with the latest values for the set temperature
+        during a LBO automatic temperature scan.
+        """
+        try:
+            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {value}")
         except AttributeError as e:
             print(e)
 
