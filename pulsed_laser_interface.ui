@@ -607,7 +607,7 @@
      <widget class="QWidget" name="verticalLayoutWidget_6">
       <property name="geometry">
        <rect>
-        <x>340</x>
+        <x>310</x>
         <y>10</y>
         <width>141</width>
         <height>91</height>
@@ -683,7 +683,7 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="bbo_lineEdit_velocity">
+        <widget class="QLineEdit" name="bbo_lineEdit_scanVelocity">
          <property name="text">
           <string>500</string>
          </property>
@@ -750,38 +750,25 @@
        <string>UV Diode Voltage [V]:</string>
       </property>
      </widget>
-     <widget class="QFrame" name="frame">
+     <widget class="QLineEdit" name="bbo_lineEdit_relativeSteps">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>120</y>
-        <width>201</width>
-        <height>101</height>
-       </rect>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Box</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Plain</enum>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineEdit_7">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
+        <x>30</x>
         <y>280</y>
-        <width>181</width>
+        <width>71</width>
         <height>21</height>
        </rect>
+      </property>
+      <property name="text">
+       <string>100</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_38">
       <property name="geometry">
        <rect>
-        <x>20</x>
+        <x>30</x>
         <y>260</y>
-        <width>181</width>
+        <width>71</width>
         <height>16</height>
        </rect>
       </property>
@@ -792,7 +779,7 @@
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_12">
+     <widget class="QPushButton" name="bbo_button_forwards">
       <property name="geometry">
        <rect>
         <x>110</x>
@@ -805,7 +792,7 @@
        <string>Forwards</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_13">
+     <widget class="QPushButton" name="bbo_button_back">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -816,6 +803,48 @@
       </property>
       <property name="text">
        <string>Back</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="bbo_lineEdit_velocity">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>280</y>
+        <width>71</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>500</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>260</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Velocity</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="bbo_lineEdit_ipRedPitaya">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
+        <y>60</y>
+        <width>113</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>192.168.12.69</string>
       </property>
      </widget>
     </widget>

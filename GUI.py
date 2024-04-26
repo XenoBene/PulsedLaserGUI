@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore, uic
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rm, dfb, lbo):
+    def __init__(self, rm, dfb, lbo, bbo):
         super().__init__()
 
         # Load the ui
@@ -11,6 +11,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rm = rm
         self.dfb = dfb
         self.lbo = lbo
+        self.bbo = bbo
+
+        # Teste Signal/Slot:
+        self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
+        self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
 
     def connect_buttons(self):
         """
@@ -18,7 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         The names of the buttons have to be looked up in the .ui file
         with QT Designer.
         """
-        # DFB Tab buttons:
+        """DFB Tab buttons:"""
         self.dfb_button_connectDfb.clicked.connect(self.dfb.connect_dfb)
         self.dfb_button_connectDfb.clicked.connect(self.dfb_update_values)
         self.dfb_button_readValues.clicked.connect(self.dfb.read_actual_dfb_values)
@@ -38,7 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_startScan.clicked.connect(self.start_wideScan_loop)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
-        # LBO Tab buttons:
+        """LBO Tab buttons:"""
         self.lbo_comboBox_visa.addItems(self.rm.list_resources())
         self.lbo_button_connectLBO.clicked.connect(
             lambda: self.lbo.connect_covesion(rm=self.rm, port=self.lbo_comboBox_visa.currentText())
@@ -52,6 +57,60 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
         self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
+
+        """BBO Tab buttons:"""
+        self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
+        self.bbo_button_connectRP.clicked.connect(
+            lambda: self.bbo.connect_red_pitaya(ip=str(self.bbo_lineEdit_ipRedPitaya.text())))
+
+        self.bbo_button_forwards.clicked.connect(
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text())))
+        self.bbo_button_forwards.clicked.connect(
+            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps.text())))
+        self.bbo_button_back.clicked.connect(
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text())))
+        self.bbo_button_back.clicked.connect(
+            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps.text())))
+
+        self.bbo_button_startUvScan.clicked.connect(
+            lambda: self.bbo.change_autoscan_parameters(
+                velocity=self.bbo_lineEdit_scanVelocity.text(),
+                steps=self.bbo_lineEdit_steps.text(),
+                wait=self.bbo_lineEdit_break.text()))
+        self.bbo_button_startUvScan.clicked.connect(self.bbo.start_autoscan)
+        # self.bbo_button_startUvScan.clicked.connect(self.bbo_start_autoscan_loop)
+        self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
+        # self.bbo_button_stopUvScan.clicked.connect(self.bbo_stop_autoscan_loop)
+
+    def bbo_update_voltage(self, value):
+        """Updates the GUI with the latest value of the uv diode voltage
+        """
+        try:
+            print("Voltage updated")
+            # self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {self.bbo.diode_voltage}")
+            self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}")
+        except AttributeError as e:
+            print(e)
+
+    def bbo_status_checkbox(self, boolean):
+        self.status_checkBox_bbo.setChecked(boolean)
+
+    def bbo_start_autoscan_loop(self):
+        """Starts a QTimer loop so that the method "bbo_update_voltage" gets called
+        repeatedly to update the GUI.
+        """
+        self.bbo_loopTimer_autoscan = QtCore.QTimer()
+        self.bbo_loopTimer_autoscan.timeout.connect(self.bbo_update_voltage)
+        self.status_checkBox_bbo.setChecked(True)
+        self.bbo_loopTimer_autoscan.start(200)
+        print("Looptimer started")
+
+    def bbo_stop_autoscan_loop(self):
+        """Stops the QTimer loop.
+        """
+        self.bbo_loopTimer_autoscan.stop()
+        self.status_checkBox_bbo.setChecked(False)
+        self.bbo_label_diodeVoltage.setText("UV Diode Voltage [V]:")
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the
@@ -70,7 +129,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.lbo._autoscan_button_is_checked:
             self.lbo_loopTimer_autoscan = QtCore.QTimer()
             self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
-            self.lbo_loopTimer_autoscan.start.connect()
             self.status_checkBox_lbo.setChecked(True)
             self.lbo_loopTimer_autoscan.start(1000)
             print("Looptimer started")
