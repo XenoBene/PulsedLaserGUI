@@ -8,6 +8,7 @@ import redpitaya_scpi as scpi
 
 class WorkerBBO(QtCore.QObject):
     # Signals need to be class variables, not instance variables:
+    status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
     update_diodeVoltage = QtCore.pyqtSignal(float)
 
@@ -54,6 +55,8 @@ class WorkerBBO(QtCore.QObject):
         or opposite direction.
         """
         self.keep_running = True
+        start_time = time.time()
+        self.status.emit(True)
         while self.keep_running:
             # Makes a number of steps (self.steps) in one direction, depending on the past:
             if self.going_right:
@@ -138,6 +141,8 @@ class WorkerBBO(QtCore.QObject):
                 self.old_pos = new_pos
                 self.iterator_steps = 0
                 self.threshold_power = uv_power
+            print(f"Fertig: {time.time() - start_time}")
+        self.status.emit(False)
         self.finished.emit()
 
     def stop(self):
@@ -148,7 +153,10 @@ class WorkerBBO(QtCore.QObject):
         print("UV Autoscan stopped")
 
 
-class BBO:
+class BBO(QtCore.QObject):
+    autoscan_status = QtCore.pyqtSignal(bool)
+    voltageUpdated = QtCore.pyqtSignal(float)
+
     def __init__(self, wlm, axis, addr):
         """This class controls the picomotor which controls the angle
         of the BBO crystal.
@@ -159,6 +167,7 @@ class BBO:
             addr (int): Adress of the motor controller. Important because our two motors
                 are daisy-chained together. Either 1 or 2 depending on the controller.
         """
+        super().__init__()
         self.wlm = wlm
         self.axis = axis
         self.addr = addr
@@ -259,7 +268,9 @@ class BBO:
 
             # Connect different methods to the signals of the thread:
             self.threadBBO.started.connect(self.workerBBO.autoscan)
-            self.workerBBO.update_diodeVoltage.connect(lambda x: self.update_uv_diode_voltage(x))
+            # self.workerBBO.update_diodeVoltage.connect(lambda x: self.update_uv_diode_voltage(x))
+            self.workerBBO.status.connect(self.autoscan_status.emit)
+            self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)

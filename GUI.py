@@ -13,6 +13,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo = lbo
         self.bbo = bbo
 
+        # Teste Signal/Slot:
+        self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
+        self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
+
     def connect_buttons(self):
         """
         Connect the buttons from the UI with the methods.
@@ -78,13 +82,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
         # self.bbo_button_stopUvScan.clicked.connect(self.bbo_stop_autoscan_loop)
 
-    def bbo_update_voltage(self):
+    def bbo_update_voltage(self, value):
         """Updates the GUI with the latest value of the uv diode voltage
         """
         try:
-            self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {self.bbo.diode_voltage}")
+            print("Voltage updated")
+            # self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {self.bbo.diode_voltage}")
+            self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}")
         except AttributeError as e:
             print(e)
+
+    def bbo_status_checkbox(self, boolean):
+        self.status_checkBox_bbo.setChecked(boolean)
 
     def bbo_start_autoscan_loop(self):
         """Starts a QTimer loop so that the method "bbo_update_voltage" gets called
@@ -93,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_loopTimer_autoscan = QtCore.QTimer()
         self.bbo_loopTimer_autoscan.timeout.connect(self.bbo_update_voltage)
         self.status_checkBox_bbo.setChecked(True)
-        self.bbo_loopTimer_autoscan.start(100)
+        self.bbo_loopTimer_autoscan.start(200)
         print("Looptimer started")
 
     def bbo_stop_autoscan_loop(self):
