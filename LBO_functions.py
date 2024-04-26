@@ -18,8 +18,7 @@ class WorkerLBO(QtCore.QObject):
     # Signals need to be class variables, not instance variables:
     status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
-    update_actTemp = QtCore.pyqtSignal()
-    update_setTemp = QtCore.pyqtSignal(float)
+    update_temperature = QtCore.pyqtSignal(float)
 
     def __init__(self, wlm, oc):
         super().__init__()
@@ -44,8 +43,7 @@ class WorkerLBO(QtCore.QObject):
                 if 1028 < wl < 1032:
                     needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
                     self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
-                    self.update_actTemp.emit()
-                    self.update_setTemp.emit(needed_temperature)
+                    self.update_temperature.emit(needed_temperature)
                     print(f"Set temp: {needed_temperature}")
                     time.sleep(1)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
@@ -54,7 +52,7 @@ class WorkerLBO(QtCore.QObject):
             print(e)
         finally:
             # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
-            # die GUI bekommt davon nichts mit.
+            # die GUI bekommt davon nichts mit. Also mit einem Signal den Knopf wieder umschalten?
             self.status.emit(False)
             self.finished.emit()  # Needed to exit the QThread
 
@@ -68,8 +66,7 @@ class WorkerLBO(QtCore.QObject):
 
 class LBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
-    update_needed_temperature = QtCore.pyqtSignal(float)
-    update_actual_temperature = QtCore.pyqtSignal(float)
+    update_temperature = QtCore.pyqtSignal(tuple)
 
     def __init__(self, wlm):
         """Class to control the OC2 oven controller by Covesion.
@@ -173,15 +170,6 @@ class LBO(QtCore.QObject):
         except pyvisa.errors.InvalidSession as e:
             print(f"Device closed: {e}")
 
-    def set_needed_temperature(self, needed_temperature):
-        """Assigns the input variable to an instance variable. This is needed
-        to hand over the signal from the WorkerLBO class to the GUI.
-
-        Args:
-            needed_temperature (float): LBO Temperature that corresponds to the current wavelength.
-        """
-        self.needed_temperature = needed_temperature
-
     def read_values(self):
         """Reads out the set temperature and ramp speed of the oven.
 
@@ -202,6 +190,7 @@ class LBO(QtCore.QObject):
         if not self._autoscan_button_is_checked:
             print("Start Autoscan")
             try:
+                self._autoscan_button_is_checked = True
                 # Initiate QThread and WorkerLBO class:
                 self.threadLBO = QtCore.QThread()
                 self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
@@ -209,8 +198,8 @@ class LBO(QtCore.QObject):
 
                 # Connect different methods to the signals of the thread:
                 self.threadLBO.started.connect(self.workerLBO.temperature_auto)
-                self.workerLBO.update_actTemp.connect(self.update_actual_temperature(self.get_actTemp))
-                self.workerLBO.update_setTemp.connect(self.update_needed_temperature)
+                self.workerLBO.update_temperature.connect(
+                    lambda x: self.update_temperature.emit((x, self.get_actTemp())))
                 self.workerLBO.status.connect(self.autoscan_status.emit)
                 self.workerLBO.finished.connect(self.threadLBO.quit)
                 self.workerLBO.finished.connect(self.workerLBO.deleteLater)
@@ -221,5 +210,6 @@ class LBO(QtCore.QObject):
             except AttributeError as e:
                 print(f"Error: {e}")
         else:
+            self._autoscan_button_is_checked = False
             print("Stop Autoscan")
             self.workerLBO.stop()

@@ -1,10 +1,14 @@
 from toptica.lasersdk.dlcpro.v2_0_3 import DLCpro, NetworkConnection, DeviceNotFoundError
 from toptica.lasersdk.client import UnavailableError
 import numpy as np
+from PyQt6 import QtCore
 
 
-class DFB():
+class DFB(QtCore.QObject):
+    update_values = QtCore.pyqtSignal(tuple)
+
     def __init__(self, ip):
+        super().__init__()
         self._connect_button_is_checked = False
         self.dlc_ip_adress = ip
 
@@ -19,7 +23,7 @@ class DFB():
                 self.dlc = DLCpro(NetworkConnection(self.dlc_ip_adress))
                 self.dlc.open()
                 print("DFB connected")
-                self.read_actual_dfb_values()
+                self.update_values.emit(self.read_actual_dfb_values())
                 self._connect_button_is_checked = True
             except DeviceNotFoundError:
                 print("DFB not found")
@@ -36,6 +40,7 @@ class DFB():
             self.start_temp = self.dlc.laser1.wide_scan.scan_begin.get()
             self.end_temp = self.dlc.laser1.wide_scan.scan_end.get()
             self.scan_speed = self.dlc.laser1.wide_scan.speed.get()
+            return self.set_temp, self.start_temp, self.end_temp, self.scan_speed
         except AttributeError as e:
             print(f"DFB is not yet connected: {e}")
         except UnavailableError as e:

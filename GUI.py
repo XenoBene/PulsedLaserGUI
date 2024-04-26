@@ -13,13 +13,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo = lbo
         self.bbo = bbo
 
-        # Teste Signal/Slot:
+        # Signal/Slots:
+        self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
+
         self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
         self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
 
         self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
-        self.lbo.update_actual_temperature.connect(self.lbo_update_actTemp)
-        self.lbo.update_needed_temperature.connect(self.lbo_update_setTemp)
+        self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
 
     def connect_buttons(self):
         """
@@ -29,9 +30,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         """DFB Tab buttons:"""
         self.dfb_button_connectDfb.clicked.connect(self.dfb.connect_dfb)
-        self.dfb_button_connectDfb.clicked.connect(self.dfb_update_values)
-        self.dfb_button_readValues.clicked.connect(self.dfb.read_actual_dfb_values)
-        self.dfb_button_readValues.clicked.connect(self.dfb_update_values)
+        self.dfb_button_readValues.clicked.connect(
+            lambda: self.dfb_update_values(*self.dfb.read_actual_dfb_values()))
         self.dfb_spinBox_setTemp.valueChanged.connect(
             lambda: self.dfb.change_dfb_setTemp(self.dfb_spinBox_setTemp.value()))
         # TODO: Bei manueller Eingabe soll mit Enter bestätigt werden bevor sich die Temperatur ändert!
@@ -60,7 +60,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                              float(self.lbo_lineEdit_rampSpeed.text()))
         )
         self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
-        self.lbo_button_autoScan.clicked.connect(self.lbo_start_autoscan_loop)
 
         """BBO Tab buttons:"""
         self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
@@ -82,9 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 steps=self.bbo_lineEdit_steps.text(),
                 wait=self.bbo_lineEdit_break.text()))
         self.bbo_button_startUvScan.clicked.connect(self.bbo.start_autoscan)
-        # self.bbo_button_startUvScan.clicked.connect(self.bbo_start_autoscan_loop)
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
-        # self.bbo_button_stopUvScan.clicked.connect(self.bbo_stop_autoscan_loop)
 
     def bbo_update_voltage(self, value):
         """Updates the GUI with the latest value of the uv diode voltage
@@ -111,51 +108,25 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
 
-    '''def lbo_start_autoscan_loop(self):
-        """Start a QTimer event so that every second the function "lbo_update_actTemp"
-        gets called to visually update the GUI with the LBO oven temperatures.
-        """
-        if not self.lbo._autoscan_button_is_checked:
-            self.lbo_loopTimer_autoscan = QtCore.QTimer()
-            self.lbo_loopTimer_autoscan.timeout.connect(self.lbo_update_actTemp)
-            self.status_checkBox_lbo.setChecked(True)
-            self.lbo_loopTimer_autoscan.start(1000)
-            print("Looptimer started")
-            self.lbo._autoscan_button_is_checked = True
-        else:
-            self.lbo_loopTimer_autoscan.stop()
-            self.status_checkBox_lbo.setChecked(False)
-            self.lbo_label_setTemp.setText("Set temperature [°C]: ")
-            self.lbo_label_actTemp.setText("Actual temperature [°C]: ")
-            self.lbo._autoscan_button_is_checked = False'''
-
-    def lbo_update_actTemp(self, value):
-        """Updates the GUI with the latest values for the actual temperature
+    def lbo_update_temperatures(self, set_temp, act_temp):
+        """Updates the GUI with the latest values for the set and act temperature
         during a LBO automatic temperature scan.
         """
         try:
-            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {value}")
+            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {set_temp}")
+            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {act_temp}")
         except AttributeError as e:
             print(e)
 
-    def lbo_update_setTemp(self, value):
-        """Updates the GUI with the latest values for the set temperature
-        during a LBO automatic temperature scan.
-        """
-        try:
-            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {value}")
-        except AttributeError as e:
-            print(e)
-
-    def dfb_update_values(self):
+    def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
         start & end temperature of the WideScan and the scan speed.
         """
         try:
-            self.dfb_spinBox_setTemp.setValue(self.dfb.set_temp)
-            self.dfb_lineEdit_scanStartTemp.setText(str(self.dfb.start_temp))
-            self.dfb_lineEdit_scanEndTemp.setText(str(self.dfb.end_temp))
-            self.dfb_lineEdit_scanSpeed.setText(str(self.dfb.scan_speed))
+            self.dfb_spinBox_setTemp.setValue(set_temp)
+            self.dfb_lineEdit_scanStartTemp.setText(str(start_temp))
+            self.dfb_lineEdit_scanEndTemp.setText(str(end_temp))
+            self.dfb_lineEdit_scanSpeed.setText(str(scan_speed))
         except AttributeError as e:
             print(f"DFB is not connected: {e}")
 
@@ -190,7 +161,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.status_checkBox_wideScan.setChecked(False)  # Visual check to confirm that WideScan has finished.
             elif False:
                 # TODO: Hier muss Überprüfung hin, ob die ASE-Filter nicht einen Error
-                # geworfen haben.
+                # geworfen haben. Am besten als Signal/Slot?
                 self.status_checkBox_wideScan.setChecked(False)
                 pass
         except TypeError as e:

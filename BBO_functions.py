@@ -1,6 +1,6 @@
 from PyQt6 import QtCore
 from pylablib.devices import Newport
-from pylablib.devices.Newport.base import NewportBackendError
+from pylablib.devices.Newport.base import NewportBackendError, NewportError
 import time
 import numpy as np
 import redpitaya_scpi as scpi
@@ -185,6 +185,9 @@ class BBO(QtCore.QObject):
             except NewportBackendError as e:
                 print(e)
                 self._connect_button_is_checked = False
+            except NewportError as e:
+                print(f"Picomotor application still opened? {e}")
+                self._connect_button_is_checked = False
         else:
             print("aus")
             self.stage.close()
@@ -246,14 +249,6 @@ class BBO(QtCore.QObject):
         except AttributeError:
             print("Picomotor not connected!")
 
-    def update_uv_diode_voltage(self, voltage):
-        """Assigns the diode voltage to an instance variable.
-
-        Args:
-            voltage (float): Voltage [V] of the UV diode.
-        """
-        self.diode_voltage = voltage
-
     def start_autoscan(self):
         """Starts the QThread (the WorkerBBO class) where the UV autoscan will operate.
         """
@@ -268,7 +263,6 @@ class BBO(QtCore.QObject):
 
             # Connect different methods to the signals of the thread:
             self.threadBBO.started.connect(self.workerBBO.autoscan)
-            # self.workerBBO.update_diodeVoltage.connect(lambda x: self.update_uv_diode_voltage(x))
             self.workerBBO.status.connect(self.autoscan_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.finished.connect(self.threadBBO.quit)
