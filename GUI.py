@@ -29,7 +29,8 @@ class MainWindow(QtWidgets.QMainWindow):
         with QT Designer.
         """
         """DFB Tab buttons:"""
-        self.dfb_button_connectDfb.clicked.connect(self.dfb.connect_dfb)
+        self.dfb_button_connectDfb.clicked.connect(
+            lambda: self.dfb.connect_dfb(ip=str(self.dfb_lineEdit_ip.text())))
         self.dfb_button_readValues.clicked.connect(
             lambda: self.dfb_update_values(*self.dfb.read_actual_dfb_values()))
         self.dfb_spinBox_setTemp.valueChanged.connect(
@@ -84,7 +85,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
 
     def bbo_update_voltage(self, value):
-        """Updates the GUI with the latest value of the uv diode voltage
+        """Changes the label in the GUI. This is the slot method for the signal
+        that is received from the uv autoscan class.
+
+        Args:
+            value (float): UV diode voltage [V]
         """
         try:
             print("Voltage updated")
@@ -93,9 +98,21 @@ class MainWindow(QtWidgets.QMainWindow):
             print(e)
 
     def bbo_status_checkbox(self, boolean):
+        """Sets the status checkbox for the UV scan to the value
+        of the boolean
+
+        Args:
+            boolean (bool): True or False, depending if the uv scan is running or not
+        """
         self.status_checkBox_bbo.setChecked(boolean)
 
     def lbo_status_checkbox(self, boolean):
+        """Sets the status checkbox for the LBO scan to the value
+        of the boolean
+
+        Args:
+            boolean (bool): True or False, depending if the LBO scan is running or not
+        """
         self.status_checkBox_lbo.setChecked(boolean)
 
     def lbo_update_values(self):
@@ -111,6 +128,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def lbo_update_temperatures(self, set_temp, act_temp):
         """Updates the GUI with the latest values for the set and act temperature
         during a LBO automatic temperature scan.
+
+        Args:
+            set_temp (float): The set temperature of the LBO oven [°C]
+            act_temp (float): The current temperature of the LBO oven [°C]
         """
         try:
             self.lbo_label_setTemp.setText(f"Set temperature [°C]: {set_temp}")
@@ -121,6 +142,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
         start & end temperature of the WideScan and the scan speed.
+
+        Args:
+            set_temp (float): Set temperature of the dfb diode [°C]
+            start_temp (float): Start temperature of the WideScan [°C]
+            end_temp (float): End temperature of the WideScan [°C]
+            scan_speed (float): WideScan scan speed [K/s]
         """
         try:
             self.dfb_spinBox_setTemp.setValue(set_temp)

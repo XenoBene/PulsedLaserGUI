@@ -7,20 +7,22 @@ from PyQt6 import QtCore
 class DFB(QtCore.QObject):
     update_values = QtCore.pyqtSignal(tuple)
 
-    def __init__(self, ip):
+    def __init__(self):
         super().__init__()
         self._connect_button_is_checked = False
-        self.dlc_ip_adress = ip
 
-    def connect_dfb(self):
+    def connect_dfb(self, ip):
         """Connects/disconnects the DFB laser depending on if the connect button
         is already checked or not. If the button changes its state from unchecked to checked,
         the DLC Pro connects and opens a session.
         If the button changes from a checked to an unchecked state, this session gets closed.
+
+        Args:
+            ip (str): IP adress of the DLC laser controller
         """
         if not self._connect_button_is_checked:
             try:
-                self.dlc = DLCpro(NetworkConnection(self.dlc_ip_adress))
+                self.dlc = DLCpro(NetworkConnection(ip))
                 self.dlc.open()
                 print("DFB connected")
                 self.update_values.emit(self.read_actual_dfb_values())

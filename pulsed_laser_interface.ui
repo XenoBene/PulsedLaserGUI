@@ -1000,7 +1000,7 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>261</width>
+        <width>351</width>
         <height>61</height>
        </rect>
       </property>
@@ -1027,6 +1027,13 @@
          </property>
          <property name="flat">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="dfb_lineEdit_ip">
+         <property name="text">
+          <string>192.168.12.38</string>
          </property>
         </widget>
        </item>
