@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore, uic
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rm, dfb, lbo, bbo):
+    def __init__(self, rm, dfb, lbo, bbo, ase):
         super().__init__()
 
         # Load the ui
@@ -12,6 +12,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb = dfb
         self.lbo = lbo
         self.bbo = bbo
+        self.ase = ase
 
         # Signal/Slots:
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
@@ -83,6 +84,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 wait=self.bbo_lineEdit_break.text()))
         self.bbo_button_startUvScan.clicked.connect(self.bbo.start_autoscan)
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
+
+        """ASE Tab buttons:"""
+        self.ase_button_connectStage.clicked.connect(self.ase.connect_rotationstage)
 
     def bbo_update_voltage(self, value):
         """Changes the label in the GUI. This is the slot method for the signal

@@ -344,31 +344,6 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_14">
        <item>
-        <widget class="QPushButton" name="ase_button_connectWLM">
-         <property name="styleSheet">
-          <string notr="true">background-color: green</string>
-         </property>
-         <property name="text">
-          <string>Connect WLM</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <property name="autoDefault">
-          <bool>false</bool>
-         </property>
-         <property name="default">
-          <bool>false</bool>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="ase_button_connectStage">
          <property name="autoFillBackground">
           <bool>false</bool>
@@ -381,6 +356,13 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="ase_button_home">
+         <property name="text">
+          <string>Home</string>
          </property>
         </widget>
        </item>
