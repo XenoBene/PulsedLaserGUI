@@ -23,6 +23,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
         self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
 
+        self.ase.autoscan_status.connect(self.ase_status_checkbox)
+
     def connect_buttons(self):
         """
         Connect the buttons from the UI with the methods.
@@ -86,7 +88,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
 
         """ASE Tab buttons:"""
-        self.ase_button_connectStage.clicked.connect(self.ase.connect_rotationstage)
+        self.ase_button_connectStage.clicked.connect(lambda: self.ase.connect_rotationstage("55001373"))  # TODO: Nicht hardcoden
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
@@ -112,6 +114,17 @@ class MainWindow(QtWidgets.QMainWindow):
             boolean (bool): True or False, depending if the uv scan is running or not
         """
         self.status_checkBox_bbo.setChecked(boolean)
+
+    def ase_status_checkbox(self, boolean):
+        """Sets the status checkbox for the ASE filter scan to the value
+        of the boolean and disables the button to disconnect the rotation stage during
+        the autoscan
+
+        Args:
+            boolean (bool): True or False, depending if the ASE filter scan is running or not
+        """
+        self.status_checkBox_ase.setChecked(boolean)
+        self.ase_button_connectStage.setEnabled(not boolean)
 
     def lbo_status_checkbox(self, boolean):
         """Sets the status checkbox for the LBO scan to the value

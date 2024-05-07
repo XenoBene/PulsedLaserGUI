@@ -99,7 +99,7 @@ class Stage(Thorlabs.KinesisMotor):
         """
         return np.round(steps / 136533.33, decimals=3)
 
-    def to_steps(angle) -> float:
+    def to_steps(self, angle) -> float:
         """Converts the physical unit 'degree' to the internal unit 'steps'.
         According to Thorlabs, 1 degree equals 136533.33 steps.
 
@@ -113,7 +113,7 @@ class Stage(Thorlabs.KinesisMotor):
         """
         return int(np.round(angle * 136533.33))
 
-    def wavelength_to_angle(wavelength: float, data: pd.DataFrame, lowtohi=True) -> float:
+    def wavelength_to_angle(self, wavelength: float, data: pd.DataFrame, lowtohi=True) -> float:
         """Calculates the angle the ASE filters have to be in to let
         the desired wavelength pass through.
         The conversion parameters have to be measured and calculated
