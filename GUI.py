@@ -87,6 +87,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """ASE Tab buttons:"""
         self.ase_button_connectStage.clicked.connect(self.ase.connect_rotationstage)
+        self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
+        self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
+        self.ase_button_home.clicked.connect(self.ase.homing_motor)
 
     def bbo_update_voltage(self, value):
         """Changes the label in the GUI. This is the slot method for the signal
