@@ -24,6 +24,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
 
         self.ase.autoscan_status.connect(self.ase_status_checkbox)
+        self.ase.update_wl_pos.connect(lambda values: self.ase_update_values(*values))
+        self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
 
     def connect_buttons(self):
         """
@@ -88,7 +90,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
 
         """ASE Tab buttons:"""
-        self.ase_button_connectStage.clicked.connect(lambda: self.ase.connect_rotationstage("55001373"))  # TODO: Nicht hardcoden
+        self.ase_button_connectStage.clicked.connect(
+            lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.getText()))
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
@@ -125,6 +128,13 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.status_checkBox_ase.setChecked(boolean)
         self.ase_button_connectStage.setEnabled(not boolean)
+
+    def ase_update_values(self, wavelength, position):
+        try:
+            self.ase_label_currentWL.setText(f"Current Wavelength: {wavelength}")
+            self.ase_label_currentAngle.setText(f"Current Angle: {position}")
+        except AttributeError as e:
+            print(e)
 
     def lbo_status_checkbox(self, boolean):
         """Sets the status checkbox for the LBO scan to the value

@@ -1,5 +1,6 @@
 from PyQt6 import QtCore
 from ThorlabsRotationStage import Stage
+import pylablib
 from pylablib.devices.Thorlabs.base import ThorlabsBackendError
 import numpy as np
 import pandas as pd
@@ -8,6 +9,7 @@ import pandas as pd
 class ASE(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     update_wl_pos = QtCore.pyqtSignal(tuple)
+    autoscan_failsafe = QtCore.pyqtSignal()
 
     def __init__(self, wlm):
         super().__init__()
@@ -40,19 +42,28 @@ class ASE(QtCore.QObject):
                 print("No stage was connected")
 
     def move_to_start(self):
-        wl = np.round(self.wlm.GetWavelength(1), 6)
-        self.stage.calmode = self.stage.change_angle(wl, self.stage.calmode, self.cal_par)
-        pos = self.stage.to_degree(self.stage.get_position())
-        print(f"Current Wavelength: {wl}")
-        print(f"Current Angle: {pos}")
-        print("--------------------------")
-        self.update_wl_pos.emit((wl, pos))
+        try:
+            wl = np.round(self.wlm.GetWavelength(1), 6)
+            self.stage.calmode = self.stage.change_angle(wl, self.stage.calmode, self.cal_par)
+            pos = self.stage.to_degree(self.stage.get_position())
+
+            self.update_wl_pos.emit((wl, pos))
+        except (pylablib.core.devio.comm_backend.DeviceBackendError, AttributeError):
+            try:
+                self.stage.close()
+            except pylablib.core.devio.comm_backend.DeviceBackendError as e:
+                print(e)
+            finally:
+                self.autoscan_failsafe.emit()
+                self.autoscan_status.emit(False)
+                self.autoscan_loop_timer.stop()
 
     def homing_motor(self):
         self.stage.setup_homing(velocity=self.stage.to_steps(10), offset_distance=self.stage.to_steps(4))
         self.stage.home(sync=False)
 
     def initiate_auto_calibration(self):
+        # TODO: Autokalibrierung einbauen von Ryan
         pass
 
     def autoscan(self):
