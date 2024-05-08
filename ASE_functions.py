@@ -4,6 +4,7 @@ import pylablib
 from pylablib.devices.Thorlabs.base import ThorlabsBackendError
 import numpy as np
 import pandas as pd
+import time
 
 
 class ASE(QtCore.QObject):
@@ -54,6 +55,7 @@ class ASE(QtCore.QObject):
             except pylablib.core.devio.comm_backend.DeviceBackendError as e:
                 print(e)
             finally:
+                print(time.time())
                 self.autoscan_failsafe.emit()
                 self.autoscan_status.emit(False)
                 self.autoscan_loop_timer.stop()

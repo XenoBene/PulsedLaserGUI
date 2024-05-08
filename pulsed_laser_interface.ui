@@ -523,7 +523,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="aes_label_currentAngle">
+        <widget class="QLabel" name="ase_label_currentAngle">
          <property name="text">
           <string>Current Angle:</string>
          </property>

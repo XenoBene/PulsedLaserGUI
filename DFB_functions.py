@@ -2,9 +2,11 @@ from toptica.lasersdk.dlcpro.v2_0_3 import DLCpro, NetworkConnection, DeviceNotF
 from toptica.lasersdk.client import UnavailableError
 import numpy as np
 from PyQt6 import QtCore
+import time
 
 
 class DFB(QtCore.QObject):
+    widescan_status = QtCore.pyqtSignal(bool)
     update_values = QtCore.pyqtSignal(tuple)
 
     def __init__(self):
@@ -117,6 +119,7 @@ class DFB(QtCore.QObject):
             # TODO: Absicherung durch if/else damit man nur WideScan starten
             # kann falls ASE-Filter verbunden sind
             self.dlc.laser1.wide_scan.start()
+            self.widescan_status.emit(True)
         except AttributeError as e:
             print(f"DFB is not yet connected: {e}")
 
@@ -126,9 +129,12 @@ class DFB(QtCore.QObject):
         down to the start temperature.
         """
         try:
+            print(time.time())
             temp = self.get_actual_temperature()
             self.dlc.laser1.wide_scan.stop()
             self.change_dfb_setTemp(temp)
+            self.widescan_status.emit(False)
+            print(time.time())
         except AttributeError as e:
             print(f"DFB is not yet connected: {e}")
 

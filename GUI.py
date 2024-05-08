@@ -15,6 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase = ase
 
         # Signal/Slots:
+        self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
 
         self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
@@ -23,7 +24,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
         self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
 
-        self.ase.autoscan_status.connect(self.ase_status_checkbox)
+        self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
+        self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
         self.ase.update_wl_pos.connect(lambda values: self.ase_update_values(*values))
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
 
@@ -91,7 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """ASE Tab buttons:"""
         self.ase_button_connectStage.clicked.connect(
-            lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.getText()))
+            lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.text()))
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
@@ -117,17 +119,6 @@ class MainWindow(QtWidgets.QMainWindow):
             boolean (bool): True or False, depending if the uv scan is running or not
         """
         self.status_checkBox_bbo.setChecked(boolean)
-
-    def ase_status_checkbox(self, boolean):
-        """Sets the status checkbox for the ASE filter scan to the value
-        of the boolean and disables the button to disconnect the rotation stage during
-        the autoscan
-
-        Args:
-            boolean (bool): True or False, depending if the ASE filter scan is running or not
-        """
-        self.status_checkBox_ase.setChecked(boolean)
-        self.ase_button_connectStage.setEnabled(not boolean)
 
     def ase_update_values(self, wavelength, position):
         try:
@@ -195,7 +186,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_loopTimer_wideScan = QtCore.QTimer()
         self.dfb_loopTimer_wideScan.timeout.connect(self.update_wideScan_progressBar)
         self.dfb.start_wideScan()
-        self.status_checkBox_wideScan.setChecked(True)  # Visual check to confirm if WideScan is currently enabled.
+        # self.status_checkBox_wideScan.setChecked(True)  # Visual check to confirm if WideScan is currently enabled.
         self.dfb_loopTimer_wideScan.start()
 
     def update_wideScan_progressBar(self):
