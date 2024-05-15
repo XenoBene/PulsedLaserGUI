@@ -461,13 +461,13 @@
        <item>
         <widget class="QPushButton" name="ase_button_startAutoCal">
          <property name="styleSheet">
-          <string notr="true">background-color: green</string>
+          <string notr="true"/>
          </property>
          <property name="text">
           <string>Initiate</string>
          </property>
          <property name="checkable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
        </item>

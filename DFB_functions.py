@@ -7,7 +7,10 @@ import time
 
 class DFB(QtCore.QObject):
     widescan_status = QtCore.pyqtSignal(bool)
+    widescan_finished = QtCore.pyqtSignal()
     update_values = QtCore.pyqtSignal(tuple)
+    update_progressbar = QtCore.pyqtSignal(tuple)
+    update_actTemp = QtCore.pyqtSignal(float)
 
     def __init__(self):
         super().__init__()
@@ -118,8 +121,11 @@ class DFB(QtCore.QObject):
         try:
             # TODO: Absicherung durch if/else damit man nur WideScan starten
             # kann falls ASE-Filter verbunden sind
+            self.widescan_loopTimer = QtCore.QTimer()
+            self.widescan_loopTimer.timeout.connect(self.update_wideScan_progress)
             self.dlc.laser1.wide_scan.start()
             self.widescan_status.emit(True)
+            self.widescan_loopTimer.start()
         except AttributeError as e:
             print(f"DFB is not yet connected: {e}")
 
@@ -133,7 +139,7 @@ class DFB(QtCore.QObject):
             temp = self.get_actual_temperature()
             self.dlc.laser1.wide_scan.stop()
             self.change_dfb_setTemp(temp)
-            self.widescan_status.emit(False)
+            # self.widescan_status.emit(False)
             print(time.time())
         except AttributeError as e:
             print(f"DFB is not yet connected: {e}")
@@ -166,3 +172,15 @@ class DFB(QtCore.QObject):
             return progress, remaining_time
         except AttributeError as e:
             print(f"DFB is not yet connected: {e}")
+
+    def update_wideScan_progress(self):
+        progress, remaining_time = self.get_wideScan_progress()
+        act_temp = self.get_actual_temperature()
+
+        self.update_progressbar.emit((progress, remaining_time))
+        self.update_actTemp.emit(act_temp)
+
+        if self.get_wideScan_state() in {0, 3}:
+            self.widescan_finished.emit()
+            self.widescan_status.emit(False)
+            self.widescan_loopTimer.stop()

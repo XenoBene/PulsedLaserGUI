@@ -17,6 +17,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Signal/Slots:
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
+        self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
+        self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
+        self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
 
         self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
         self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
@@ -52,7 +55,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb.change_wideScan_scanSpeed(self.dfb_lineEdit_scanSpeed.text()))
         # TODO: Lieber einen "Set value" Knopf einbauen mit print Bestätigung statt dem editingFinished,
         # dann ist das alles konsistenter
-        self.dfb_button_startScan.clicked.connect(self.start_wideScan_loop)
+        self.dfb_button_startScan.clicked.connect(self.dfb.start_wideScan)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
         """LBO Tab buttons:"""
@@ -97,6 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
+        self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
 
     def bbo_update_voltage(self, value):
         """Changes the label in the GUI. This is the slot method for the signal
@@ -178,40 +182,37 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"DFB is not connected: {e}")
 
-    def start_wideScan_loop(self):
-        """Creates and starts a QTimer that starts the WideScan.
-        After every loop of the QTimer, the progressbar and remeaining time
-        gets updated in the GUI.
-        """
-        self.dfb_loopTimer_wideScan = QtCore.QTimer()
-        self.dfb_loopTimer_wideScan.timeout.connect(self.update_wideScan_progressBar)
-        self.dfb.start_wideScan()
-        # self.status_checkBox_wideScan.setChecked(True)  # Visual check to confirm if WideScan is currently enabled.
-        self.dfb_loopTimer_wideScan.start()
+    def update_widescan_progressbar(self, progress, time):
+        self.dfb_progressBar_scan.setValue(progress)
+        self.dfb_label_remainingTime.setText(f"Remaining time: {time} s")
 
-    def update_wideScan_progressBar(self):
-        """Updates the GUI with the progress & remaining time of the WideScan
-        and the current temperature of the DFB diode.
-        When the WideScan reaches its end, the progressbar is resetted and the QTimer loop
-        is stopped.
-        """
-        try:
-            progress, remaining_time = self.dfb.get_wideScan_progress()
-            self.dfb_progressBar_scan.setValue(progress)
-            self.dfb_label_remainingTime.setText(
-                f"Remaining time: {remaining_time} s")
-            self.dfb_label_actTemp.setText(
-                f"Actual temperature: {self.dfb.get_actual_temperature()} °C")
-            if self.dfb.get_wideScan_state() == 0:
-                self.dfb_progressBar_scan.reset()
-                self.dfb_label_remainingTime.setText("Remaining time: ")
-                self.dfb_loopTimer_wideScan.stop()
-                self.status_checkBox_wideScan.setChecked(False)  # Visual check to confirm that WideScan has finished.
-            elif False:
-                # TODO: Hier muss Überprüfung hin, ob die ASE-Filter nicht einen Error
-                # geworfen haben. Am besten als Signal/Slot?
-                self.status_checkBox_wideScan.setChecked(False)
-                pass
-        except TypeError as e:
-            self.dfb_loopTimer_wideScan.stop()
-            print(f"No DFB connected: {e}")
+    def reset_wideScan_progressBar(self):
+        self.dfb_label_actTemp.setText("Actual temperature: ")
+        self.dfb_progressBar_scan.reset()
+        self.dfb_label_remainingTime.setText("Remaining time: ")
+
+    def autocalibration_popup(self):
+        with open(r'Kalibrierung/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
+            f.seek(0)
+            f = f.read().split('\r\n')
+            if f == ['']:
+                previous_cal = ("No calibration previously recorded. ")
+            else:
+                previous_cal = (f"Previous calibration: {f[-2].split()[0]} {f[-2].split()[1]} hrs. ")
+
+            autocal_msg_str = (previous_cal +
+                               "To perform the calibration of the rotation stage, please place "
+                               "the desired powermeter directly after the first fibre amplifier. "
+                               "Ensure that the WLM and rotation stage are connected beforehand. "
+                               "Please connect the required powermeter with the 'PM1' button. "
+                               "Then, please click 'Yes'.")
+            autocal_request = QtWidgets.QMessageBox.question(self,
+                                                             'Initiate auto calibration',
+                                                             autocal_msg_str,
+                                                             buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
+            # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
+            pass
+        elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
+            # TODO: Mache nichts
+            pass
