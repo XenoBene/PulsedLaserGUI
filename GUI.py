@@ -100,6 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
+        self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
 
     def bbo_update_voltage(self, value):
         """Changes the label in the GUI. This is the slot method for the signal
@@ -189,3 +190,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_label_actTemp.setText("Actual temperature: ")
         self.dfb_progressBar_scan.reset()
         self.dfb_label_remainingTime.setText("Remaining time: ")
+
+    def autocalibration_popup(self):
+        with open(r'Kalibrierung/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
+            f.seek(0)
+            f = f.read().split('\r\n')
+            if f == ['']:
+                previous_cal = ("No calibration previously recorded. ")
+            else:
+                previous_cal = (f"Previous calibration: {f[-2].split()[0]} {f[-2].split()[1]} hrs. ")
+
+            autocal_msg_str = (previous_cal +
+                               "To perform the calibration of the rotation stage, please place "
+                               "the desired powermeter directly after the first fibre amplifier. "
+                               "Ensure that the WLM and rotation stage are connected beforehand. "
+                               "Please connect the required powermeter with the 'PM1' button. "
+                               "Then, please click 'Yes'.")
+            autocal_request = QtWidgets.QMessageBox.question(self,
+                                                             'Initiate auto calibration',
+                                                             autocal_msg_str,
+                                                             buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
+            # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
+            pass
+        elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
+            # TODO: Mache nichts
+            pass
