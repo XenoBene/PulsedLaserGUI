@@ -1,8 +1,19 @@
-from PyQt6 import QtWidgets, QtCore, uic
+from PyQt6 import QtWidgets, uic
+import ASE_functions
+import DFB_functions
+import LBO_functions
+import BBO_functions
+import pyvisa
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rm, dfb, lbo, bbo, ase):
+    def __init__(self,
+                 rm: pyvisa.ResourceManager,
+                 dfb: DFB_functions.DFB,
+                 lbo: LBO_functions.LBO,
+                 bbo: BBO_functions.BBO,
+                 ase: ASE_functions.ASE
+                 ):
         super().__init__()
 
         # Load the ui
@@ -212,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                              buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
         if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
             # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
-            pass
+            self.ase.wavelength_to_angle_calibration()
         elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
             # TODO: Mache nichts
             pass
