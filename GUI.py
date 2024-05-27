@@ -42,6 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
         self.ase.update_wl_pos.connect(lambda values: self.ase_update_values(*values))
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
+        self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
 
     def connect_buttons(self):
         """
@@ -223,7 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                              buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
         if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
             # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
-            self.ase.wavelength_to_angle_calibration()
+            self.ase.start_autocalibration(dfb=self.dfb)
         elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
             # TODO: Mache nichts
             pass

@@ -8,12 +8,16 @@ import time
 import datetime
 import os
 import csv
+import glob
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 
 
 class ASE(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     update_wl_pos = QtCore.pyqtSignal(tuple)
     autoscan_failsafe = QtCore.pyqtSignal()
+    autocalibration_progress = QtCore.pyqtSignal(int)
 
     def __init__(self, wlm):
         super().__init__()
@@ -21,6 +25,20 @@ class ASE(QtCore.QObject):
         self.cal_par = pd.read_csv("lastused_calpar.csv", delimiter=';')
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
+
+        # INITIALISE BOUNDS FOR AUTOCALIBRATION
+        self.ac_startangle = 110
+        self.ac_endangle = 120
+        self.ac_B_lower = 0
+        self.ac_B_upper = 1
+        self.ac_x0_lower = self.ac_startangle - 5
+        self.ac_x0_upper = self.ac_endangle + 5
+        self.ac_a_lower = 0.1
+        self.ac_a_upper = 5
+        self.ac_n_lower = 1
+        self.ac_n_upper = 5
+        self.ac_y0_lower = 0
+        self.ac_y0_upper = 0.1
 
     def connect_rotationstage(self, serial):
         if not self._connect_button_is_checked:
@@ -81,8 +99,9 @@ class ASE(QtCore.QObject):
 
     def init_wavelength_to_angle_calibration(self, dfb, temp, lowtohi, folderpath="Kalibrierung"):
         if lowtohi:
-            dfb.change_dfb_setTemp(temp)
+            # dfb.change_dfb_setTemp(temp)
             # TODO: Wait until settled
+            pass
 
         with open(folderpath+'/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
             f.seek(0)
@@ -106,82 +125,201 @@ class ASE(QtCore.QObject):
             temp_wavelength = str(np.round(self.wlm.GetWavelength(1), 2)).replace('.', ',')
 
             if lowtohi:
-                cal_folderpath = folderpath_lowtohi  # paste desired folder path at r''
-                cal_filename = 'kal' + temp_wavelength + 'nm_lowtohi'
+                self.cal_folderpath = folderpath_lowtohi  # paste desired folder path at r''
+                self.cal_filename = 'kal' + temp_wavelength + 'nm_lowtohi'
                 # self.ac_direction_lowtohi = True
             else:
-                cal_folderpath = folderpath_hitolo
-                cal_filename = 'kal' + temp_wavelength + 'nm_hitolow'
+                self.cal_folderpath = folderpath_hitolo
+                self.cal_filename = 'kal' + temp_wavelength + 'nm_hitolow'
                 # self.ac_direction_lowtohi = False
 
-            with open(cal_folderpath+'/'+cal_filename+'.csv', 'w', encoding='UTF8', newline='') as f:
+            with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'w', encoding='UTF8', newline='') as f:
                 self.writer = csv.writer(f, delimiter=';')
                 header = ['Time [s]', 'Wavelength [nm]', 'Power [W]', 'Angle [°]']
                 self.writer.writerow(header)
 
     def wavelength_to_angle_calibration(self, dfb, temp_list: list[float]):
-        # TODO: Autokalibrierung einbauen von Ryan
         if self.ac_begincal:
             stage_velocity = 5
-            self.stage.setup_gen_move(backlash_distance=(136533*3))
-            self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
+            # self.stage.setup_gen_move(backlash_distance=(136533*3))
+            # self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
             # TODO: Warte bis Motor sich fertigbewegt hat
             """QtTest.QTest.qWait(int(
                 ((abs(self.ac_startangle-to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))"""
-            if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
-                self.stage.setup_gen_move(backlash_distance=0)
+            # if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
+            if True:
+                # self.stage.setup_gen_move(backlash_distance=0)
                 self.cal_old_time = time.time()  # TODO: Zeit woanders reinschreiben?
                 self.ac_begincal = False
 
         if self.lowtohi:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], True)
-                self.stage.scan_to_angle(self.ac_endangle, 0.5)
-                print('Stage starts moving')
+                # self.stage.scan_to_angle(self.ac_endangle, 0.5)
                 self.initcal_bool = False
+                self.autocalibration_progress.emit(int((self.autocal_iterator + 0.5) * 100 / len(temp_list)))
 
             with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
-                power = self.get_power()  # TODO: Implementiere PM160
+                # power = self.get_power()  # TODO: Implementiere PM160
+                power = 1
                 cal_actual_time = np.round(
                     time.time()-self.cal_old_time, decimals=4)
                 cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                # cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                cal_current_angle = 2
 
                 csv.writer(f, delimiter=';').writerow(
                     [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                if not self.stage.is_moving():
+                # if not self.stage.is_moving():
+                if True:
                     self.lowtohi = False
                     self.initcal_bool = True
         else:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], False)
-                self.stage.scan_to_angle(self.ac_startangle, 0.5)
-                print('Stage starts moving')
+                # self.stage.scan_to_angle(self.ac_startangle, 0.5)
                 self.initcal_bool = False
+                self.autocalibration_progress.emit(int((self.autocal_iterator + 1) * 100 / len(temp_list)))
 
             with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
-                power = self.get_power()  # TODO: Implementiere PM160
+                # power = self.get_power()  # TODO: Implementiere PM160
+                power = 10
                 cal_actual_time = np.round(
                     time.time()-self.cal_old_time, decimals=4)
                 cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                # cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                cal_current_angle = 20
                 csv.writer(f, delimiter=';').writerow(
                     [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                if not self.stage.is_moving():
+                # if not self.stage.is_moving():
+                if True:
                     self.lowtohi = True
                     self.initcal_bool = True
 
                     if ((len(temp_list)-1) == self.autocal_iterator):  # stop the timer, calculate
-                        self.stage_calibration(showplots=True,
-                                               bounds=([self.ac_B_lower, self.ac_x0_lower, self.ac_a_lower, self.ac_n_lower, self.ac_y0_lower],
-                                                       [self.ac_B_upper, self.ac_x0_upper, self.ac_a_upper, self.ac_n_upper, self.ac_y0_upper])
-                                               )
+                        """self.calculate_autocalibration(showplots=True,
+                                                       bounds=([self.ac_B_lower, self.ac_x0_lower, self.ac_a_lower, self.ac_n_lower, self.ac_y0_lower],
+                                                               [self.ac_B_upper, self.ac_x0_upper, self.ac_a_upper, self.ac_n_upper, self.ac_y0_upper])
+                                                       )"""
                         # self.pm1.write('SENS:POW:RANG:AUTO ON')  # TODO: Autorange wieder an beim Messkopf
                         print("Auto calibration finished! Please select the new calibration parameters "
                               f"located in the '{self.cal_folderpath[:-8]}' folder. "
                               "Furthermore, please take a look at the fits to ensure that none of the fits "
                               "diverge.")
+                        self.autocalibration_loop_timer.stop()
+                        self.autocalibration_progress.emit(0)
                     else:
                         self.autocal_iterator += 1
+
+    def start_autocalibration(self, dfb):
+        # TODO: PM160 Autorange aus
+        # TODO: PM160 Range auf über 250 mW
+        self.autocalibration_loop_timer = QtCore.QTimer()
+        self.autocalibration_loop_timer.setInterval(20)
+
+        self.ac_begincal = True
+        self.lowtohi = True
+        self.initcal_bool = True
+        self.autocal_iterator = 0
+
+        self.autocalibration_loop_timer.timeout.connect(
+            lambda *args: self.wavelength_to_angle_calibration(dfb, [15, 20, 25, 30, 35]))
+        self.autocalibration_loop_timer.start()
+        print('Start auto-calibration!')
+
+    def calculate_autocalibration(self, folderpath='Kalibrierung', foldername='',
+                                  bounds=([0, 108, 0.1, 1, 0], [1, 118, 2, 5, 0.1]), showplots=False):
+        def flattopgauss(x, B=0.01, x0=23, a=1, n=2, y0=0):
+            """The Flat-Top-Gaussian function, used later to fit the power-angle data.
+
+            Args:
+                x (_type_): list of numbers.
+                B (float, optional): Amplitude of Gaussian. Defaults to 0.01.
+                x0 (int, optional): Mean value of Gaussian. Defaults to 23.
+                a (int, optional): Width of Gaussian. Defaults to 1.
+                n (int, optional): Power of expression in index of exp function. Defaults to 4.
+                y0 (int, optional): The y-offset of the Flat-Top-Gaussian.
+
+            Returns:
+                _type_: list of numbers.
+            """
+            return B*np.exp(-(((x-x0)**2)/(a**2))**n)+y0
+        if foldername == '':
+            with open(folderpath+'/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
+                f.seek(0)
+                f = f.read().split('\r\n')
+                # if f == ['']:
+                #     temp_datetime = str(datetime.date.today()) +'_'+ str(datetime.datetime.now().strftime("%H:%M")).replace(":","")+'hrs'
+                #     foldpath_cal_par = folderpath+f'/{temp_datetime}'
+                #     foldpath_lotohi = foldpath_cal_par+'/lowtohi'
+                #     foldpath_hitolo = foldpath_cal_par+'/hitolow'
+                # else:
+                temp_datetime = str(
+                    f[-2].split()[0])+'_'+str(f[-2].split()[1][0:5].replace(":", ""))+'hrs'
+                foldpath_cal_par = folderpath+f'/{temp_datetime}'
+                foldpath_lotohi = foldpath_cal_par+'/lowtohi'
+                foldpath_hitolo = foldpath_cal_par+'/hitolow'
+
+        else:
+            foldpath_cal_par = folderpath+'/'+foldername
+            foldpath_lotohi = foldpath_cal_par+'/lowtohi'
+            foldpath_hitolo = foldpath_cal_par+'/hitolow'
+
+        csv_files_lotohi = glob.glob(foldpath_lotohi+'/*.csv')
+        csv_files_hitolo = glob.glob(foldpath_hitolo+'/*.csv')
+        df_list_lotohi = [pd.read_csv(file, delimiter=';')
+                          for file in csv_files_lotohi]
+        x0lst_lotohi = []
+        df_list_hitolo = [pd.read_csv(file, delimiter=';')
+                          for file in csv_files_hitolo]
+        x0lst_hitolo = []
+
+        wvlst_lotohi = [df['Wavelength [nm]'][0] for df in df_list_lotohi]
+        wvlst_hitolo = [df['Wavelength [nm]'][0] for df in df_list_hitolo]
+        popt_lotohi = []
+        popt_hitolo = []
+
+        for df in df_list_lotohi:
+            popt, pcov = curve_fit(flattopgauss, df['Angle [°]'], df['Power [W]'], bounds=bounds
+                                   )
+            popt_lotohi.append(popt)
+            x0lst_lotohi.append(popt[1])  # append x0
+        for df in df_list_hitolo:
+            popt, pcov = curve_fit(flattopgauss, df['Angle [°]'], df['Power [W]'], bounds=bounds
+                                   )
+            popt_hitolo.append(popt)
+            x0lst_hitolo.append(popt[1])  # append x0
+
+        par_lotohi = np.polyfit(wvlst_lotohi, x0lst_lotohi, 1)
+        par_hitolo = np.polyfit(wvlst_hitolo, x0lst_hitolo, 1)
+
+        with open(foldpath_cal_par+'/twowayscan_cal_par(GUI).csv', 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f, delimiter=';')
+            header = ['Kalibrierung', 'm', 'b']
+            writer.writerow(header)
+            writer.writerow(['lo->hi (Kal 1)', par_lotohi[0], par_lotohi[1]])
+            writer.writerow(['hi->lo (Kal 2)', par_hitolo[0], par_hitolo[1]])
+
+        if showplots:
+            for i in range(0, len(popt_lotohi)):
+                plt.figure()
+                plt.plot(df_list_lotohi[i]['Angle [°]'],
+                         df_list_lotohi[i]['Power [W]'], 'b-', label='data')
+                plt.plot(df_list_lotohi[i]['Angle [°]'], flattopgauss(
+                    df_list_lotohi[i]['Angle [°]'], *popt_lotohi[i]), 'r-', label='fit')
+                plt.grid(True)
+                plt.ylim(bottom=0)
+                plt.legend()
+            plt.show()
+            for i in range(0, len(popt_hitolo)):
+                plt.figure()
+                plt.plot(df_list_hitolo[i]['Angle [°]'],
+                         df_list_hitolo[i]['Power [W]'], 'b-', label='data')
+                plt.plot(df_list_hitolo[i]['Angle [°]'], flattopgauss(
+                    df_list_hitolo[i]['Angle [°]'], *popt_hitolo[i]), 'r-', label='fit')
+                plt.grid(True)
+                plt.ylim(bottom=0)
+                plt.legend()
+            plt.show()
