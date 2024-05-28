@@ -1,4 +1,4 @@
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtTest
 from ThorlabsRotationStage import Stage
 import pylablib
 from pylablib.devices.Thorlabs.base import ThorlabsBackendError
@@ -141,21 +141,20 @@ class ASE(QtCore.QObject):
     def wavelength_to_angle_calibration(self, dfb, temp_list: list[float]):
         if self.ac_begincal:
             stage_velocity = 5
-            # self.stage.setup_gen_move(backlash_distance=(136533*3))
-            # self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
+            self.stage.setup_gen_move(backlash_distance=(136533*3))
+            self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
             # TODO: Warte bis Motor sich fertigbewegt hat
-            """QtTest.QTest.qWait(int(
-                ((abs(self.ac_startangle-to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))"""
-            # if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
-            if True:
-                # self.stage.setup_gen_move(backlash_distance=0)
+            QtTest.QTest.qWait(int(
+                ((abs(self.ac_startangle-to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
+            if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
+                self.stage.setup_gen_move(backlash_distance=0)
                 self.cal_old_time = time.time()  # TODO: Zeit woanders reinschreiben?
                 self.ac_begincal = False
 
         if self.lowtohi:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], True)
-                # self.stage.scan_to_angle(self.ac_endangle, 0.5)
+                self.stage.scan_to_angle(self.ac_endangle, 0.5)
                 self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 0.5) * 100 / len(temp_list)))
 
@@ -165,20 +164,18 @@ class ASE(QtCore.QObject):
                 cal_actual_time = np.round(
                     time.time()-self.cal_old_time, decimals=4)
                 cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                # cal_current_angle = self.stage.to_degree(self.stage.get_position())
-                cal_current_angle = 2
+                cal_current_angle = self.stage.to_degree(self.stage.get_position())
 
                 csv.writer(f, delimiter=';').writerow(
                     [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                # if not self.stage.is_moving():
-                if True:
+                if not self.stage.is_moving():
                     self.lowtohi = False
                     self.initcal_bool = True
         else:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], False)
-                # self.stage.scan_to_angle(self.ac_startangle, 0.5)
+                self.stage.scan_to_angle(self.ac_startangle, 0.5)
                 self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 1) * 100 / len(temp_list)))
 
@@ -188,21 +185,19 @@ class ASE(QtCore.QObject):
                 cal_actual_time = np.round(
                     time.time()-self.cal_old_time, decimals=4)
                 cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                # cal_current_angle = self.stage.to_degree(self.stage.get_position())
-                cal_current_angle = 20
+                cal_current_angle = self.stage.to_degree(self.stage.get_position())
                 csv.writer(f, delimiter=';').writerow(
                     [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                # if not self.stage.is_moving():
-                if True:
+                if not self.stage.is_moving():
                     self.lowtohi = True
                     self.initcal_bool = True
 
                     if ((len(temp_list)-1) == self.autocal_iterator):  # stop the timer, calculate
-                        """self.calculate_autocalibration(showplots=True,
+                        self.calculate_autocalibration(showplots=True,
                                                        bounds=([self.ac_B_lower, self.ac_x0_lower, self.ac_a_lower, self.ac_n_lower, self.ac_y0_lower],
                                                                [self.ac_B_upper, self.ac_x0_upper, self.ac_a_upper, self.ac_n_upper, self.ac_y0_upper])
-                                                       )"""
+                                                       )
                         # self.pm1.write('SENS:POW:RANG:AUTO ON')  # TODO: Autorange wieder an beim Messkopf
                         print("Auto calibration finished! Please select the new calibration parameters "
                               f"located in the '{self.cal_folderpath[:-8]}' folder. "
@@ -256,8 +251,7 @@ class ASE(QtCore.QObject):
                 #     foldpath_lotohi = foldpath_cal_par+'/lowtohi'
                 #     foldpath_hitolo = foldpath_cal_par+'/hitolow'
                 # else:
-                temp_datetime = str(
-                    f[-2].split()[0])+'_'+str(f[-2].split()[1][0:5].replace(":", ""))+'hrs'
+                temp_datetime = str(f[-2].split()[0])+'_'+str(f[-2].split()[1][0:5].replace(":", ""))+'hrs'
                 foldpath_cal_par = folderpath+f'/{temp_datetime}'
                 foldpath_lotohi = foldpath_cal_par+'/lowtohi'
                 foldpath_hitolo = foldpath_cal_par+'/hitolow'
@@ -312,7 +306,8 @@ class ASE(QtCore.QObject):
                 plt.grid(True)
                 plt.ylim(bottom=0)
                 plt.legend()
-            plt.show()
+            plt.show()  # TODO: Replace show() with draw() and the creation of a popup or similar. Calling show() works,
+            # but does print "QCoreApplication::exec: The event loop is already running" because GUI is already running
             for i in range(0, len(popt_hitolo)):
                 plt.figure()
                 plt.plot(df_list_hitolo[i]['Angle [°]'],
@@ -322,4 +317,4 @@ class ASE(QtCore.QObject):
                 plt.grid(True)
                 plt.ylim(bottom=0)
                 plt.legend()
-            plt.show()
+            plt.show()  # TODO: Replace show(), see above
