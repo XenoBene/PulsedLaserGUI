@@ -145,7 +145,7 @@ class ASE(QtCore.QObject):
             self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
             # TODO: Warte bis Motor sich fertigbewegt hat
             QtTest.QTest.qWait(int(
-                ((abs(self.ac_startangle-to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
+                ((abs(self.ac_startangle-self.stage.to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
             if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
                 self.stage.setup_gen_move(backlash_distance=0)
                 self.cal_old_time = time.time()  # TODO: Zeit woanders reinschreiben?
