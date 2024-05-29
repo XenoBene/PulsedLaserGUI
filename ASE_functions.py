@@ -107,9 +107,8 @@ class ASE(QtCore.QObject):
 
     def init_wavelength_to_angle_calibration(self, dfb, temp, lowtohi, folderpath="Kalibrierung"):
         if lowtohi:
-            # dfb.change_dfb_setTemp(temp)
-            # TODO: Wait until settled
-            # QtTest.QTest.qWait(20 * 1000)
+            dfb.change_dfb_setTemp(temp)
+            QtTest.QTest.qWait(20 * 1000)
             pass
 
         with open(folderpath+'/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
@@ -151,13 +150,12 @@ class ASE(QtCore.QObject):
     def wavelength_to_angle_calibration(self, dfb, powermeter, temp_list: list[float]):
         if self.ac_begincal:
             stage_velocity = 5
-            # self.stage.setup_gen_move(backlash_distance=(136533*3))
-            # self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
+            self.stage.setup_gen_move(backlash_distance=(136533*3))
+            self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
             # TODO: QtTest is only for test purposes, find a different solution (e.g. QThread and while-loop?)
-            # QtTest.QTest.qWait(int(
-            #     ((abs(self.ac_startangle-self.stage.to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
-            # if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
-            if True:
+            QtTest.QTest.qWait(int(
+                ((abs(self.ac_startangle-self.stage.to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
+            if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
                 # self.stage.setup_gen_move(backlash_distance=0)
                 self.cal_old_time = time.time()  # TODO: Zeit woanders reinschreiben?
                 self.ac_begincal = False
@@ -165,49 +163,45 @@ class ASE(QtCore.QObject):
         if self.lowtohi:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], True)
-                # self.stage.scan_to_angle(self.ac_endangle, 0.5)
+                self.stage.scan_to_angle(self.ac_endangle, 0.5)
                 self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 0.5) * 100 / len(temp_list)))
 
             with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
                 for i in range(10):
-                    # power = powermeter.get_power()
+                    power = powermeter.get_power()
                     power = 1
                     cal_actual_time = np.round(
                         time.time()-self.cal_old_time, decimals=4)
                     cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                    # cal_current_angle = self.stage.to_degree(self.stage.get_position())
-                    cal_current_angle = 2
+                    cal_current_angle = self.stage.to_degree(self.stage.get_position())
 
                     csv.writer(f, delimiter=';').writerow(
                         [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                # if not self.stage.is_moving():
-                if True:
+                if not self.stage.is_moving():
                     self.lowtohi = False
                     self.initcal_bool = True
         else:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], False)
-                # self.stage.scan_to_angle(self.ac_startangle, 0.5)
+                self.stage.scan_to_angle(self.ac_startangle, 0.5)
                 self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 1) * 100 / len(temp_list)))
 
             with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
                 for i in range(10):
-                    # power = powermeter.get_power()
+                    power = powermeter.get_power()
                     power = 10
                     cal_actual_time = np.round(
                         time.time()-self.cal_old_time, decimals=4)
                     cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                    # cal_current_angle = self.stage.to_degree(self.stage.get_position())
-                    cal_current_angle = 20
+                    cal_current_angle = self.stage.to_degree(self.stage.get_position())
 
                     csv.writer(f, delimiter=';').writerow(
                         [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-            # if not self.stage.is_moving():
-            if True:
+            if not self.stage.is_moving():
                 self.lowtohi = True
                 self.initcal_bool = True
 
@@ -339,3 +333,4 @@ class ASE(QtCore.QObject):
                 plt.ylim(bottom=0)
                 plt.legend()
             plt.show()  # TODO: Replace show(), see above
+            # TODO: Implement what should happen after the calculations: Choosing the correct calibration data, etc.

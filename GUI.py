@@ -119,6 +119,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
 
+        """PM Tab buttons:"""
+        self.pm_button_connectPM1.clicked.connect(
+            lambda: self.pm1.connect_pm(visa="placeholder"))
+        self.pm_button_connectPM2.clicked.connect(
+            lambda: self.pm2.connect_pm(visa="placeholder"))
+        # TODO: Implement Adjust Zero button
+        # TODO: Implement wavelength change
+
     def bbo_update_voltage(self, value):
         """Changes the label in the GUI. This is the slot method for the signal
         that is received from the uv autoscan class.
@@ -230,7 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                              buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
         if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
             # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
-            self.ase.start_autocalibration(dfb=self.dfb)
+            self.ase.start_autocalibration(dfb=self.dfb, powermeter=self.pm1)
         elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
             # TODO: Mache nichts
             pass
