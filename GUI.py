@@ -3,6 +3,7 @@ import ASE_functions
 import DFB_functions
 import LBO_functions
 import BBO_functions
+import Powermeter_functions
 import pyvisa
 
 
@@ -12,7 +13,9 @@ class MainWindow(QtWidgets.QMainWindow):
                  dfb: DFB_functions.DFB,
                  lbo: LBO_functions.LBO,
                  bbo: BBO_functions.BBO,
-                 ase: ASE_functions.ASE
+                 ase: ASE_functions.ASE,
+                 pm1: Powermeter_functions.PM,
+                 pm2: Powermeter_functions.PM
                  ):
         super().__init__()
 
@@ -24,6 +27,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo = lbo
         self.bbo = bbo
         self.ase = ase
+        self.pm1 = pm1
+        self.pm2 = pm2
 
         # Signal/Slots:
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
@@ -206,7 +211,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def autocalibration_popup(self):
         with open(r'Kalibrierung/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
             f.seek(0)
-            f = f.read().split('\r\n')
+            # f = f.read().split('\r\n')
+            f = f.read().split('\n')
             if f == ['']:
                 previous_cal = ("No calibration previously recorded. ")
             else:

@@ -11,6 +11,14 @@ import csv
 import glob
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+import logging
+
+logging.basicConfig(
+    filename="Kalibrierung/calibrationlog.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 
 class ASE(QtCore.QObject):
@@ -101,11 +109,13 @@ class ASE(QtCore.QObject):
         if lowtohi:
             # dfb.change_dfb_setTemp(temp)
             # TODO: Wait until settled
+            # QtTest.QTest.qWait(20 * 1000)
             pass
 
         with open(folderpath+'/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
             f.seek(0)
-            f = f.read().split('\r\n')
+            # f = f.read().split('\r\n')
+            f = f.read().split('\n')
             if f[0] == '':
                 temp_datetime = str(datetime.date.today(
                 )) + '_' + str(datetime.datetime.now().strftime("%H:%M")).replace(":", "")+'hrs'
@@ -138,79 +148,89 @@ class ASE(QtCore.QObject):
                 header = ['Time [s]', 'Wavelength [nm]', 'Power [W]', 'Angle [°]']
                 self.writer.writerow(header)
 
-    def wavelength_to_angle_calibration(self, dfb, temp_list: list[float]):
+    def wavelength_to_angle_calibration(self, dfb, powermeter, temp_list: list[float]):
         if self.ac_begincal:
             stage_velocity = 5
-            self.stage.setup_gen_move(backlash_distance=(136533*3))
-            self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
-            # TODO: Warte bis Motor sich fertigbewegt hat
-            QtTest.QTest.qWait(int(
-                ((abs(self.ac_startangle-self.stage.to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
-            if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
-                self.stage.setup_gen_move(backlash_distance=0)
+            # self.stage.setup_gen_move(backlash_distance=(136533*3))
+            # self.stage.scan_to_angle(self.ac_startangle, stage_velocity)
+            # TODO: QtTest is only for test purposes, find a different solution (e.g. QThread and while-loop?)
+            # QtTest.QTest.qWait(int(
+            #     ((abs(self.ac_startangle-self.stage.to_degree(self.stage.get_position()))) / stage_velocity)*1000 + 3000))
+            # if (not self.stage.is_moving()) and np.round(self.stage.to_degree(self.stage.get_position()), 1) == self.ac_startangle:
+            if True:
+                # self.stage.setup_gen_move(backlash_distance=0)
                 self.cal_old_time = time.time()  # TODO: Zeit woanders reinschreiben?
                 self.ac_begincal = False
 
         if self.lowtohi:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], True)
-                self.stage.scan_to_angle(self.ac_endangle, 0.5)
+                # self.stage.scan_to_angle(self.ac_endangle, 0.5)
                 self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 0.5) * 100 / len(temp_list)))
 
             with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
-                # power = self.get_power()  # TODO: Implementiere PM160
-                power = 1
-                cal_actual_time = np.round(
-                    time.time()-self.cal_old_time, decimals=4)
-                cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                for i in range(10):
+                    # power = powermeter.get_power()
+                    power = 1
+                    cal_actual_time = np.round(
+                        time.time()-self.cal_old_time, decimals=4)
+                    cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
+                    # cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                    cal_current_angle = 2
 
-                csv.writer(f, delimiter=';').writerow(
-                    [cal_actual_time, cal_wavelength, power, cal_current_angle])
+                    csv.writer(f, delimiter=';').writerow(
+                        [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                if not self.stage.is_moving():
+                # if not self.stage.is_moving():
+                if True:
                     self.lowtohi = False
                     self.initcal_bool = True
         else:
             if self.initcal_bool:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], False)
-                self.stage.scan_to_angle(self.ac_startangle, 0.5)
+                # self.stage.scan_to_angle(self.ac_startangle, 0.5)
                 self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 1) * 100 / len(temp_list)))
 
             with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
-                # power = self.get_power()  # TODO: Implementiere PM160
-                power = 10
-                cal_actual_time = np.round(
-                    time.time()-self.cal_old_time, decimals=4)
-                cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                cal_current_angle = self.stage.to_degree(self.stage.get_position())
-                csv.writer(f, delimiter=';').writerow(
-                    [cal_actual_time, cal_wavelength, power, cal_current_angle])
+                for i in range(10):
+                    # power = powermeter.get_power()
+                    power = 10
+                    cal_actual_time = np.round(
+                        time.time()-self.cal_old_time, decimals=4)
+                    cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
+                    # cal_current_angle = self.stage.to_degree(self.stage.get_position())
+                    cal_current_angle = 20
 
-                if not self.stage.is_moving():
-                    self.lowtohi = True
-                    self.initcal_bool = True
+                    csv.writer(f, delimiter=';').writerow(
+                        [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-                    if ((len(temp_list)-1) == self.autocal_iterator):  # stop the timer, calculate
-                        self.calculate_autocalibration(showplots=True,
-                                                       bounds=([self.ac_B_lower, self.ac_x0_lower, self.ac_a_lower, self.ac_n_lower, self.ac_y0_lower],
-                                                               [self.ac_B_upper, self.ac_x0_upper, self.ac_a_upper, self.ac_n_upper, self.ac_y0_upper])
-                                                       )
-                        # self.pm1.write('SENS:POW:RANG:AUTO ON')  # TODO: Autorange wieder an beim Messkopf
-                        print("Auto calibration finished! Please select the new calibration parameters "
-                              f"located in the '{self.cal_folderpath[:-8]}' folder. "
-                              "Furthermore, please take a look at the fits to ensure that none of the fits "
-                              "diverge.")
-                        self.autocalibration_loop_timer.stop()
-                        self.autocalibration_progress.emit(0)
-                    else:
-                        self.autocal_iterator += 1
+            # if not self.stage.is_moving():
+            if True:
+                self.lowtohi = True
+                self.initcal_bool = True
 
-    def start_autocalibration(self, dfb):
-        # TODO: PM160 Autorange aus
-        # TODO: PM160 Range auf über 250 mW
+                if ((len(temp_list)-1) == self.autocal_iterator):  # stop the timer, calculate
+                    self.calculate_autocalibration(showplots=True,
+                                                   bounds=([self.ac_B_lower, self.ac_x0_lower, self.ac_a_lower,
+                                                            self.ac_n_lower, self.ac_y0_lower],
+                                                           [self.ac_B_upper, self.ac_x0_upper, self.ac_a_upper,
+                                                            self.ac_n_upper, self.ac_y0_upper])
+                                                   )
+                    powermeter.enable_autorange(True)
+                    print("Auto calibration finished! Please select the new calibration parameters "
+                          f"located in the '{self.cal_folderpath[:-8]}' folder. "
+                          "Furthermore, please take a look at the fits to ensure that none of the fits "
+                          "diverge.")
+                    self.autocalibration_loop_timer.stop()
+                    self.autocalibration_progress.emit(0)
+                else:
+                    self.autocal_iterator += 1
+
+    def start_autocalibration(self, dfb, powermeter):
+        powermeter.enable_autorange(False)
+        powermeter.set_range("full")
         self.autocalibration_loop_timer = QtCore.QTimer()
         self.autocalibration_loop_timer.setInterval(20)
 
@@ -220,8 +240,9 @@ class ASE(QtCore.QObject):
         self.autocal_iterator = 0
 
         self.autocalibration_loop_timer.timeout.connect(
-            lambda *args: self.wavelength_to_angle_calibration(dfb, [15, 20, 25, 30, 35]))
+            lambda *args: self.wavelength_to_angle_calibration(dfb, powermeter, [15, 20, 25, 30, 35]))
         self.autocalibration_loop_timer.start()
+        logging.info('Auto calibration initiated.')
         print('Start auto-calibration!')
 
     def calculate_autocalibration(self, folderpath='Kalibrierung', foldername='',
@@ -244,7 +265,8 @@ class ASE(QtCore.QObject):
         if foldername == '':
             with open(folderpath+'/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
                 f.seek(0)
-                f = f.read().split('\r\n')
+                # f = f.read().split('\r\n')
+                f = f.read().split('\n')
                 # if f == ['']:
                 #     temp_datetime = str(datetime.date.today()) +'_'+ str(datetime.datetime.now().strftime("%H:%M")).replace(":","")+'hrs'
                 #     foldpath_cal_par = folderpath+f'/{temp_datetime}'
@@ -266,8 +288,7 @@ class ASE(QtCore.QObject):
         df_list_lotohi = [pd.read_csv(file, delimiter=';')
                           for file in csv_files_lotohi]
         x0lst_lotohi = []
-        df_list_hitolo = [pd.read_csv(file, delimiter=';')
-                          for file in csv_files_hitolo]
+        df_list_hitolo = [pd.read_csv(file, delimiter=';') for file in csv_files_hitolo]
         x0lst_hitolo = []
 
         wvlst_lotohi = [df['Wavelength [nm]'][0] for df in df_list_lotohi]
