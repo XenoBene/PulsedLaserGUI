@@ -1,4 +1,4 @@
-from pylablib.devices.Thorlabs import PM160
+from pylablib.devices import Thorlabs
 
 
 class PM():
@@ -10,7 +10,7 @@ class PM():
 
     def connect_pm(self, visa):
         if not self._connect_button_is_checked:
-            self.pm = PM160(visa)
+            self.pm = Thorlabs.PM160(visa)
             self._connect_button_is_checked = True
         else:
             self.pm.close()

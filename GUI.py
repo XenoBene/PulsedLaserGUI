@@ -120,10 +120,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
 
         """PM Tab buttons:"""
+        self.pm_comboBox_visaResources1.addItems(self.rm.list_resources())
+        self.pm_comboBox_visaResources2.addItems(self.rm.list_resources())
         self.pm_button_connectPM1.clicked.connect(
-            lambda: self.pm1.connect_pm(visa="placeholder"))
+            lambda: self.pm1.connect_pm(visa=self.pm_comboBox_visaResources1.currentText()))
         self.pm_button_connectPM2.clicked.connect(
-            lambda: self.pm2.connect_pm(visa="placeholder"))
+            lambda: self.pm2.connect_pm(visa=self.pm_comboBox_visaResources2.currentText()))
         # TODO: Implement Adjust Zero button
         # TODO: Implement wavelength change
 
@@ -235,10 +237,24 @@ class MainWindow(QtWidgets.QMainWindow):
             autocal_request = QtWidgets.QMessageBox.question(self,
                                                              'Initiate auto calibration',
                                                              autocal_msg_str,
-                                                             buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                                                             buttons=QtWidgets.QMessageBox.StandardButton.Yes
+                                                             | QtWidgets.QMessageBox.StandardButton.No)
         if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
             # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
-            self.ase.start_autocalibration(dfb=self.dfb, powermeter=self.pm1)
+            self.ase.start_autocalibration(dfb=self.dfb, powermeter=self.pm1,
+                                           calibration_bounds=([self.ase_cal_B_lower.text(),
+                                                                self.ase_cal_x0_lower.text(),
+                                                                self.ase_cal_a_lower.text(),
+                                                                self.ase_cal_n_lower.text(),
+                                                                self.ase_cal_y0_lower.text()],
+                                                               [self.ase_cal_B_upper.text(),
+                                                                self.ase_cal_x0_upper.text(),
+                                                                self.ase_cal_a_upper.text(),
+                                                                self.ase_cal_n_upper.text(),
+                                                                self.ase_cal_y0_upper.text()]),
+                                           startangle=self.ase_cal_startangle.text(),
+                                           endangle=self.ase_cal_endangle.text()
+                                           )
         elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
             # TODO: Mache nichts
             pass
