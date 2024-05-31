@@ -158,46 +158,31 @@ class ASE(QtCore.QObject):
                 self.cal_old_time = time.time()  # TODO: Zeit woanders reinschreiben?
                 self.ac_begincal = False
 
-        if self.lowtohi:
-            if self.initcal_bool:
+        if self.initcal_bool:
+            if self.lowtohi:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], True)
                 self.stage.scan_to_angle(endangle, 0.5)
-                self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 0.5) * 100 / len(temp_list)))
-
-            with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
-                for i in range(10):
-                    power = powermeter.get_power()
-                    cal_actual_time = np.round(
-                        time.time()-self.cal_old_time, decimals=4)
-                    cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                    cal_current_angle = self.stage.to_degree(self.stage.get_position())
-
-                    csv.writer(f, delimiter=';').writerow(
-                        [cal_actual_time, cal_wavelength, power, cal_current_angle])
-
-                if not self.stage.is_moving():
-                    self.lowtohi = False
-                    self.initcal_bool = True
-        else:
-            if self.initcal_bool:
+            else:
                 self.init_wavelength_to_angle_calibration(dfb, temp_list[self.autocal_iterator], False)
                 self.stage.scan_to_angle(startangle, 0.5)
-                self.initcal_bool = False
                 self.autocalibration_progress.emit(int((self.autocal_iterator + 1) * 100 / len(temp_list)))
+            self.initcal_bool = False
 
-            with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
-                for i in range(10):
-                    power = powermeter.get_power()
-                    cal_actual_time = np.round(
-                        time.time()-self.cal_old_time, decimals=4)
-                    cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
-                    cal_current_angle = self.stage.to_degree(self.stage.get_position())
+        with open(self.cal_folderpath+'/'+self.cal_filename+'.csv', 'a', encoding='UTF8', newline='') as f:
+            power = powermeter.get_power()
+            cal_actual_time = np.round(
+                time.time()-self.cal_old_time, decimals=4)
+            cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
+            cal_current_angle = self.stage.to_degree(self.stage.get_position())
 
-                    csv.writer(f, delimiter=';').writerow(
-                        [cal_actual_time, cal_wavelength, power, cal_current_angle])
+            csv.writer(f, delimiter=';').writerow(
+                [cal_actual_time, cal_wavelength, power, cal_current_angle])
 
-            if not self.stage.is_moving():
+            if not self.stage.is_moving() and self.lowtohi:
+                self.lowtohi = False
+                self.initcal_bool = True
+            elif not self.stage.is_moving() and not self.lowtohi:
                 self.lowtohi = True
                 self.initcal_bool = True
 
