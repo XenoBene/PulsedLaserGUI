@@ -93,7 +93,7 @@ class ASE(QtCore.QObject):
 
     def init_wavelength_to_angle_calibration(self, dfb, temp, lowtohi, folderpath="Kalibrierung"):
         if lowtohi:
-            dfb.change_dfb_setTemp(temp)
+            dfb.change_dfb_setTemp(float(temp))
             QtTest.QTest.qWait(20 * 1000)
 
         with open(folderpath+'/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:

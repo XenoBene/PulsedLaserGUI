@@ -245,18 +245,18 @@ class MainWindow(QtWidgets.QMainWindow):
         if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
             # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
             self.ase.start_autocalibration(dfb=self.dfb, powermeter=self.pm1,
-                                           calibration_bounds=([self.ase_cal_B_lower.text(),
-                                                                self.ase_cal_x0_lower.text(),
-                                                                self.ase_cal_a_lower.text(),
-                                                                self.ase_cal_n_lower.text(),
-                                                                self.ase_cal_y0_lower.text()],
-                                                               [self.ase_cal_B_upper.text(),
-                                                                self.ase_cal_x0_upper.text(),
-                                                                self.ase_cal_a_upper.text(),
-                                                                self.ase_cal_n_upper.text(),
-                                                                self.ase_cal_y0_upper.text()]),
-                                           startangle=self.ase_cal_startangle.text(),
-                                           endangle=self.ase_cal_endangle.text()
+                                           calibration_bounds=([float(self.ase_cal_B_lower.text()),
+                                                                float(self.ase_cal_x0_lower.text()),
+                                                                float(self.ase_cal_a_lower.text()),
+                                                                float(self.ase_cal_n_lower.text()),
+                                                                float(self.ase_cal_y0_lower.text())],
+                                                               [float(self.ase_cal_B_upper.text()),
+                                                                float(self.ase_cal_x0_upper.text()),
+                                                                float(self.ase_cal_a_upper.text()),
+                                                                float(self.ase_cal_n_upper.text()),
+                                                                float(self.ase_cal_y0_upper.text())]),
+                                           startangle=float(self.ase_cal_startangle.text()),
+                                           endangle=float(self.ase_cal_endangle.text())
                                            )
         elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
             # TODO: Mache nichts
