@@ -1,4 +1,4 @@
-from PyQt6 import QtCore, QtTest
+from PyQt6 import QtCore, QtTest, QtWidgets
 from ThorlabsRotationStage import Stage
 import pylablib
 from pylablib.devices.Thorlabs.base import ThorlabsBackendError
@@ -33,20 +33,6 @@ class ASE(QtCore.QObject):
         self.cal_par = pd.read_csv("lastused_calpar.csv", delimiter=';')
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
-
-        # INITIALISE BOUNDS FOR AUTOCALIBRATION
-        self.ac_startangle = 110
-        self.ac_endangle = 120
-        self.ac_B_lower = 0
-        self.ac_B_upper = 1
-        self.ac_x0_lower = self.ac_startangle - 5
-        self.ac_x0_upper = self.ac_endangle + 5
-        self.ac_a_lower = 0.1
-        self.ac_a_upper = 5
-        self.ac_n_lower = 1
-        self.ac_n_upper = 5
-        self.ac_y0_lower = 0
-        self.ac_y0_upper = 0.1
 
     def connect_rotationstage(self, serial):
         if not self._connect_button_is_checked:

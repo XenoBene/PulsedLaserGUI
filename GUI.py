@@ -5,6 +5,8 @@ import LBO_functions
 import BBO_functions
 import Powermeter_functions
 import pyvisa
+import pandas as pd
+import csv
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -118,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
         self.ase_button_home.clicked.connect(self.ase.homing_motor)
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
+        self.ase_button_selectPath.clicked.connect(self.open_calparfile)
 
         """PM Tab buttons:"""
         self.pm_comboBox_visaResources1.addItems(self.rm.list_resources())
@@ -258,3 +261,25 @@ class MainWindow(QtWidgets.QMainWindow):
         elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
             # TODO: Mache nichts
             pass
+
+    def open_calparfile(self):
+        try:
+            calparfilename, _ = QtWidgets.QFileDialog.getOpenFileName(
+                parent=self, caption="Select path", directory="", filter="All Files (*);;(*.csv)")
+            if calparfilename != "":
+                self.ase.cal_par = pd.read_csv(calparfilename, delimiter=';')
+                try:
+                    # call self.cal_par: if rubbish file is loaded, then there will be no key
+                    # the corresponding names below. code then throws an error
+                    self.ase.cal_par["m"]
+                    self.ase.cal_par["b"]
+                    with open(r"lastused_calpar.csv", 'w', encoding='UTF8', newline='') as f:
+                        writer = csv.writer(f, delimiter=';')
+                        header = ['Kalibrierung', 'm', 'b']
+                        writer.writerow(header)
+                        writer.writerow(['lo->hi (Kal 1)', self.ase.cal_par["m"][0], self.ase.cal_par["b"][0]])
+                        writer.writerow(['hi->lo (Kal 2)', self.ase.cal_par["m"][1], self.ase.cal_par["b"][1]])
+                except KeyError:
+                    print("Please select a valid file with the motor calibration parameters!")
+        except FileNotFoundError:
+            print("File not found!")
