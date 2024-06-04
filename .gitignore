@@ -14,3 +14,4 @@ Kalibrierung/2024-05-23_1051hrs/hitolow/kal460,86nm_hitolow.csv
 Kalibrierung/2024-05-23_1051hrs/lowtohi/kal460,86nm_lowtohi.csv
 Kalibrierung
 Kalibrierung/calibrationlog.log
+__pycache__/Powermeter_functions.cpython-310.pyc
