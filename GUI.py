@@ -271,14 +271,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     # call self.cal_par: if rubbish file is loaded, then there will be no key
                     # the corresponding names below. code then throws an error
-                    self.ase.cal_par["m"]
-                    self.ase.cal_par["b"]
                     with open(r"lastused_calpar.csv", 'w', encoding='UTF8', newline='') as f:
                         writer = csv.writer(f, delimiter=';')
                         header = ['Kalibrierung', 'm', 'b']
                         writer.writerow(header)
                         writer.writerow(['lo->hi (Kal 1)', self.ase.cal_par["m"][0], self.ase.cal_par["b"][0]])
                         writer.writerow(['hi->lo (Kal 2)', self.ase.cal_par["m"][1], self.ase.cal_par["b"][1]])
+
+                    self.ase_label_pathText.setText(calparfilename)
                 except KeyError:
                     print("Please select a valid file with the motor calibration parameters!")
         except FileNotFoundError:

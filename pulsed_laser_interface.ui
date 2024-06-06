@@ -433,7 +433,7 @@
        <item>
         <widget class="QLabel" name="ase_label_pathText">
          <property name="text">
-          <string>Path Text für später</string>
+          <string>lastused_calpar.csv</string>
          </property>
         </widget>
        </item>

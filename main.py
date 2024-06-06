@@ -13,7 +13,7 @@ import Powermeter_functions
 
 app = QtWidgets.QApplication(sys.argv)
 # wlm = HighFinesse.WLM(dll_path="C:\Windows\System32\wlmData.dll", autostart=False)
-wlm = WLM_functions.WavelengthMeter(debug=False)
+wlm = WLM_functions.WavelengthMeter(debug=True)
 # TODO: Was soll passieren wenn gar kein WLM angeschlossen ist?
 # TODO: pylablib für WLM benutzen
 window = GUI.MainWindow(
