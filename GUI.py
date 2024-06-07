@@ -213,15 +213,64 @@ class MainWindow(QtWidgets.QMainWindow):
             print(f"DFB is not connected: {e}")
 
     def update_widescan_progressbar(self, progress, time):
+        """
+        Updates the progress bar and remaining time label during a wide scan.
+
+        Parameters:
+        -----------
+        progress : int
+            The current progress value to set on the progress bar.
+        time : float
+            The remaining time in seconds to display.
+
+        Behavior:
+        ---------
+        - Sets the progress bar to the specified progress value.
+        - Updates the remaining time label with the specified time.
+
+        Example:
+        --------
+        >>> obj.update_widescan_progressbar(50, 120.5)
+        """
         self.dfb_progressBar_scan.setValue(progress)
         self.dfb_label_remainingTime.setText(f"Remaining time: {time} s")
 
     def reset_wideScan_progressBar(self):
+        """
+        Resets the wide scan progress bar and related labels.
+
+        Behavior:
+        ---------
+        - Resets the progress bar to its initial state.
+        - Clears the actual temperature and remaining time labels.
+
+        Example:
+        --------
+        >>> obj.reset_wideScan_progressBar()
+        """
         self.dfb_label_actTemp.setText("Actual temperature: ")
         self.dfb_progressBar_scan.reset()
         self.dfb_label_remainingTime.setText("Remaining time: ")
 
     def autocalibration_popup(self):
+        """
+        Displays a popup to initiate the auto-calibration process.
+
+        This method reads the calibration log to display the previous calibration date and time,
+        and prompts the user to start the auto-calibration of the rotation stage. If the user
+        confirms, the auto-calibration process is initiated.
+
+        Behavior:
+        ---------
+        - Reads the previous calibration details from the log file.
+        - Displays a message box with instructions for the calibration process.
+        - If the user clicks 'Yes', starts the auto-calibration.
+        - If the user clicks 'No', does nothing.
+
+        Example:
+        --------
+        >>> obj.autocalibration_popup()
+        """
         with open(r'Kalibrierung/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
             f.seek(0)
             # f = f.read().split('\r\n')
@@ -263,6 +312,28 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
     def open_calparfile(self):
+        """
+        Opens a file dialog to select a calibration parameter file.
+
+        This method allows the user to select a CSV file containing calibration parameters.
+        It reads the selected file, validates its contents, and updates the calibration parameters.
+
+        Behavior:
+        ---------
+        - Opens a file dialog for the user to select a CSV file.
+        - Reads the selected file and updates the calibration parameters.
+        - Saves the last used calibration parameters to a CSV file.
+        - Updates the display with the path of the selected file.
+
+        Error Handling:
+        ---------------
+        - If the selected file is not found, prints "File not found!".
+        - If the selected file does not contain the required keys, prints an error message.
+
+        Example:
+        --------
+        >>> obj.open_calparfile()
+        """
         try:
             calparfilename, _ = QtWidgets.QFileDialog.getOpenFileName(
                 parent=self, caption="Select path", directory="", filter="All Files (*);;(*.csv)")
