@@ -79,6 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """LBO Tab buttons:"""
         self.lbo_comboBox_visa.addItems(self.rm.list_resources())
+        self.lbo_button_refresh.clicked.connect(lambda: self.refresh_combobox(self.lbo_comboBox_visa))
         self.lbo_button_connectLBO.clicked.connect(
             lambda: self.lbo.connect_covesion(rm=self.rm, port=self.lbo_comboBox_visa.currentText())
         )
@@ -131,6 +132,10 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.pm2.connect_pm(visa=self.pm_comboBox_visaResources2.currentText()))
         # TODO: Implement Adjust Zero button
         # TODO: Implement wavelength change
+
+    def refresh_combobox(self, combobox):
+        combobox.clear()
+        combobox.addItems(self.rm.list_resources())
 
     def bbo_update_voltage(self, value):
         """Changes the label in the GUI. This is the slot method for the signal
