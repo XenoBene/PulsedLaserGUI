@@ -136,6 +136,80 @@
        </item>
       </layout>
      </widget>
+     <widget class="QPushButton" name="general_button_startMeasurement">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>150</y>
+        <width>161</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: green</string>
+      </property>
+      <property name="text">
+       <string>Start Measurement</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="general_button_stopMeasurement">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>190</y>
+        <width>161</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: red</string>
+      </property>
+      <property name="text">
+       <string>Stop Measurement</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="general_button_selectPath">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>80</y>
+        <width>113</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Select path</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_17">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>80</y>
+        <width>141</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Measurement Path:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="general_label_chosenPath">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>110</y>
+        <width>301</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Chosen path</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">

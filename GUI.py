@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, uic
+from PyQt6 import QtWidgets, uic, QtCore
 import ASE_functions
 import DFB_functions
 import LBO_functions
@@ -7,6 +7,8 @@ import Powermeter_functions
 import pyvisa
 import pandas as pd
 import csv
+import time
+import numpy as np
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -32,6 +34,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pm1 = pm1
         self.pm2 = pm2
 
+        self.data_uv = 0.0
+        self.data_steps = 0
+        self.data_pm1 = 0.0
+        self.data_pm2 = 0.0
+        self.data_wl = 0.0
+        self.data_lbo = 0.0
+
         # Signal/Slots:
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
@@ -39,15 +48,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
         self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
 
-        self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
+        self.bbo.voltageUpdated.connect(lambda value:
+                                        self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
         self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
+        self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
+        self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
 
         self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
         self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
+        self.lbo.update_temperature.connect(lambda set_temp, act_temp: setattr(self, "data_lbo", act_temp))
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
         self.ase.update_wl_pos.connect(lambda values: self.ase_update_values(*values))
+        self.ase.update_wl_pos.connect(lambda wl, pos: setattr(self, "data_wl", wl))
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
         self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
 
@@ -133,22 +147,44 @@ class MainWindow(QtWidgets.QMainWindow):
         # TODO: Implement Adjust Zero button
         # TODO: Implement wavelength change
 
+        """General Tab buttons:"""
+        self.general_button_selectPath.clicked.connect(self.create_measurement_file)
+        self.general_button_startMeasurement.clicked.connect(self.start_measurement)
+        self.general_button_stopMeasurement.clicked.connect(self.stop_measurement)
+
     def refresh_combobox(self, combobox):
         combobox.clear()
         combobox.addItems(self.rm.list_resources())
 
-    def bbo_update_voltage(self, value):
-        """Changes the label in the GUI. This is the slot method for the signal
-        that is received from the uv autoscan class.
+    def create_measurement_file(self):
+        self.file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save CSV File", "", "CSV Files (*.csv)")
 
-        Args:
-            value (float): UV diode voltage [V]
-        """
-        try:
-            print("Voltage updated")
-            self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}")
-        except AttributeError as e:
-            print(e)
+    def write_data(self):
+        with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerows("Test")
+
+    def start_measurement(self):
+        self.measurement_loop_timer = QtCore.QTimer()
+        start_time = time.time()
+        self.measurement_loop_timer.timeout.connect(lambda: self.measurement(start_time))
+        with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
+                             "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature [°C]"])
+        self.measurement_loop_timer.start(1000)
+
+    def stop_measurement(self):
+        self.measurement_loop_timer.stop()
+
+    def measurement(self, start_time):
+        timestamp = time.time()
+        time_since_start = np.round(timestamp - start_time, 6)
+
+        with open(self.file_path, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow([time_since_start, timestamp, self.data_wl, self.data_pm1,
+                             self.data_pm2, self.data_steps, self.data_uv, self.data_lbo])
 
     def bbo_status_checkbox(self, boolean):
         """Sets the status checkbox for the UV scan to the value

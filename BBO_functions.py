@@ -11,6 +11,7 @@ class WorkerBBO(QtCore.QObject):
     status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
     update_diodeVoltage = QtCore.pyqtSignal(float)
+    update_motorSteps = QtCore.pyqtSignal(int)
 
     def __init__(self, wlm, rp, stage, axis, addr, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -58,7 +59,7 @@ class WorkerBBO(QtCore.QObject):
         start_time = time.time()
         self.status.emit(True)
         while self.keep_running:
-            # Makes a number of steps (self.steps) in one direction, depending on the past:
+            # Makes a number of steps (self.steps) in one direction:
             if self.going_right:
                 self.stage.move_by(axis=self.axis, addr=self.addr, steps=self.steps)
             else:
@@ -82,6 +83,9 @@ class WorkerBBO(QtCore.QObject):
 
             # Measure the current position (absolute steps):
             new_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
+
+            # Signal for the GUI or writing data:
+            self.update_motorSteps.emit(new_pos)
 
             # Calculate the slope (i.e. calculate if the power got higher
             # or not). The direction of the next step depends on the slope:
@@ -156,6 +160,7 @@ class WorkerBBO(QtCore.QObject):
 class BBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     voltageUpdated = QtCore.pyqtSignal(float)
+    stepsUpdated = QtCore.pyqtSignal(int)
 
     def __init__(self, wlm, axis, addr):
         """This class controls the picomotor which controls the angle
@@ -265,6 +270,7 @@ class BBO(QtCore.QObject):
             self.threadBBO.started.connect(self.workerBBO.autoscan)
             self.workerBBO.status.connect(self.autoscan_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
+            self.workerBBO.update_motorSteps.connect(self.stepsUpdated.emit)
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)
