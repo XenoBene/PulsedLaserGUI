@@ -160,8 +160,9 @@ class ASE(QtCore.QObject):
         >>> obj.homing_motor()
         """
         try:
+            print("Homing!")
             self.stage.setup_homing(velocity=self.stage.to_steps(10), offset_distance=self.stage.to_steps(4))
-            self.stage.home(sync=False)
+            self.stage.home(sync=False, force=True)  # sync=False means no waiting until motor is finished. force=True means homing even if already homed
         except AttributeError:
             print("No stage is connected")
 

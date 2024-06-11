@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, uic, QtCore
+from PyQt6 import QtWidgets, uic, QtCore, QtTest
 import ASE_functions
 import DFB_functions
 import LBO_functions
@@ -67,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
             self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
             ))
-        self.ase.update_wl_pos.connect(lambda wl, pos: setattr(self, "data_wl", wl))
+        self.ase.update_wl_pos.connect(lambda values: setattr(self, "data_wl", values[0]))
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
         self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
 
@@ -164,6 +164,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def create_measurement_file(self):
         self.file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save CSV File", "", "CSV Files (*.csv)")
+        self.general_label_chosenPath.setText(self.file_path)
 
     def start_measurement(self):
         self.measurement_loop_timer = QtCore.QTimer()
@@ -182,22 +183,35 @@ class MainWindow(QtWidgets.QMainWindow):
         timestamp = time.time()
         time_since_start = np.round(timestamp - start_time, 6)
 
-        if self.general_checkBox_savePower1.isChecked():
-            self.data_pm1 = self.pm1.get_power()
-        if self.general_checkBox_savePower2.isChecked():
-            self.data_pm2 = self.pm2.get_power()
+        data_pm1 = 0.0
+        data_pm2 = 0.0
+        data_wl = 0.0
+        data_steps = 0
+        data_uv = 0.0
+        data_lbo = 0.0
+
+        if self.general_checkbox_savePower1.isChecked():
+            data_pm1 = self.pm1.get_power()
+        if self.general_checkbox_savePower2.isChecked():
+            data_pm2 = self.pm2.get_power()
+        if self.general_checkbox_saveWL.isChecked():
+            data_wl = self.data_wl
+        if self.general_checkbox_saveMotorSteps.isChecked():
+            data_steps = self.data_steps
+        if self.general_checkbox_saveUvPdVolt.isChecked():
+            data_uv = self.data_uv
+        if self.general_checkbox_saveLboTemp.isChecked():
+            data_lbo = self.data_lbo
 
         with open(self.file_path, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=";")
-            writer.writerow([time_since_start, timestamp, self.data_wl, self.data_pm1,
-                             self.data_pm2, self.data_steps, self.data_uv, self.data_lbo])
+            writer.writerow([time_since_start, timestamp, data_wl, data_pm1,
+                             data_pm2, data_steps, data_uv, data_lbo])
         self.reset_data_storage()
 
     def reset_data_storage(self):
         self.data_uv = 0.0
         self.data_steps = 0
-        self.data_pm1 = 0.0
-        self.data_pm2 = 0.0
         self.data_wl = 0.0
         self.data_lbo = 0.0
 
