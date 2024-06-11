@@ -43,30 +43,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Signal/Slots:
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
+        self.dfb.widescan_status.connect(lambda bool: self.status_label_wideScan.setText("T[°C] =") if not bool else None)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
         self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
         self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
+        self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
 
         self.bbo.voltageUpdated.connect(lambda value:
                                         self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
-        self.bbo.autoscan_status.connect(lambda bool: self.status_checkBox_bbo.setChecked(bool))
+        self.bbo.autoscan_status.connect(self.status_checkBox_bbo.setChecked)
+        self.bbo.autoscan_status.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
+        self.bbo.voltageUpdated.connect(lambda value: self.status_label_bbo.setText(f"U[V] = {value}"))
         self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
 
-        self.lbo.autoscan_status.connect(lambda bool: self.status_checkBox_lbo.setChecked(bool))
+        self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
+        self.lbo.autoscan_status.connect(lambda bool: self.status_label_lbo.setText("T[°C] =") if not bool else None)
         self.lbo.update_temperature.connect(lambda temp: (
             self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp[0]}"),
             self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {temp[1]}")
             ))
+        self.lbo.update_temperature.connect(lambda values: self.status_label_lbo.setText(f"T[°C] = {values[1]}"))
         self.lbo.update_temperature.connect(lambda temp: setattr(self, "data_lbo", temp[1]))
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
+        self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)
         self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
         self.ase.update_wl_pos.connect(lambda values: (
             self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
             self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
             ))
+        self.ase.update_wl_pos.connect(lambda values: self.status_label_ase.setText(f"theta[°] = {values[1]}"))
         self.ase.update_wl_pos.connect(lambda values: setattr(self, "data_wl", values[0]))
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
         self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
@@ -139,16 +147,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.text()))
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
-        # self.ase_button_home.clicked.connect(self.ase_homing_popup)
-        self.ase_button_home.clicked.connect(
-            lambda: self.ase.homing_motor()
-            if QtWidgets.QMessageBox.question(
-                self, 'Motor Homing',
-                "Home the ASE filter rotation stage? Only press 'Yes' if all fiber amplifiers are turned off!",
-                buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
-                ) == QtWidgets.QMessageBox.StandardButton.Yes
-            else None
-            )
+        self.ase_button_home.clicked.connect(self.ase_homing_popup)
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
         self.ase_button_selectPath.clicked.connect(self.open_calparfile)
 
