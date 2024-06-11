@@ -50,17 +50,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.bbo.voltageUpdated.connect(lambda value:
                                         self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
-        self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
+        self.bbo.autoscan_status.connect(lambda bool: self.status_checkBox_bbo.setChecked(bool))
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
         self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
 
-        self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
-        self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
-        self.lbo.update_temperature.connect(lambda set_temp, act_temp: setattr(self, "data_lbo", act_temp))
+        self.lbo.autoscan_status.connect(lambda bool: self.status_checkBox_lbo.setChecked(bool))
+        self.lbo.update_temperature.connect(lambda temp: (
+            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp[0]}"),
+            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {temp[1]}")
+            ))
+        self.lbo.update_temperature.connect(lambda temp: setattr(self, "data_lbo", temp[1]))
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
-        self.ase.update_wl_pos.connect(lambda values: self.ase_update_values(*values))
+        self.ase.update_wl_pos.connect(lambda values: (
+            self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
+            self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
+            ))
         self.ase.update_wl_pos.connect(lambda wl, pos: setattr(self, "data_wl", wl))
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
         self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
@@ -159,11 +165,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def create_measurement_file(self):
         self.file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save CSV File", "", "CSV Files (*.csv)")
 
-    def write_data(self):
-        with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerows("Test")
-
     def start_measurement(self):
         self.measurement_loop_timer = QtCore.QTimer()
         start_time = time.time()
@@ -181,35 +182,24 @@ class MainWindow(QtWidgets.QMainWindow):
         timestamp = time.time()
         time_since_start = np.round(timestamp - start_time, 6)
 
+        if self.general_checkBox_savePower1.isChecked():
+            self.data_pm1 = self.pm1.get_power()
+        if self.general_checkBox_savePower2.isChecked():
+            self.data_pm2 = self.pm2.get_power()
+
         with open(self.file_path, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=";")
             writer.writerow([time_since_start, timestamp, self.data_wl, self.data_pm1,
                              self.data_pm2, self.data_steps, self.data_uv, self.data_lbo])
+        self.reset_data_storage()
 
-    def bbo_status_checkbox(self, boolean):
-        """Sets the status checkbox for the UV scan to the value
-        of the boolean
-
-        Args:
-            boolean (bool): True or False, depending if the uv scan is running or not
-        """
-        self.status_checkBox_bbo.setChecked(boolean)
-
-    def ase_update_values(self, wavelength, position):
-        try:
-            self.ase_label_currentWL.setText(f"Current Wavelength: {wavelength}")
-            self.ase_label_currentAngle.setText(f"Current Angle: {position}")
-        except AttributeError as e:
-            print(e)
-
-    def lbo_status_checkbox(self, boolean):
-        """Sets the status checkbox for the LBO scan to the value
-        of the boolean
-
-        Args:
-            boolean (bool): True or False, depending if the LBO scan is running or not
-        """
-        self.status_checkBox_lbo.setChecked(boolean)
+    def reset_data_storage(self):
+        self.data_uv = 0.0
+        self.data_steps = 0
+        self.data_pm1 = 0.0
+        self.data_pm2 = 0.0
+        self.data_wl = 0.0
+        self.data_lbo = 0.0
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the
@@ -220,20 +210,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.lbo_lineEdit_targetTemp.setText(str(self.lbo.set_temp))
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
-
-    def lbo_update_temperatures(self, set_temp, act_temp):
-        """Updates the GUI with the latest values for the set and act temperature
-        during a LBO automatic temperature scan.
-
-        Args:
-            set_temp (float): The set temperature of the LBO oven [°C]
-            act_temp (float): The current temperature of the LBO oven [°C]
-        """
-        try:
-            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {set_temp}")
-            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {act_temp}")
-        except AttributeError as e:
-            print(e)
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
