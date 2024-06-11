@@ -139,7 +139,16 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.text()))
         self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
         self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
-        self.ase_button_home.clicked.connect(self.ase.homing_motor)
+        # self.ase_button_home.clicked.connect(self.ase_homing_popup)
+        self.ase_button_home.clicked.connect(
+            lambda: self.ase.homing_motor()
+            if QtWidgets.QMessageBox.question(
+                self, 'Motor Homing',
+                "Home the ASE filter rotation stage? Only press 'Yes' if all fiber amplifiers are turned off!",
+                buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+                ) == QtWidgets.QMessageBox.StandardButton.Yes
+            else None
+            )
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
         self.ase_button_selectPath.clicked.connect(self.open_calparfile)
 
@@ -282,6 +291,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_label_actTemp.setText("Actual temperature: ")
         self.dfb_progressBar_scan.reset()
         self.dfb_label_remainingTime.setText("Remaining time: ")
+
+    def ase_homing_popup(self):
+        popup = QtWidgets.QMessageBox.question(
+            self, 'Motor Homing',
+            "Home the ASE filter rotation stage? Only press 'Yes' if all fiber amplifiers are turned off!",
+            buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if popup == QtWidgets.QMessageBox.StandardButton.Yes:
+            self.ase.homing_motor()
 
     def autocalibration_popup(self):
         """
