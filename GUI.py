@@ -162,8 +162,10 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.pm1.connect_pm(visa=self.pm_comboBox_visaResources1.currentText()))
         self.pm_button_connectPM2.clicked.connect(
             lambda: self.pm2.connect_pm(visa=self.pm_comboBox_visaResources2.currentText()))
-        # TODO: Implement Adjust Zero button
-        # TODO: Implement wavelength change
+        self.pm_button_changeWL1.clicked.connect(lambda:
+                                                 self.pm1.set_wavelength(self.pm_lineEdit_enterWL1.currentText()))
+        self.pm_button_changeWL2.clicked.connect(lambda:
+                                                 self.pm2.set_wavelength(self.pm_lineEdit_enterWL2.currentText()))
 
         """General Tab buttons:"""
         self.general_button_selectPath.clicked.connect(self.create_measurement_file)

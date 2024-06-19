@@ -27,3 +27,6 @@ class PM():
 
     def set_range(self, range):
         self.pm.set_range(rng=range)
+
+    def get_wavelength(self):
+        return self.pm.get_wavelength()

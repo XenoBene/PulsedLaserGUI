@@ -90,7 +90,7 @@
         <rect>
          <x>10</x>
          <y>0</y>
-         <width>141</width>
+         <width>175</width>
          <height>161</height>
         </rect>
        </property>
@@ -362,7 +362,7 @@
         <bool>true</bool>
        </property>
       </widget>
-      <widget class="QPushButton" name="pm_button_adjustZero1">
+      <widget class="QPushButton" name="pm_button_changeWL1">
        <property name="geometry">
         <rect>
          <x>490</x>
@@ -372,7 +372,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>Adjust zero</string>
+        <string>Change WL</string>
        </property>
       </widget>
       <widget class="QLineEdit" name="pm_lineEdit_enterWL1">
@@ -484,7 +484,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QPushButton" name="pm_button_adjustZero2">
+      <widget class="QPushButton" name="pm_button_changeWL2">
        <property name="geometry">
         <rect>
          <x>490</x>
@@ -494,7 +494,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>Adjust zero</string>
+        <string>Change WL</string>
        </property>
       </widget>
      </widget>
