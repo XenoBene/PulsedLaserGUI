@@ -83,6 +83,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
         self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
 
+        self.pm1.updateWavelength.connect(lambda wl: self.pm_lineEdit_enterWL1.setText(str(wl)))
+        self.pm2.updateWavelength.connect(lambda wl: self.pm_lineEdit_enterWL2.setText(str(wl)))
+
     def connect_buttons(self):
         """
         Connect the buttons from the UI with the methods.

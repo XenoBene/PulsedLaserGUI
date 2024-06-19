@@ -1,7 +1,9 @@
 from pylablib.devices import Thorlabs
+from PyQt6 import QtCore
 
 
-class PM():
+class PM(QtCore.QObject):
+    updateWavelength = QtCore.pyqtSignal(float)
 
     def __init__(self):
         super().__init__()
@@ -12,6 +14,7 @@ class PM():
         if not self._connect_button_is_checked:
             self.pm = Thorlabs.PM160(visa)
             self._connect_button_is_checked = True
+            self.updateWavelength.emit(self.get_wavelength)
         else:
             self.pm.close()
             self._connect_button_is_checked = False
