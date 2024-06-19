@@ -88,6 +88,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pm1.updatePower.connect(lambda pow: self.pm_label_power1.setText(f"Power PM1: {pow} W"))
         self.pm2.updatePower.connect(lambda pow: self.pm_label_power2.setText(f"Power PM2: {pow} W"))
 
+        self.dfb.update_textBox.connect(lambda text: self.status_textEdit.insertPlainText(text))
+
     def connect_buttons(self):
         """
         Connect the buttons from the UI with the methods.
@@ -261,6 +263,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dfb_lineEdit_scanSpeed.setText(str(scan_speed))
         except AttributeError as e:
             print(f"DFB is not connected: {e}")
+        except TypeError as e:
+            print(e)
 
     def update_widescan_progressbar(self, progress, time):
         """

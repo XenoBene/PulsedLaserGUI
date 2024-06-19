@@ -11,6 +11,7 @@ class DFB(QtCore.QObject):
     update_values = QtCore.pyqtSignal(tuple)
     update_progressbar = QtCore.pyqtSignal(tuple)
     update_actTemp = QtCore.pyqtSignal(float)
+    update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -33,6 +34,7 @@ class DFB(QtCore.QObject):
                 self.update_values.emit(self.read_actual_dfb_values())
                 self._connect_button_is_checked = True
             except DeviceNotFoundError:
+                self.update_textBox.emit("DFB not found")
                 print("DFB not found")
         else:
             self.dlc.close()
@@ -49,8 +51,10 @@ class DFB(QtCore.QObject):
             self.scan_speed = self.dlc.laser1.wide_scan.speed.get()
             return self.set_temp, self.start_temp, self.end_temp, self.scan_speed
         except AttributeError as e:
+            self.update_textBox.emit(f"DFB is not yet connected: {e}")
             print(f"DFB is not yet connected: {e}")
         except UnavailableError as e:
+            self.update_textBox.emit(f"DFB session was closed: {e}")
             print(f"DFB session was closed: {e}")
 
     def get_actual_temperature(self):
