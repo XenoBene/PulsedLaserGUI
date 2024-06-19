@@ -4,6 +4,7 @@ from PyQt6 import QtCore
 
 class PM(QtCore.QObject):
     updateWavelength = QtCore.pyqtSignal(float)
+    updatePower = QtCore.pyqtSignal(float)
 
     def __init__(self):
         super().__init__()
@@ -20,7 +21,9 @@ class PM(QtCore.QObject):
             self._connect_button_is_checked = False
 
     def get_power(self):
-        return self.pm.get_power()
+        power = self.pm.get_power()
+        self.updatePower.emit(power)
+        return power
 
     def set_wavelength(self, wl):
         self.pm.set_wavelength(wl)

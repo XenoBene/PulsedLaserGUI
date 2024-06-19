@@ -85,6 +85,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.pm1.updateWavelength.connect(lambda wl: self.pm_lineEdit_enterWL1.setText(str(wl)))
         self.pm2.updateWavelength.connect(lambda wl: self.pm_lineEdit_enterWL2.setText(str(wl)))
+        self.pm1.updatePower.connect(lambda pow: self.pm_label_power1.setText(f"Power PM1: {pow} W"))
+        self.pm2.updatePower.connect(lambda pow: self.pm_label_power2.setText(f"Power PM2: {pow} W"))
 
     def connect_buttons(self):
         """
