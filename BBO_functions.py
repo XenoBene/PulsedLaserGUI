@@ -11,6 +11,7 @@ class WorkerBBO(QtCore.QObject):
     status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
     update_diodeVoltage = QtCore.pyqtSignal(float)
+    update_motorSteps = QtCore.pyqtSignal(int)
 
     def __init__(self, wlm, rp, stage, axis, addr, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -47,101 +48,82 @@ class WorkerBBO(QtCore.QObject):
         self.start_pos = self.old_pos
 
     def autoscan(self):
-        """Logic behind the UV autoscan. This method should keep the uv output
-        power at the maximum, even when the wavelength gets scanned.
-        To achieve this, a Greedy algorithm is used. The picomotor will make a few steps
-        in one direction, and will measure if the uv power after this step ist higher or
-        lower than before. Based on the measurement, the next step will be in the same
-        or opposite direction.
         """
+        Controls the UV autoscan process to maintain maximum UV output power during wavelength scanning.
+
+        Behavior:
+        ---------
+        - Continuously adjusts the picomotor's position to maximize UV power using a Greedy algorithm.
+        - Moves the picomotor by a set number of steps in the current direction.
+        - Measures the UV power after each step and updates the position and power readings.
+        - Determines the slope of UV power change and adjusts the movement direction accordingly.
+        - If UV power falls below 80% of the threshold:
+            - Corrects the picomotor's position based on the difference between the current and
+            starting wavelength and position.
+        - Operates in a loop until manually stopped.
+
+        Signals:
+        --------
+        - `status` (bool): Emits True when the scan is active, and False when the scan is stopped.
+        - `update_diodeVoltage` (float): Emits the current UV power measurement.
+        - `update_motorSteps` (int): Emits the current position of the picomotor.
+        - `finished`: Emits when the scanning process is completed.
+
+        Internal Methods:
+        -----------------
+        - `measure_uv_power()`: Measures and returns the current UV power.
+        - `update_position_and_measure()`: Updates and returns the current picomotor position.
+        - `correct_position_if_needed(wl, uv_power, new_pos)`: Corrects the picomotor position
+        if UV power is below the threshold.
+        """
+        def measure_uv_power():
+            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
+            buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+            return np.round(np.mean(buff), 4)
+
+        def update_position_and_measure():
+            new_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
+            self.update_motorSteps.emit(new_pos)
+            return new_pos
+
+        def correct_position_if_needed(wl, uv_power, new_pos):
+            if self.threshold_power * 0.8 > uv_power > 0:
+                delta_wl = wl - self.delta_wl_start
+                calculated_steps = -delta_wl * (3233 if delta_wl > 0 else 3500)
+                delta_pos = calculated_steps - (new_pos - self.start_pos)
+                self.stage.move_by(axis=self.axis, addr=self.addr, steps=int(delta_pos))
+                time.sleep(float(abs(delta_pos) / self.velocity))
+                return self.stage.get_position(axis=self.axis, addr=self.addr)
+            return new_pos
+
         self.keep_running = True
         start_time = time.time()
         self.status.emit(True)
+
         while self.keep_running:
-            # Makes a number of steps (self.steps) in one direction, depending on the past:
-            if self.going_right:
-                self.stage.move_by(axis=self.axis, addr=self.addr, steps=self.steps)
-            else:
-                self.stage.move_by(axis=self.axis, addr=self.addr, steps=-self.steps)
+            direction = self.steps if self.going_right else -self.steps
+            self.stage.move_by(axis=self.axis, addr=self.addr, steps=direction)
+            time.sleep(float(self.steps / self.velocity) + self.wait)
 
-            # Break while the motor is moving (plus some additional wait time):
-            time.sleep(float(self.steps / self.velocity))
-            time.sleep(float(self.wait))
-
-            # Measure the voltage of the uv diode (proportional
-            # to the uv output power):
-            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
-            buff_string = self.rp.rx_txt()
-            buff_string = buff_string.strip(
-                '{}\n\r').replace("  ", "").split(',')
-            buff = list(map(float, buff_string))
-            uv_power = np.round(np.mean(buff), 4)
-
-            # Signal for the GUI:
+            uv_power = measure_uv_power()
             self.update_diodeVoltage.emit(uv_power)
+            new_pos = update_position_and_measure()
 
-            # Measure the current position (absolute steps):
-            new_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
-
-            # Calculate the slope (i.e. calculate if the power got higher
-            # or not). The direction of the next step depends on the slope:
             slope = (uv_power - self.old_power) / (new_pos - self.old_pos)
-            if slope > 0:
-                self.going_right = True
-            else:
-                self.going_right = False
+            self.going_right = slope > 0
+            self.old_power, self.old_pos = uv_power, new_pos
 
-            # Assign the newest values to attributes for the next iteration:
-            self.old_power = uv_power
-            self.old_pos = new_pos
-
-            # Measure the current wavelength:
             wl = np.round(self.wlm.GetWavelength(1), 6)
-
-            """
-            Here starts the implementation of a kind of power failsafe:
-            If the output power suddenly drops down a certain threshold, the picomotor
-            will not just take the usual steps in one direction. Instead, the wavelength difference
-            between the last checkpoint and the current wavelength gets converted to the needed
-            steps for this wavelength difference (based on empirical data).
-            """
-            # Checkpoint: Every 20 iterations, the current values get saved to the
-            # instance attributes and the iteration counter gets resetted.
             self.iterator_steps += 1
+
             if self.iterator_steps > 20:
-                self.delta_wl_start = wl
-                self.start_pos = new_pos
-                self.threshold_power = uv_power
+                self.delta_wl_start, self.start_pos, self.threshold_power = wl, new_pos, uv_power
                 self.iterator_steps = 0
-                print("Iteratorsteps reset")
 
-            # Calculates the difference between the current wavelength and the wl at the last checkpoint
-            delta_wl = wl - self.delta_wl_start
-            print(f"Delta wl: {delta_wl}")
+            new_pos = correct_position_if_needed(wl, uv_power, new_pos)
 
-            # compare steps to calculated steps and move the necessary steps to the theoretical position,
-            # if current power is a lot lower than control power
-            if (self.threshold_power * 0.8 > uv_power > 0):
-                if delta_wl > 0:
-                    print(f"Position vor Korr1: {new_pos}")
-                    calculated_steps = -delta_wl * 3233  # Empirical data
-                elif delta_wl < 0:
-                    print(f"Position vor Korr2: {new_pos}")
-                    calculated_steps = -delta_wl * 3500  # Empirical data
+            print(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")
 
-                # Calculates and moves the motor to the theoretical position:
-                delta_pos = (calculated_steps - (new_pos - self.start_pos))
-                self.stage.move_by(axis=self.axis, addr=self.addr, steps=int(delta_pos))
-                time.sleep(float(abs(delta_pos) / self.velocity))
-
-                new_pos = self.stage.get_position(axis=self.axis, addr=self.addr)
-                print(f"Position nach Korrektur: {new_pos}")
-
-                # Reset the old values:
-                self.old_pos = new_pos
-                self.iterator_steps = 0
-                self.threshold_power = uv_power
-            print(f"Fertig: {time.time() - start_time}")
         self.status.emit(False)
         self.finished.emit()
 
@@ -156,6 +138,7 @@ class WorkerBBO(QtCore.QObject):
 class BBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     voltageUpdated = QtCore.pyqtSignal(float)
+    stepsUpdated = QtCore.pyqtSignal(int)
 
     def __init__(self, wlm, axis, addr):
         """This class controls the picomotor which controls the angle
@@ -265,6 +248,7 @@ class BBO(QtCore.QObject):
             self.threadBBO.started.connect(self.workerBBO.autoscan)
             self.workerBBO.status.connect(self.autoscan_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
+            self.workerBBO.update_motorSteps.connect(self.stepsUpdated.emit)
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)

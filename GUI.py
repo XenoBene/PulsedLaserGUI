@@ -1,8 +1,26 @@
-from PyQt6 import QtWidgets, QtCore, uic
+from PyQt6 import QtWidgets, uic, QtCore, QtTest
+import ASE_functions
+import DFB_functions
+import LBO_functions
+import BBO_functions
+import Powermeter_functions
+import pyvisa
+import pandas as pd
+import csv
+import time
+import numpy as np
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rm, dfb, lbo, bbo):
+    def __init__(self,
+                 rm: pyvisa.ResourceManager,
+                 dfb: DFB_functions.DFB,
+                 lbo: LBO_functions.LBO,
+                 bbo: BBO_functions.BBO,
+                 ase: ASE_functions.ASE,
+                 pm1: Powermeter_functions.PM,
+                 pm2: Powermeter_functions.PM
+                 ):
         super().__init__()
 
         # Load the ui
@@ -12,15 +30,54 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb = dfb
         self.lbo = lbo
         self.bbo = bbo
+        self.ase = ase
+        self.pm1 = pm1
+        self.pm2 = pm2
+
+        self.data_uv = 0.0
+        self.data_steps = 0
+        self.data_pm1 = 0.0
+        self.data_pm2 = 0.0
+        self.data_wl = 0.0
+        self.data_lbo = 0.0
 
         # Signal/Slots:
+        self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
+        self.dfb.widescan_status.connect(lambda bool: self.status_label_wideScan.setText("T[°C] =") if not bool else None)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
+        self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
+        self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
+        self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
+        self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
 
-        self.bbo.voltageUpdated.connect(self.bbo_update_voltage)
-        self.bbo.autoscan_status.connect(self.bbo_status_checkbox)
+        self.bbo.voltageUpdated.connect(lambda value:
+                                        self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
+        self.bbo.autoscan_status.connect(self.status_checkBox_bbo.setChecked)
+        self.bbo.autoscan_status.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
+        self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
+        self.bbo.voltageUpdated.connect(lambda value: self.status_label_bbo.setText(f"U[V] = {value}"))
+        self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
 
-        self.lbo.autoscan_status.connect(self.lbo_status_checkbox)
-        self.lbo.update_temperature.connect(lambda temp: self.lbo_update_temperatures(*temp))
+        self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
+        self.lbo.autoscan_status.connect(lambda bool: self.status_label_lbo.setText("T[°C] =") if not bool else None)
+        self.lbo.update_temperature.connect(lambda temp: (
+            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp[0]}"),
+            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {temp[1]}")
+            ))
+        self.lbo.update_temperature.connect(lambda values: self.status_label_lbo.setText(f"T[°C] = {values[1]}"))
+        self.lbo.update_temperature.connect(lambda temp: setattr(self, "data_lbo", temp[1]))
+
+        self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
+        self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)
+        self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
+        self.ase.update_wl_pos.connect(lambda values: (
+            self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
+            self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
+            ))
+        self.ase.update_wl_pos.connect(lambda values: self.status_label_ase.setText(f"theta[°] = {values[1]}"))
+        self.ase.update_wl_pos.connect(lambda values: setattr(self, "data_wl", values[0]))
+        self.ase.autoscan_failsafe.connect(self.dfb.abort_wideScan)
+        self.ase.autocalibration_progress.connect(lambda progress: self.ase_progressBar_autocal.setValue(progress))
 
     def connect_buttons(self):
         """
@@ -45,11 +102,12 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb.change_wideScan_scanSpeed(self.dfb_lineEdit_scanSpeed.text()))
         # TODO: Lieber einen "Set value" Knopf einbauen mit print Bestätigung statt dem editingFinished,
         # dann ist das alles konsistenter
-        self.dfb_button_startScan.clicked.connect(self.start_wideScan_loop)
+        self.dfb_button_startScan.clicked.connect(self.dfb.start_wideScan)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
         """LBO Tab buttons:"""
         self.lbo_comboBox_visa.addItems(self.rm.list_resources())
+        self.lbo_button_refresh.clicked.connect(lambda: self.refresh_combobox(self.lbo_comboBox_visa))
         self.lbo_button_connectLBO.clicked.connect(
             lambda: self.lbo.connect_covesion(rm=self.rm, port=self.lbo_comboBox_visa.currentText())
         )
@@ -84,36 +142,86 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_startUvScan.clicked.connect(self.bbo.start_autoscan)
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
 
-    def bbo_update_voltage(self, value):
-        """Changes the label in the GUI. This is the slot method for the signal
-        that is received from the uv autoscan class.
+        """ASE Tab buttons:"""
+        self.ase_button_connectStage.clicked.connect(
+            lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.text()))
+        self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
+        self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
+        self.ase_button_home.clicked.connect(self.ase_homing_popup)
+        self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
+        self.ase_button_selectPath.clicked.connect(self.open_calparfile)
 
-        Args:
-            value (float): UV diode voltage [V]
-        """
-        try:
-            print("Voltage updated")
-            self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}")
-        except AttributeError as e:
-            print(e)
+        """PM Tab buttons:"""
+        self.pm_comboBox_visaResources1.addItems(self.rm.list_resources())
+        self.pm_comboBox_visaResources2.addItems(self.rm.list_resources())
+        self.pm_button_connectPM1.clicked.connect(
+            lambda: self.pm1.connect_pm(visa=self.pm_comboBox_visaResources1.currentText()))
+        self.pm_button_connectPM2.clicked.connect(
+            lambda: self.pm2.connect_pm(visa=self.pm_comboBox_visaResources2.currentText()))
+        # TODO: Implement Adjust Zero button
+        # TODO: Implement wavelength change
 
-    def bbo_status_checkbox(self, boolean):
-        """Sets the status checkbox for the UV scan to the value
-        of the boolean
+        """General Tab buttons:"""
+        self.general_button_selectPath.clicked.connect(self.create_measurement_file)
+        self.general_button_startMeasurement.clicked.connect(self.start_measurement)
+        self.general_button_stopMeasurement.clicked.connect(self.stop_measurement)
 
-        Args:
-            boolean (bool): True or False, depending if the uv scan is running or not
-        """
-        self.status_checkBox_bbo.setChecked(boolean)
+    def refresh_combobox(self, combobox):
+        combobox.clear()
+        combobox.addItems(self.rm.list_resources())
 
-    def lbo_status_checkbox(self, boolean):
-        """Sets the status checkbox for the LBO scan to the value
-        of the boolean
+    def create_measurement_file(self):
+        self.file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save CSV File", "", "CSV Files (*.csv)")
+        self.general_label_chosenPath.setText(self.file_path)
 
-        Args:
-            boolean (bool): True or False, depending if the LBO scan is running or not
-        """
-        self.status_checkBox_lbo.setChecked(boolean)
+    def start_measurement(self):
+        self.measurement_loop_timer = QtCore.QTimer()
+        start_time = time.time()
+        self.measurement_loop_timer.timeout.connect(lambda: self.measurement(start_time))
+        with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
+                             "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature [°C]"])
+        self.measurement_loop_timer.start(1000)
+
+    def stop_measurement(self):
+        self.measurement_loop_timer.stop()
+
+    def measurement(self, start_time):
+        timestamp = time.time()
+        time_since_start = np.round(timestamp - start_time, 6)
+
+        data_pm1 = 0.0
+        data_pm2 = 0.0
+        data_wl = 0.0
+        data_steps = 0
+        data_uv = 0.0
+        data_lbo = 0.0
+
+        if self.general_checkbox_savePower1.isChecked():
+            data_pm1 = self.pm1.get_power()
+        if self.general_checkbox_savePower2.isChecked():
+            data_pm2 = self.pm2.get_power()
+        if self.general_checkbox_saveWL.isChecked():
+            data_wl = self.data_wl
+        if self.general_checkbox_saveMotorSteps.isChecked():
+            data_steps = self.data_steps
+        if self.general_checkbox_saveUvPdVolt.isChecked():
+            data_uv = self.data_uv
+        if self.general_checkbox_saveLboTemp.isChecked():
+            data_lbo = self.data_lbo
+
+        with open(self.file_path, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow([time_since_start, timestamp, data_wl, data_pm1,
+                             data_pm2, data_steps, data_uv, data_lbo])
+        self.reset_data_storage()
+
+    def reset_data_storage(self):
+        self.data_uv = 0.0
+        self.data_steps = 0
+        self.data_wl = 0.0
+        self.data_lbo = 0.0
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the
@@ -124,20 +232,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.lbo_lineEdit_targetTemp.setText(str(self.lbo.set_temp))
         except AttributeError as e:
             print(f"Covesion oven is not connected: {e}")
-
-    def lbo_update_temperatures(self, set_temp, act_temp):
-        """Updates the GUI with the latest values for the set and act temperature
-        during a LBO automatic temperature scan.
-
-        Args:
-            set_temp (float): The set temperature of the LBO oven [°C]
-            act_temp (float): The current temperature of the LBO oven [°C]
-        """
-        try:
-            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {set_temp}")
-            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {act_temp}")
-        except AttributeError as e:
-            print(e)
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
@@ -157,40 +251,153 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             print(f"DFB is not connected: {e}")
 
-    def start_wideScan_loop(self):
-        """Creates and starts a QTimer that starts the WideScan.
-        After every loop of the QTimer, the progressbar and remeaining time
-        gets updated in the GUI.
+    def update_widescan_progressbar(self, progress, time):
         """
-        self.dfb_loopTimer_wideScan = QtCore.QTimer()
-        self.dfb_loopTimer_wideScan.timeout.connect(self.update_wideScan_progressBar)
-        self.dfb.start_wideScan()
-        self.status_checkBox_wideScan.setChecked(True)  # Visual check to confirm if WideScan is currently enabled.
-        self.dfb_loopTimer_wideScan.start()
+        Updates the progress bar and remaining time label during a wide scan.
 
-    def update_wideScan_progressBar(self):
-        """Updates the GUI with the progress & remaining time of the WideScan
-        and the current temperature of the DFB diode.
-        When the WideScan reaches its end, the progressbar is resetted and the QTimer loop
-        is stopped.
+        Parameters:
+        -----------
+        progress : int
+            The current progress value to set on the progress bar.
+        time : float
+            The remaining time in seconds to display.
+
+        Behavior:
+        ---------
+        - Sets the progress bar to the specified progress value.
+        - Updates the remaining time label with the specified time.
+
+        Example:
+        --------
+        >>> obj.update_widescan_progressbar(50, 120.5)
+        """
+        self.dfb_progressBar_scan.setValue(progress)
+        self.dfb_label_remainingTime.setText(f"Remaining time: {time} s")
+
+    def reset_wideScan_progressBar(self):
+        """
+        Resets the wide scan progress bar and related labels.
+
+        Behavior:
+        ---------
+        - Resets the progress bar to its initial state.
+        - Clears the actual temperature and remaining time labels.
+
+        Example:
+        --------
+        >>> obj.reset_wideScan_progressBar()
+        """
+        self.dfb_label_actTemp.setText("Actual temperature: ")
+        self.dfb_progressBar_scan.reset()
+        self.dfb_label_remainingTime.setText("Remaining time: ")
+
+    def ase_homing_popup(self):
+        popup = QtWidgets.QMessageBox.question(
+            self, 'Motor Homing',
+            "Home the ASE filter rotation stage? Only press 'Yes' if all fiber amplifiers are turned off!",
+            buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if popup == QtWidgets.QMessageBox.StandardButton.Yes:
+            self.ase.homing_motor()
+
+    def autocalibration_popup(self):
+        """
+        Displays a popup to initiate the auto-calibration process.
+
+        This method reads the calibration log to display the previous calibration date and time,
+        and prompts the user to start the auto-calibration of the rotation stage. If the user
+        confirms, the auto-calibration process is initiated.
+
+        Behavior:
+        ---------
+        - Reads the previous calibration details from the log file.
+        - Displays a message box with instructions for the calibration process.
+        - If the user clicks 'Yes', starts the auto-calibration.
+        - If the user clicks 'No', does nothing.
+
+        Example:
+        --------
+        >>> obj.autocalibration_popup()
+        """
+        with open(r'Kalibrierung/calibrationlog.log', mode='a+', encoding='UTF8', newline="\n") as f:
+            f.seek(0)
+            # f = f.read().split('\r\n')
+            f = f.read().split('\n')
+            if f == ['']:
+                previous_cal = ("No calibration previously recorded. ")
+            else:
+                previous_cal = (f"Previous calibration: {f[-2].split()[0]} {f[-2].split()[1]} hrs. ")
+
+            autocal_msg_str = (previous_cal +
+                               "To perform the calibration of the rotation stage, please place "
+                               "the desired powermeter directly after the first fibre amplifier. "
+                               "Ensure that the WLM and rotation stage are connected beforehand. "
+                               "Please connect the required powermeter with the 'PM1' button. "
+                               "Then, please click 'Yes'.")
+            autocal_request = QtWidgets.QMessageBox.question(self,
+                                                             'Initiate auto calibration',
+                                                             autocal_msg_str,
+                                                             buttons=QtWidgets.QMessageBox.StandardButton.Yes
+                                                             | QtWidgets.QMessageBox.StandardButton.No)
+        if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
+            # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
+            self.ase.start_autocalibration(dfb=self.dfb, powermeter=self.pm1,
+                                           calibration_bounds=([float(self.ase_cal_B_lower.text()),
+                                                                float(self.ase_cal_x0_lower.text()),
+                                                                float(self.ase_cal_a_lower.text()),
+                                                                float(self.ase_cal_n_lower.text()),
+                                                                float(self.ase_cal_y0_lower.text())],
+                                                               [float(self.ase_cal_B_upper.text()),
+                                                                float(self.ase_cal_x0_upper.text()),
+                                                                float(self.ase_cal_a_upper.text()),
+                                                                float(self.ase_cal_n_upper.text()),
+                                                                float(self.ase_cal_y0_upper.text())]),
+                                           startangle=float(self.ase_cal_startangle.text()),
+                                           endangle=float(self.ase_cal_endangle.text())
+                                           )
+        elif autocal_request == QtWidgets.QMessageBox.StandardButton.No:
+            # TODO: Mache nichts
+            pass
+
+    def open_calparfile(self):
+        """
+        Opens a file dialog to select a calibration parameter file.
+
+        This method allows the user to select a CSV file containing calibration parameters.
+        It reads the selected file, validates its contents, and updates the calibration parameters.
+
+        Behavior:
+        ---------
+        - Opens a file dialog for the user to select a CSV file.
+        - Reads the selected file and updates the calibration parameters.
+        - Saves the last used calibration parameters to a CSV file.
+        - Updates the display with the path of the selected file.
+
+        Error Handling:
+        ---------------
+        - If the selected file is not found, prints "File not found!".
+        - If the selected file does not contain the required keys, prints an error message.
+
+        Example:
+        --------
+        >>> obj.open_calparfile()
         """
         try:
-            progress, remaining_time = self.dfb.get_wideScan_progress()
-            self.dfb_progressBar_scan.setValue(progress)
-            self.dfb_label_remainingTime.setText(
-                f"Remaining time: {remaining_time} s")
-            self.dfb_label_actTemp.setText(
-                f"Actual temperature: {self.dfb.get_actual_temperature()} °C")
-            if self.dfb.get_wideScan_state() == 0:
-                self.dfb_progressBar_scan.reset()
-                self.dfb_label_remainingTime.setText("Remaining time: ")
-                self.dfb_loopTimer_wideScan.stop()
-                self.status_checkBox_wideScan.setChecked(False)  # Visual check to confirm that WideScan has finished.
-            elif False:
-                # TODO: Hier muss Überprüfung hin, ob die ASE-Filter nicht einen Error
-                # geworfen haben. Am besten als Signal/Slot?
-                self.status_checkBox_wideScan.setChecked(False)
-                pass
-        except TypeError as e:
-            self.dfb_loopTimer_wideScan.stop()
-            print(f"No DFB connected: {e}")
+            calparfilename, _ = QtWidgets.QFileDialog.getOpenFileName(
+                parent=self, caption="Select path", directory="", filter="All Files (*);;(*.csv)")
+            if calparfilename != "":
+                self.ase.cal_par = pd.read_csv(calparfilename, delimiter=';')
+                try:
+                    # call self.cal_par: if rubbish file is loaded, then there will be no key
+                    # the corresponding names below. code then throws an error
+                    with open(r"lastused_calpar.csv", 'w', encoding='UTF8', newline='') as f:
+                        writer = csv.writer(f, delimiter=';')
+                        header = ['Kalibrierung', 'm', 'b']
+                        writer.writerow(header)
+                        writer.writerow(['lo->hi (Kal 1)', self.ase.cal_par["m"][0], self.ase.cal_par["b"][0]])
+                        writer.writerow(['hi->lo (Kal 2)', self.ase.cal_par["m"][1], self.ase.cal_par["b"][1]])
+
+                    self.ase_label_pathText.setText(calparfilename)
+                except KeyError:
+                    print("Please select a valid file with the motor calibration parameters!")
+        except FileNotFoundError:
+            print("File not found!")
