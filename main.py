@@ -13,16 +13,16 @@ import Powermeter_functions
 
 app = QtWidgets.QApplication(sys.argv)
 # wlm = HighFinesse.WLM(dll_path="C:\Windows\System32\wlmData.dll", autostart=False)
-wlm = WLM_functions.WavelengthMeter(debug=False)
+# wlm = WLM_functions.WavelengthMeter(debug=False)
 # TODO: Was soll passieren wenn gar kein WLM angeschlossen ist?
 # TODO: pylablib für WLM benutzen
 window = GUI.MainWindow(
     rm=pyvisa.ResourceManager(),
-    # TODO: Hier wlm=Blabla hin, dann kann das von der Gui über Funktionen verteilt werden
+    wlm=WLM_functions.WavelengthMeter(debug=True),
     dfb=DFB_functions.DFB(),
-    lbo=LBO_functions.LBO(wlm=wlm),
-    bbo=BBO_functions.BBO(wlm=wlm, axis=1, addr=1),
-    ase=ASE_functions.ASE(wlm=wlm),
+    lbo=LBO_functions.LBO(),
+    bbo=BBO_functions.BBO(axis=1, addr=1),
+    ase=ASE_functions.ASE(),
     pm1=Powermeter_functions.PM(),
     pm2=Powermeter_functions.PM()
     )

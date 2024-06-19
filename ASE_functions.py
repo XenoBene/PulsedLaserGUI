@@ -28,15 +28,10 @@ class ASE(QtCore.QObject):
     autoscan_failsafe = QtCore.pyqtSignal()
     autocalibration_progress = QtCore.pyqtSignal(int)
 
-    def __init__(self, wlm):
+    def __init__(self):
         """This class controls the Thorlabs rotation stage that rotates the ASE filters.
-
-        Args:
-            wlm (WavelengthMeter): Device to measure the wavelength of the laser
         """
         super().__init__()
-        self.wlm = wlm
-
         self.cal_par = pd.read_csv("lastused_calpar.csv", delimiter=';')
 
         # Booleans to check if the GUI buttons are checked or not:
@@ -95,7 +90,7 @@ class ASE(QtCore.QObject):
             except AttributeError:
                 print("No stage was connected")
 
-    def move_to_start(self):
+    def move_to_start(self, wlm):
         """
         Moves the stage to the start position based on the current wavelength.
 
@@ -122,7 +117,7 @@ class ASE(QtCore.QObject):
         >>> obj.move_to_start()
         """
         try:
-            wl = np.round(self.wlm.GetWavelength(1), 6)
+            wl = np.round(wlm.GetWavelength(1), 6)
             self.stage.calmode = self.stage.change_angle(wl, self.stage.calmode, self.cal_par)
             pos = self.stage.to_degree(self.stage.get_position())
 
@@ -165,7 +160,7 @@ class ASE(QtCore.QObject):
         except AttributeError:
             print("No stage is connected")
 
-    def autoscan(self):
+    def autoscan(self, wlm):
         """
         Toggles the autoscan process.
 
@@ -185,7 +180,7 @@ class ASE(QtCore.QObject):
         """
         self.autoscan_loop_timer = QtCore.QTimer()
         if not self._autoscan_button_is_checked:
-            self.autoscan_loop_timer.timeout.connect(self.move_to_start)
+            self.autoscan_loop_timer.timeout.connect(lambda: self.move_to_start(wlm=wlm))
             self.autoscan_loop_timer.start(10)
             self.autoscan_status.emit(True)
             self._autoscan_button_is_checked = True
@@ -194,7 +189,7 @@ class ASE(QtCore.QObject):
             self.autoscan_status.emit(False)
             self._autoscan_button_is_checked = False
 
-    def init_wavelength_to_angle_calibration(self, dfb, temp, lowtohi, folderpath="Kalibrierung"):
+    def init_wavelength_to_angle_calibration(self, wlm, dfb, temp, lowtohi, folderpath="Kalibrierung"):
         """
         Initializes the wavelength to angle calibration process.
 
@@ -244,7 +239,7 @@ class ASE(QtCore.QObject):
         os.makedirs(folderpath_lowtohi, exist_ok=True)
         os.makedirs(folderpath_hitolow, exist_ok=True)
 
-        temp_wavelength = str(np.round(self.wlm.GetWavelength(1), 2)).replace('.', ',')
+        temp_wavelength = str(np.round(wlm.GetWavelength(1), 2)).replace('.', ',')
 
         self.cal_folderpath = folderpath_lowtohi if lowtohi else folderpath_hitolow
         direction = 'lowtohi' if lowtohi else 'hitolow'
@@ -253,7 +248,7 @@ class ASE(QtCore.QObject):
         with open(f'{self.cal_folderpath}/{self.cal_filename}.csv', 'w', encoding='UTF8', newline='') as f:
             csv.writer(f, delimiter=';').writerow(['Time [s]', 'Wavelength [nm]', 'Power [W]', 'Angle [°]'])
 
-    def wavelength_to_angle_calibration(self, dfb, powermeter, temp_list: list[float], calibration_bounds,
+    def wavelength_to_angle_calibration(self, wlm, dfb, powermeter, temp_list: list[float], calibration_bounds,
                                         startangle, endangle):
         """
         Performs wavelength to angle calibration over a range of temperatures.
@@ -295,7 +290,7 @@ class ASE(QtCore.QObject):
         >>> obj.wavelength_to_angle_calibration(dfb, powermeter, [25.0, 30.0, 35.0], (400, 700), 0, 180)
         """
         def handle_initcal(lowtohi, temp):
-            self.init_wavelength_to_angle_calibration(dfb, temp, lowtohi)
+            self.init_wavelength_to_angle_calibration(wlm, dfb, temp, lowtohi)
             self.stage.scan_to_angle(endangle if lowtohi else startangle, 0.5)
             progress = (self.autocal_iterator + (0.5 if lowtohi else 1)) * 100 / len(temp_list)
             self.autocalibration_progress.emit(int(progress))
@@ -324,7 +319,7 @@ class ASE(QtCore.QObject):
             power = powermeter.get_power()
             cal_actual_time = np.round(
                 time.time()-self.cal_old_time, decimals=4)
-            cal_wavelength = np.round(self.wlm.GetWavelength(1), 6)
+            cal_wavelength = np.round(wlm.GetWavelength(1), 6)
             cal_current_angle = self.stage.to_degree(self.stage.get_position())
 
             csv.writer(f, delimiter=';').writerow(
@@ -346,7 +341,7 @@ class ASE(QtCore.QObject):
                 else:
                     self.autocal_iterator += 1
 
-    def start_autocalibration(self, dfb, powermeter, calibration_bounds, startangle, endangle):
+    def start_autocalibration(self, wlm, dfb, powermeter, calibration_bounds, startangle, endangle):
         """
         Starts the automatic wavelength to angle calibration process.
 
@@ -389,7 +384,7 @@ class ASE(QtCore.QObject):
         self.autocal_iterator = 0
 
         self.autocalibration_loop_timer.timeout.connect(
-            lambda *args: self.wavelength_to_angle_calibration(dfb, powermeter, [15, 20, 25, 30, 35],
+            lambda *args: self.wavelength_to_angle_calibration(wlm, dfb, powermeter, [15, 20, 25, 30, 35],
                                                                calibration_bounds, startangle, endangle))
         self.autocalibration_loop_timer.start()
         logging.info('Auto calibration initiated.')

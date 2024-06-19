@@ -67,15 +67,10 @@ class LBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     update_temperature = QtCore.pyqtSignal(tuple)
 
-    def __init__(self, wlm):
+    def __init__(self):
         """Class to control the OC2 oven controller by Covesion.
-
-        Args:
-            wlm (class WavelengthMeter): Device to measure the wavelength.
-                We use a WS7 by HighFinesse.
         """
         super().__init__()
-        self.wlm = wlm
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
 
@@ -180,7 +175,7 @@ class LBO(QtCore.QObject):
         self.rate = float(values[4]) * 60
         return self.set_temp, self.rate
 
-    def toggle_autoscan(self):
+    def toggle_autoscan(self, wlm):
         """Starts|Stops the automatic temperature scan of the LBO depending on the
         state of the "Autoscan" button in the GUI. This process
         gets started in a QThread because otherwise there would be problems
@@ -192,7 +187,7 @@ class LBO(QtCore.QObject):
                 self._autoscan_button_is_checked = True
                 # Initiate QThread and WorkerLBO class:
                 self.threadLBO = QtCore.QThread()
-                self.workerLBO = WorkerLBO(wlm=self.wlm, oc=self.oc)
+                self.workerLBO = WorkerLBO(wlm=wlm, oc=self.oc)
                 self.workerLBO.moveToThread(self.threadLBO)
 
                 # Connect different methods to the signals of the thread:

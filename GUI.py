@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, uic, QtCore, QtTest
 import ASE_functions
+import WLM_functions
 import DFB_functions
 import LBO_functions
 import BBO_functions
@@ -14,6 +15,7 @@ import numpy as np
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self,
                  rm: pyvisa.ResourceManager,
+                 wlm: WLM_functions.WavelengthMeter,
                  dfb: DFB_functions.DFB,
                  lbo: LBO_functions.LBO,
                  bbo: BBO_functions.BBO,
@@ -27,6 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = uic.loadUi("pulsed_laser_interface.ui", self)
 
         self.rm = rm
+        self.wlm = wlm
         self.dfb = dfb
         self.lbo = lbo
         self.bbo = bbo
@@ -43,7 +46,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Signal/Slots:
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
-        self.dfb.widescan_status.connect(lambda bool: self.status_label_wideScan.setText("T[°C] =") if not bool else None)
+        self.dfb.widescan_status.connect(lambda bool:
+                                         self.status_label_wideScan.setText("T[°C] =") if not bool else None)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
         self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
@@ -118,7 +122,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.lbo.set_temperature(float(self.lbo_lineEdit_targetTemp.text()),
                                              float(self.lbo_lineEdit_rampSpeed.text()))
         )
-        self.lbo_button_autoScan.clicked.connect(self.lbo.toggle_autoscan)
+        self.lbo_button_autoScan.clicked.connect(lambda: self.lbo.toggle_autoscan(wlm=self.wlm))
 
         """BBO Tab buttons:"""
         self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
@@ -139,14 +143,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 velocity=self.bbo_lineEdit_scanVelocity.text(),
                 steps=self.bbo_lineEdit_steps.text(),
                 wait=self.bbo_lineEdit_break.text()))
-        self.bbo_button_startUvScan.clicked.connect(self.bbo.start_autoscan)
+        self.bbo_button_startUvScan.clicked.connect(lambda: self.bbo.start_autoscan(wlm=self.wlm))
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
 
         """ASE Tab buttons:"""
         self.ase_button_connectStage.clicked.connect(
             lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.text()))
-        self.ase_button_moveToStart.clicked.connect(self.ase.move_to_start)
-        self.ase_button_startAutoScan.clicked.connect(self.ase.autoscan)
+        self.ase_button_moveToStart.clicked.connect(lambda: self.ase.move_to_start(wlm=self.wlm))
+        self.ase_button_startAutoScan.clicked.connect(lambda: self.ase.autoscan(wlm=self.wlm))
         self.ase_button_home.clicked.connect(self.ase_homing_popup)
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
         self.ase_button_selectPath.clicked.connect(self.open_calparfile)
@@ -340,7 +344,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                              | QtWidgets.QMessageBox.StandardButton.No)
         if autocal_request == QtWidgets.QMessageBox.StandardButton.Yes:
             # TODO: Starte Autokalibration, dabei darf nichts anklickbar sein
-            self.ase.start_autocalibration(dfb=self.dfb, powermeter=self.pm1,
+            self.ase.start_autocalibration(wlm=self.wlm, dfb=self.dfb, powermeter=self.pm1,
                                            calibration_bounds=([float(self.ase_cal_B_lower.text()),
                                                                 float(self.ase_cal_x0_lower.text()),
                                                                 float(self.ase_cal_a_lower.text()),

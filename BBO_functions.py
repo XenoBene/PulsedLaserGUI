@@ -140,18 +140,16 @@ class BBO(QtCore.QObject):
     voltageUpdated = QtCore.pyqtSignal(float)
     stepsUpdated = QtCore.pyqtSignal(int)
 
-    def __init__(self, wlm, axis, addr):
+    def __init__(self, axis, addr):
         """This class controls the picomotor which controls the angle
         of the BBO crystal.
 
         Args:
-            wlm (WavelengthMeter): Device to measure the wavelength of the laser
             axis (int): Port that the motor is connected to (1 to 4, usually 1)
             addr (int): Adress of the motor controller. Important because our two motors
                 are daisy-chained together. Either 1 or 2 depending on the controller.
         """
         super().__init__()
-        self.wlm = wlm
         self.axis = axis
         self.addr = addr
         self._connect_button_is_checked = False
@@ -232,14 +230,14 @@ class BBO(QtCore.QObject):
         except AttributeError:
             print("Picomotor not connected!")
 
-    def start_autoscan(self):
+    def start_autoscan(self, wlm):
         """Starts the QThread (the WorkerBBO class) where the UV autoscan will operate.
         """
         print("Start Autoscan")
         try:
             # Initiate QThread and WorkerLBO class:
             self.threadBBO = QtCore.QThread()
-            self.workerBBO = WorkerBBO(wlm=self.wlm, rp=self.rp, stage=self.stage,
+            self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
                                        axis=self.axis, addr=self.addr, steps=self.autoscan_steps,
                                        velocity=self.autoscan_velocity, wait=self.autoscan_wait)
             self.workerBBO.moveToThread(self.threadBBO)
