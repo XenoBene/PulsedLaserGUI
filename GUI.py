@@ -14,6 +14,8 @@ from datetime import datetime
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    update_textBox = QtCore.pyqtSignal(str)
+
     def __init__(self,
                  rm: pyvisa.ResourceManager,
                  wlm: WLM_functions.WavelengthMeter,
@@ -89,9 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pm1.updatePower.connect(lambda pow: self.pm_label_power1.setText(f"Power PM1: {pow} W"))
         self.pm2.updatePower.connect(lambda pow: self.pm_label_power2.setText(f"Power PM2: {pow} W"))
 
-        self.dfb.update_textBox.connect(lambda: self.status_textEdit.insertPlainText(
-            f"{datetime.now().strftime('%H:%M:%S')} - "))
-        self.dfb.update_textBox.connect(lambda text: self.status_textEdit.insertPlainText(text))
+        self.dfb.update_textBox.connect(self.update_status_text)
+        self.update_textBox.connect(self.update_status_text)
 
     def connect_buttons(self):
         """
@@ -182,6 +183,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.general_button_startMeasurement.clicked.connect(self.start_measurement)
         self.general_button_stopMeasurement.clicked.connect(self.stop_measurement)
 
+    def update_status_text(self, text):
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        self.status_textEdit.insertPlainText(f"{timestamp} - {text}\n")
+
     def refresh_combobox(self, combobox):
         combobox.clear()
         combobox.addItems(self.rm.list_resources())
@@ -194,11 +199,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.measurement_loop_timer = QtCore.QTimer()
         start_time = time.time()
         self.measurement_loop_timer.timeout.connect(lambda: self.measurement(start_time))
-        with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file, delimiter=";")
-            writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
-                             "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature [°C]"])
-        self.measurement_loop_timer.start(1000)
+        try:
+            with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file, delimiter=";")
+                writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
+                                "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature [°C]"])
+            self.measurement_loop_timer.start(1000)
+        except AttributeError:
+            self.update_textBox.emit("Couldn't start measurement: No file path chosen")
 
     def stop_measurement(self):
         self.measurement_loop_timer.stop()
