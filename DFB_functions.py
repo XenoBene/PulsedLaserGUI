@@ -30,15 +30,14 @@ class DFB(QtCore.QObject):
             try:
                 self.dlc = DLCpro(NetworkConnection(ip))
                 self.dlc.open()
-                print("DFB connected")
+                self.update_textBox.emit("DFB connected\n")
                 self.update_values.emit(self.read_actual_dfb_values())
                 self._connect_button_is_checked = True
             except DeviceNotFoundError:
-                self.update_textBox.emit("DFB not found")
-                print("DFB not found")
+                self.update_textBox.emit("DFB not found\n")
         else:
             self.dlc.close()
-            print("DFB connection closed")
+            self.update_textBox.emit("DFB connection closed\n")
             self._connect_button_is_checked = False
 
     def read_actual_dfb_values(self):
@@ -51,11 +50,10 @@ class DFB(QtCore.QObject):
             self.scan_speed = self.dlc.laser1.wide_scan.speed.get()
             return self.set_temp, self.start_temp, self.end_temp, self.scan_speed
         except AttributeError as e:
-            self.update_textBox.emit(f"DFB is not yet connected: {e}")
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
         except UnavailableError as e:
             self.update_textBox.emit(f"DFB session was closed: {e}")
-            print(f"DFB session was closed: {e}")
+            self.update_textBox.emit(f"DFB session was closed: {e}\n")
 
     def get_actual_temperature(self):
         """Reads out the current temperature of the DFB diode.
@@ -67,7 +65,7 @@ class DFB(QtCore.QObject):
             act_temp = self.dlc.laser1.dl.tc.temp_act.get()
             return np.round(act_temp, 3)
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
 
     def change_dfb_setTemp(self, set_temp):
         """Changes the set temperature of the diode.
@@ -78,7 +76,7 @@ class DFB(QtCore.QObject):
         try:
             self.dlc.laser1.dl.tc.temp_set.set(np.round(set_temp, 2))
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
 
     def change_wideScan_startTemp(self, start_temp):
         """Changes the start temperature of a WideScan.
@@ -89,9 +87,9 @@ class DFB(QtCore.QObject):
         try:
             self.dlc.laser1.wide_scan.scan_begin.set(float(start_temp))
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
         except ValueError as e:
-            print(f"Value has to be a number: {e}")
+            self.update_textBox.emit(f"Value has to be a number: {e}\n")
 
     def change_wideScan_endTemp(self, end_temp):
         """Changes the end temperature of a WideScan.
@@ -102,9 +100,9 @@ class DFB(QtCore.QObject):
         try:
             self.dlc.laser1.wide_scan.scan_end.set(float(end_temp))
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
         except ValueError as e:
-            print(f"Value has to be a number: {e}")
+            self.update_textBox.emit(f"Value has to be a number: {e}\n")
 
     def change_wideScan_scanSpeed(self, scan_speed):
         """Changes the scan speed of a WideScan
@@ -115,9 +113,9 @@ class DFB(QtCore.QObject):
         try:
             self.dlc.laser1.wide_scan.speed.set(float(scan_speed))
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
         except ValueError as e:
-            print(f"Value has to be a number: {e}")
+            self.update_textBox.emit(f"Value has to be a number: {e}\n")
 
     def start_wideScan(self):
         """Starts the WideScan
@@ -131,7 +129,7 @@ class DFB(QtCore.QObject):
             self.widescan_status.emit(True)
             self.widescan_loopTimer.start()
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
 
     def abort_wideScan(self):
         """Stops the WideScan and changes the set temperature to the
@@ -139,14 +137,12 @@ class DFB(QtCore.QObject):
         down to the start temperature.
         """
         try:
-            print(time.time())
             temp = self.get_actual_temperature()
             self.dlc.laser1.wide_scan.stop()
             self.change_dfb_setTemp(temp)
             # self.widescan_status.emit(False)
-            print(time.time())
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
 
     def get_wideScan_state(self):
         """Get the state of the WideScan process.
@@ -162,7 +158,7 @@ class DFB(QtCore.QObject):
             state = self.dlc.laser1.wide_scan.state.get()
             return state
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
 
     def get_wideScan_progress(self):
         """Check the progress and remaining time of the WideScan.
@@ -175,7 +171,7 @@ class DFB(QtCore.QObject):
             remaining_time = self.dlc.laser1.wide_scan.remaining_time.get()
             return progress, remaining_time
         except AttributeError as e:
-            print(f"DFB is not yet connected: {e}")
+            self.update_textBox.emit(f"DFB is not yet connected: {e}\n")
 
     def update_wideScan_progress(self):
         progress, remaining_time = self.get_wideScan_progress()

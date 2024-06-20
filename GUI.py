@@ -10,6 +10,7 @@ import pandas as pd
 import csv
 import time
 import numpy as np
+from datetime import datetime
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -88,6 +89,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pm1.updatePower.connect(lambda pow: self.pm_label_power1.setText(f"Power PM1: {pow} W"))
         self.pm2.updatePower.connect(lambda pow: self.pm_label_power2.setText(f"Power PM2: {pow} W"))
 
+        self.dfb.update_textBox.connect(lambda: self.status_textEdit.insertPlainText(
+            f"{datetime.now().strftime('%H:%M:%S')} - "))
         self.dfb.update_textBox.connect(lambda text: self.status_textEdit.insertPlainText(text))
 
     def connect_buttons(self):
@@ -170,9 +173,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pm_button_connectPM2.clicked.connect(
             lambda: self.pm2.connect_pm(visa=self.pm_comboBox_visaResources2.currentText()))
         self.pm_button_changeWL1.clicked.connect(lambda:
-                                                 self.pm1.set_wavelength(self.pm_lineEdit_enterWL1.currentText()))
+                                                 self.pm1.set_wavelength(float(self.pm_lineEdit_enterWL1.text()) * 1e-9))
         self.pm_button_changeWL2.clicked.connect(lambda:
-                                                 self.pm2.set_wavelength(self.pm_lineEdit_enterWL2.currentText()))
+                                                 self.pm2.set_wavelength(float(self.pm_lineEdit_enterWL2.text()) * 1e-9))
 
         """General Tab buttons:"""
         self.general_button_selectPath.clicked.connect(self.create_measurement_file)
