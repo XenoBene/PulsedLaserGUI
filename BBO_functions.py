@@ -97,10 +97,10 @@ class WorkerBBO(QtCore.QObject):
             return new_pos
 
         self.keep_running = True
-        start_time = time.time()
         self.status.emit(True)
 
         while self.keep_running:
+            start_time = time.time()
             direction = self.steps if self.going_right else -self.steps
             self.stage.move_by(axis=self.axis, addr=self.addr, steps=direction)
             time.sleep(float(self.steps / self.velocity) + self.wait)
