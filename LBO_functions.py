@@ -37,14 +37,16 @@ class WorkerLBO(QtCore.QObject):
         self.keep_running = True
         self.status.emit(True)
         try:
+            old_wl = 0
             while self.keep_running:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
                 # wl = self.wlm.get_wavelength(channel=1, wait=False)  # PyLabLib
-                if 1028 < wl < 1032:
+                if 1028 < wl < 1032 and abs(old_wl - wl) > 0.001:
                     needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
                     self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
                     self.update_temperature.emit((needed_temperature, actual_temperature))
+                    old_wl = wl
                     time.sleep(1)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
             print(f"LBO scan stopped working: {e}")
