@@ -16,3 +16,5 @@ Kalibrierung
 Kalibrierung/calibrationlog.log
 __pycache__/Powermeter_functions.cpython-310.pyc
 __pycache__/Powermeter_functions.cpython-310.pyc
+__pycache__/Error_Decorator.cpython-310.pyc
+__pycache__

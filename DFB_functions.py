@@ -3,6 +3,7 @@ from toptica.lasersdk.client import UnavailableError
 import numpy as np
 from PyQt6 import QtCore
 import time
+from Error_Decorator import handle_dfb_attribute_error
 
 
 class DFB(QtCore.QObject):
@@ -41,6 +42,7 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit("DFB connection closed")
             self._connect_button_is_checked = False
 
+    @handle_dfb_attribute_error(default_return=(None, None, None, None))
     def read_actual_dfb_values(self):
         """Reads out the set temperature and the WideScan parameters 'Start temp.', 'End temp.' and 'Scan speed'.
         """
@@ -50,9 +52,6 @@ class DFB(QtCore.QObject):
             self.end_temp = self.dlc.laser1.wide_scan.scan_end.get()
             self.scan_speed = self.dlc.laser1.wide_scan.speed.get()
             return self.set_temp, self.start_temp, self.end_temp, self.scan_speed
-        except AttributeError as e:
-            self.update_textBox.emit(f"DFB is not yet connected: {e}")
-            return None, None, None, None
         except UnavailableError as e:
             self.update_textBox.emit(f"DFB session was closed: {e}")
             self.update_textBox.emit(f"DFB session was closed: {e}")
@@ -70,16 +69,14 @@ class DFB(QtCore.QObject):
         except AttributeError as e:
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
 
+    @handle_dfb_attribute_error()
     def change_dfb_setTemp(self, set_temp):
         """Changes the set temperature of the diode.
 
         Args:
             set_temp (float): Desired set temperature [°C]
         """
-        try:
-            self.dlc.laser1.dl.tc.temp_set.set(np.round(set_temp, 2))
-        except AttributeError as e:
-            self.update_textBox.emit(f"DFB is not yet connected: {e}")
+        self.dlc.laser1.dl.tc.temp_set.set(np.round(set_temp, 2))
 
     def change_wideScan_startTemp(self, start_temp):
         """Changes the start temperature of a WideScan.
