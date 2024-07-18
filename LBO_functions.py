@@ -40,6 +40,9 @@ class WorkerLBO(QtCore.QObject):
             old_wl = 0
             while self.keep_running:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
+                time.sleep(0.1)    # This sleep timer is important, otherwise the WLM is overloaded when the ASE filter
+                # also measure the wavelength all the time
+
                 # wl = self.wlm.get_wavelength(channel=1, wait=False)  # PyLabLib
                 if 1028 < wl < 1032 and abs(old_wl - wl) > 0.001:
                     needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
@@ -47,7 +50,7 @@ class WorkerLBO(QtCore.QObject):
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
                     self.update_temperature.emit((needed_temperature, actual_temperature))
                     old_wl = wl
-                    time.sleep(1)  # Sleep timer so that the needed CPU runtime is not as high.
+                    time.sleep(0.9)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
             print(f"LBO scan stopped working: {e}")
         except WlmDataLibError as e:  # Needed when PyLabLib is used
