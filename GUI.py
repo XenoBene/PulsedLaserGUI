@@ -67,12 +67,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
         self.lbo.autoscan_status.connect(lambda bool: self.status_label_lbo.setText("T[°C] =") if not bool else None)
-        self.lbo.update_temperature.connect(lambda temp: (
-            self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp[0]}"),
-            self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {temp[1]}")
-            ))
-        self.lbo.update_temperature.connect(lambda values: self.status_label_lbo.setText(f"T[°C] = {values[1]}"))
-        self.lbo.update_temperature.connect(lambda temp: setattr(self, "data_lbo", temp[1]))
+        self.lbo.update_set_temperature.connect(
+            lambda temp: self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp}"))
+        self.lbo.update_act_temperature.connect(
+            lambda temp: self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {temp}"))
+        self.lbo.update_act_temperature.connect(lambda value: self.status_label_lbo.setText(f"T[°C] = {value}"))
+        self.lbo.update_act_temperature.connect(lambda temp: setattr(self, "data_lbo", temp))
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)

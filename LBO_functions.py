@@ -18,7 +18,8 @@ class WorkerLBO(QtCore.QObject):
     # Signals need to be class variables, not instance variables:
     status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
-    update_temperature = QtCore.pyqtSignal(tuple)
+    update_set_temperature = QtCore.pyqtSignal(float)
+    update_act_temperature = QtCore.pyqtSignal(float)
 
     def __init__(self, wlm, oc):
         super().__init__()
@@ -44,11 +45,13 @@ class WorkerLBO(QtCore.QObject):
                 # also measure the wavelength all the time
 
                 # wl = self.wlm.get_wavelength(channel=1, wait=False)  # PyLabLib
-                if 1028 < wl < 1032 and abs(old_wl - wl) > 0.001:
-                    needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
-                    self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
+                if 1028 < wl < 1032:
+                    if abs(old_wl - wl) > 0.001:
+                        needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
+                        self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
+                        self.update_set_temperature.emit(needed_temperature)
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
-                    self.update_temperature.emit((needed_temperature, actual_temperature))
+                    self.update_act_temperature.emit(actual_temperature)
                     old_wl = wl
                     time.sleep(0.9)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
@@ -71,7 +74,8 @@ class WorkerLBO(QtCore.QObject):
 
 class LBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
-    update_temperature = QtCore.pyqtSignal(tuple)
+    update_act_temperature = QtCore.pyqtSignal(float)
+    update_set_temperature = QtCore.pyqtSignal(float)
 
     def __init__(self):
         """Class to control the OC2 oven controller by Covesion.
@@ -198,7 +202,8 @@ class LBO(QtCore.QObject):
 
                 # Connect different methods to the signals of the thread:
                 self.threadLBO.started.connect(self.workerLBO.temperature_auto)
-                self.workerLBO.update_temperature.connect(self.update_temperature.emit)
+                self.workerLBO.update_act_temperature.connect(self.update_act_temperature.emit)
+                self.workerLBO.update_set_temperature.connect(self.update_set_temperature.emit)
                 self.workerLBO.status.connect(self.autoscan_status.emit)
                 self.workerLBO.finished.connect(self.threadLBO.quit)
                 self.workerLBO.finished.connect(self.workerLBO.deleteLater)
