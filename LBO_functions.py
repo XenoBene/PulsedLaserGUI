@@ -129,7 +129,7 @@ class LBO(QtCore.QObject):
             ValueError: Gets raised if the input values are not in the allowed bounds.
         """
         try:
-            if ((float(set_temp) <= 200) and (float(set_temp) >= 15) and (float(rate) <= 2)):
+            if ((float(set_temp) <= 200) and (float(set_temp) >= 15) and (0 < float(rate) <= 2)):
                 self.oc.write("!i191;"+str(set_temp)+";0;0;" +
                               str(np.round(rate/60, 3))+";0;0;BF")
             else:

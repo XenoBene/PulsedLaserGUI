@@ -165,10 +165,10 @@ class BBO(QtCore.QObject):
                 self._connect_button_is_checked = True
             except NewportBackendError as e:
                 print(e)
-                self._connect_button_is_checked = False
+                self._connect_button_is_checked = True
             except NewportError as e:
                 print(f"Picomotor application still opened? {e}")
-                self._connect_button_is_checked = False
+                self._connect_button_is_checked = True
         else:
             print("aus")
             self.stage.close()
@@ -182,18 +182,22 @@ class BBO(QtCore.QObject):
         Args:
             ip (str): IP adress of the RedPitaya (SCPI server needs to be turned on)
         """
-        if not self._connect_rp_button_is_checked:
-            self.rp = scpi.scpi(ip)
-            self.rp.tx_txt('ACQ:RST')
-            self.rp.acq_set(1)
-            self.rp.tx_txt('ACQ:DATA:FORMAT ASCII')
-            self.rp.tx_txt('ACQ:DATA:UNITS VOLTS')
-            self.rp.tx_txt('ACQ:START')
+        try:
+            if not self._connect_rp_button_is_checked:
+                self.rp = scpi.scpi(ip)
+                self.rp.tx_txt('ACQ:RST')
+                self.rp.acq_set(1)
+                self.rp.tx_txt('ACQ:DATA:FORMAT ASCII')
+                self.rp.tx_txt('ACQ:DATA:UNITS VOLTS')
+                self.rp.tx_txt('ACQ:START')
 
+                self._connect_rp_button_is_checked = True
+            else:
+                # TODO: Disconnect Red Pitaya
+                self._connect_rp_button_is_checked = False
+        except BrokenPipeError as e:
+            print(e)
             self._connect_rp_button_is_checked = True
-        else:
-            # TODO: Disconnect Red Pitaya
-            self._connect_rp_button_is_checked = False
 
     def move_by(self, steps):
         """Moves the picomotor in one direction.

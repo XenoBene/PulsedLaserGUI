@@ -1080,7 +1080,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>240</y>
+        <y>150</y>
         <width>211</width>
         <height>101</height>
        </rect>
@@ -1180,7 +1180,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>100</y>
+        <y>10</y>
         <width>381</width>
         <height>131</height>
        </rect>
@@ -1298,72 +1298,6 @@
        <property name="text">
         <string>UV Diode Voltage [V]:</string>
        </property>
-      </widget>
-     </widget>
-     <widget class="QFrame" name="frame_12">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>331</width>
-        <height>81</height>
-       </rect>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Box</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Plain</enum>
-      </property>
-      <widget class="QWidget" name="verticalLayoutWidget_5">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>10</y>
-         <width>311</width>
-         <height>61</height>
-        </rect>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
-          <item>
-           <widget class="QLabel" name="bbo_label_1">
-            <property name="text">
-             <string>Measurement Path:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bbo_button_selectPath">
-            <property name="text">
-             <string>Select Path</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QLabel" name="bbo_label_measurementPath">
-          <property name="text">
-           <string>Measurement Path für später</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </widget>
      </widget>
      <widget class="QFrame" name="frame_13">
