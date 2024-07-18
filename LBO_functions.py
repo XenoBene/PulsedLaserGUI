@@ -128,12 +128,15 @@ class LBO(QtCore.QObject):
         Raises:
             ValueError: Gets raised if the input values are not in the allowed bounds.
         """
-        if ((set_temp <= 200) and (set_temp >= 15) and (rate <= 2)):
-            self.oc.write("!i191;"+str(set_temp)+";0;0;" +
-                          str(np.round(rate/60, 3))+";0;0;BF")
-        else:
-            raise ValueError(
-                "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
+        try:
+            if ((float(set_temp) <= 200) and (float(set_temp) >= 15) and (float(rate) <= 2)):
+                self.oc.write("!i191;"+str(set_temp)+";0;0;" +
+                              str(np.round(rate/60, 3))+";0;0;BF")
+            else:
+                raise ValueError(
+                    "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
+        except ValueError as e:
+            print(e)
 
     def get_status(self):
         """Returns the status of the covesion controller.
