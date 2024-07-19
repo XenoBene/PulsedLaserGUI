@@ -110,7 +110,8 @@ class WorkerBBO(QtCore.QObject):
             new_pos = update_position_and_measure()
 
             slope = (uv_power - self.old_power) / (new_pos - self.old_pos)
-            self.going_right = slope > 0
+            # self.going_right = slope > 0
+            self.going_right = not self.going_right
             self.old_power, self.old_pos = uv_power, new_pos
 
             wl = np.round(self.wlm.GetWavelength(1), 6)
@@ -120,7 +121,7 @@ class WorkerBBO(QtCore.QObject):
                 self.delta_wl_start, self.start_pos, self.threshold_power = wl, new_pos, uv_power
                 self.iterator_steps = 0
 
-            new_pos = correct_position_if_needed(wl, uv_power, new_pos)
+            # new_pos = correct_position_if_needed(wl, uv_power, new_pos)  # Rettungsalgorithmus
 
             print(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")
 
