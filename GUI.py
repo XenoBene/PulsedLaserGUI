@@ -92,6 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pm2.updatePower.connect(lambda pow: self.pm_label_power2.setText(f"Power PM2: {pow} W"))
 
         self.dfb.update_textBox.connect(self.update_status_text)
+        self.lbo.update_textBox.connect(self.update_status_text)
         self.update_textBox.connect(self.update_status_text)
 
     def connect_buttons(self):
@@ -255,7 +256,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.lbo_lineEdit_rampSpeed.setText(str(self.lbo.rate))
             self.lbo_lineEdit_targetTemp.setText(str(self.lbo.set_temp))
         except AttributeError as e:
-            print(f"Covesion oven is not connected: {e}")
+            self.update_textBox(f"Covesion oven is not connected: {e}")
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
@@ -273,9 +274,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dfb_lineEdit_scanEndTemp.setText(str(end_temp))
             self.dfb_lineEdit_scanSpeed.setText(str(scan_speed))
         except AttributeError as e:
-            print(f"DFB is not connected: {e}")
+            self.update_textBox(f"DFB is not connected: {e}")
         except TypeError as e:
-            print(e)
+            self.update_textBox(e)
 
     def update_widescan_progressbar(self, progress, time):
         """
@@ -424,6 +425,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     self.ase_label_pathText.setText(calparfilename)
                 except KeyError:
-                    print("Please select a valid file with the motor calibration parameters!")
+                    self.update_textBox("Please select a valid file with the motor calibration parameters!")
         except FileNotFoundError:
-            print("File not found!")
+            self.update_textBox("File not found!")

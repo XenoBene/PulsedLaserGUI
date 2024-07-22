@@ -54,20 +54,17 @@ class DFB(QtCore.QObject):
             return self.set_temp, self.start_temp, self.end_temp, self.scan_speed
         except UnavailableError as e:
             self.update_textBox.emit(f"DFB session was closed: {e}")
-            self.update_textBox.emit(f"DFB session was closed: {e}")
             return None, None, None, None
 
+    @handle_dfb_attribute_error()
     def get_actual_temperature(self):
         """Reads out the current temperature of the DFB diode.
 
         Returns:
             float: Temperature of the DFB diode [°C]
         """
-        try:
-            act_temp = self.dlc.laser1.dl.tc.temp_act.get()
-            return np.round(act_temp, 3)
-        except AttributeError as e:
-            self.update_textBox.emit(f"DFB is not yet connected: {e}")
+        act_temp = self.dlc.laser1.dl.tc.temp_act.get()
+        return np.round(act_temp, 3)
 
     @handle_dfb_attribute_error()
     def change_dfb_setTemp(self, set_temp):

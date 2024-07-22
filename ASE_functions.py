@@ -27,6 +27,7 @@ class ASE(QtCore.QObject):
     update_wl_pos = QtCore.pyqtSignal(tuple)
     autoscan_failsafe = QtCore.pyqtSignal()
     autocalibration_progress = QtCore.pyqtSignal(int)
+    update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self):
         """This class controls the Thorlabs rotation stage that rotates the ASE filters.
@@ -75,20 +76,20 @@ class ASE(QtCore.QObject):
                 self.stage.calmode = True  # Sets the cal mode to Kal 1
                 if not self.stage.is_homed():
                     # TODO: Richtige Nachricht bzw. auto Homing?
-                    print("Motor is not homed! Please press 'Home'")
+                    self.update_textBox.emit("Motor is not homed! Please press 'Home'")
                 else:
-                    print(f"Motor {self.stage.serial_nr} connected.")
-                    print(f"Motor is at the position {self.stage.to_degree(self.stage.get_position())}.")
+                    self.update_textBox.emit(f"Motor {self.stage.serial_nr} connected.")
+                    self.update_textBox.emit(f"Motor is at the position {self.stage.to_degree(self.stage.get_position())}.")
                 self.stage.setup_velocity(max_velocity=self.stage.to_steps(10))
             except ThorlabsBackendError:
-                print("Device not found")
+                self.update_textBox.emit("Device not found")
         else:
             try:
                 self._connect_button_is_checked = False
                 self.stage.close()
-                print("Motor disconnected")
+                self.update_textBox.emit("Motor disconnected")
             except AttributeError:
-                print("No stage was connected")
+                self.update_textBox.emit("No stage was connected")
 
     def move_to_start(self, wlm):
         """
@@ -126,9 +127,8 @@ class ASE(QtCore.QObject):
             try:
                 self.stage.close()
             except pylablib.core.devio.comm_backend.DeviceBackendError as e:
-                print(e)
+                self.update_textBox.emit(e)
             finally:
-                print(time.time())
                 self.autoscan_failsafe.emit()
                 self.autoscan_status.emit(False)
                 self.autoscan_loop_timer.stop()
@@ -158,7 +158,7 @@ class ASE(QtCore.QObject):
             self.stage.setup_homing(velocity=self.stage.to_steps(10), offset_distance=self.stage.to_steps(4))
             self.stage.home(sync=False, force=True)  # sync=False means no waiting until motor is finished. force=True means homing even if already homed
         except AttributeError:
-            print("No stage is connected")
+            self.update_textBox.emit("No stage is connected")
 
     def autoscan(self, wlm):
         """
@@ -334,8 +334,9 @@ class ASE(QtCore.QObject):
                 if self.autocal_iterator == len(temp_list) - 1:
                     self.calculate_autocalibration(showplots=True, bounds=calibration_bounds)
                     powermeter.enable_autorange(True)
-                    print("Auto calibration finished! Please select the new calibration parameters located in the"
-                          f"{self.cal_folderpath[:-8]} folder. Ensure none of the fits diverge.")
+                    self.update_textBox.emit("Auto calibration finished! Please select the new calibration"
+                                             f"parameters located in the {self.cal_folderpath[:-8]} folder."
+                                             "Ensure none of the fits diverge.")
                     self.autocalibration_loop_timer.stop()
                     self.autocalibration_progress.emit(0)
                 else:
@@ -388,7 +389,7 @@ class ASE(QtCore.QObject):
                                                                calibration_bounds, startangle, endangle))
         self.autocalibration_loop_timer.start()
         logging.info('Auto calibration initiated.')
-        print('Start auto-calibration!')
+        self.update_textBox.emit('Start auto-calibration!')
 
     def calculate_autocalibration(self, folderpath='Kalibrierung', foldername='',
                                   bounds=([0, 108, 0.1, 1, 0], [1, 118, 2, 5, 0.1]), showplots=False):

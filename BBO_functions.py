@@ -12,6 +12,7 @@ class WorkerBBO(QtCore.QObject):
     finished = QtCore.pyqtSignal()
     update_diodeVoltage = QtCore.pyqtSignal(float)
     update_motorSteps = QtCore.pyqtSignal(int)
+    update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self, wlm, rp, stage, axis, addr, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -123,7 +124,7 @@ class WorkerBBO(QtCore.QObject):
 
             # new_pos = correct_position_if_needed(wl, uv_power, new_pos)  # Rettungsalgorithmus
 
-            print(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")
+            self.update_textBox.emit(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")
 
         self.status.emit(False)
         self.finished.emit()
@@ -133,13 +134,14 @@ class WorkerBBO(QtCore.QObject):
         to end the autoscan method to end the QThread.
         """
         self.keep_running = False
-        print("UV Autoscan stopped")
+        self.update_textBox.emit("UV Autoscan stopped")
 
 
 class BBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     voltageUpdated = QtCore.pyqtSignal(float)
     stepsUpdated = QtCore.pyqtSignal(int)
+    update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self, axis, addr):
         """This class controls the picomotor which controls the angle
@@ -162,16 +164,16 @@ class BBO(QtCore.QObject):
         if not self._connect_button_is_checked:
             try:
                 self.stage = Newport.Picomotor8742()
-                print("an")
+                self.update_textBox.emit("Picomotor connected")
                 self._connect_button_is_checked = True
             except NewportBackendError as e:
-                print(e)
+                self.update_textBox.emit(e)
                 self._connect_button_is_checked = True
             except NewportError as e:
-                print(f"Picomotor application still opened? {e}")
+                self.update_textBox.emit(f"Picomotor application still opened? {e}")
                 self._connect_button_is_checked = True
         else:
-            print("aus")
+            self.update_textBox.emit("Picomotor disconnected")
             self.stage.close()
             # TODO: Das disconnected den Motor nicht wirklich, man kann ihn immer noch ansteuern
             self._connect_button_is_checked = False
@@ -197,7 +199,7 @@ class BBO(QtCore.QObject):
                 # TODO: Disconnect Red Pitaya
                 self._connect_rp_button_is_checked = False
         except BrokenPipeError as e:
-            print(e)
+            self.update_textBox.emit(e)
             self._connect_rp_button_is_checked = True
 
     def move_by(self, steps):
@@ -210,7 +212,7 @@ class BBO(QtCore.QObject):
         try:
             self.stage.move_by(axis=self.axis, addr=self.addr, steps=steps)
         except AttributeError:
-            print("Picomotor not connected!")
+            self.update_textBox.emit("Picomotor not connected!")
 
     def change_autoscan_parameters(self, velocity, steps, wait):
         """Assigns the velocity, steps and wait time to instance attributes.
@@ -233,12 +235,12 @@ class BBO(QtCore.QObject):
         try:
             self.stage.setup_velocity(axis=self.axis, addr=self.addr, speed=velocity)
         except AttributeError:
-            print("Picomotor not connected!")
+            self.update_textBox.emit("Picomotor not connected!")
 
     def start_autoscan(self, wlm):
         """Starts the QThread (the WorkerBBO class) where the UV autoscan will operate.
         """
-        print("Start Autoscan")
+        self.update_textBox.emit("Start Autoscan")
         try:
             # Initiate QThread and WorkerLBO class:
             self.threadBBO = QtCore.QThread()
@@ -252,6 +254,7 @@ class BBO(QtCore.QObject):
             self.workerBBO.status.connect(self.autoscan_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.update_motorSteps.connect(self.stepsUpdated.emit)
+            self.workerBBO.update_textBox.connect(self.update_textBox.emit)
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)
@@ -259,10 +262,10 @@ class BBO(QtCore.QObject):
             # Start the thread:
             self.threadBBO.start()
         except AttributeError as e:
-            print(f"Error: {e}")
+            self.update_textBox.emit(f"Error: {e}")
 
     def stop_autoscan(self):
         """Stops the QThread (WorkerBBO class).
         """
-        print("Stop Autoscan")
+        self.update_textBox.emit("Stop Autoscan")
         self.workerBBO.stop()

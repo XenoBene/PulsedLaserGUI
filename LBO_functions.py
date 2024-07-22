@@ -20,6 +20,7 @@ class WorkerLBO(QtCore.QObject):
     finished = QtCore.pyqtSignal()
     update_set_temperature = QtCore.pyqtSignal(float)
     update_act_temperature = QtCore.pyqtSignal(float)
+    update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self, wlm, oc):
         super().__init__()
@@ -55,9 +56,9 @@ class WorkerLBO(QtCore.QObject):
                     old_wl = wl
                     time.sleep(0.9)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
-            print(f"LBO scan stopped working: {e}")
+            self.update_textBox.emit(f"LBO scan stopped working: {e}")
         except WlmDataLibError as e:  # Needed when PyLabLib is used
-            print(e)
+            self.update_textBox.emit(e)
         finally:
             # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
             # die GUI bekommt davon nichts mit. Also mit einem Signal den Knopf wieder umschalten?
@@ -69,13 +70,14 @@ class WorkerLBO(QtCore.QObject):
         to end the temperature_auto method to end the QThread.
         """
         self.keep_running = False
-        print("LBO Autoscan stopped by hand")
+        self.update_textBox.emit("LBO Autoscan stopped by hand")
 
 
 class LBO(QtCore.QObject):
     autoscan_status = QtCore.pyqtSignal(bool)
     update_act_temperature = QtCore.pyqtSignal(float)
     update_set_temperature = QtCore.pyqtSignal(float)
+    update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self):
         """Class to control the OC2 oven controller by Covesion.
@@ -98,10 +100,10 @@ class LBO(QtCore.QObject):
                 self.oc = rm.open_resource(port, baud_rate=19200, data_bits=8,
                                            parity=pyvisa.constants.Parity.none, flow_control=0,
                                            stop_bits=pyvisa.constants.StopBits.one)
-                print("Covesion oven connected")
+                self.update_textBox.emit("Covesion oven connected")
                 self.read_values()  # Read values as the first thing after connecting
             except pyvisa.errors.VisaIOError as e:
-                print(f"Device not supported: {e}")
+                self.update_textBox.emit(f"Device not supported: {e}")
             finally:
                 self._connect_button_is_checked = True
         else:
@@ -110,7 +112,7 @@ class LBO(QtCore.QObject):
                 try:
                     self.oc.session  # Checks if the oven is really disconnected
                 except pyvisa.errors.InvalidSession:
-                    print("Device closed")
+                    self.update_textBox.emit("Device closed")
             except pyvisa.errors.InvalidSession:
                 # TODO: Richtiger Fehler wenn Disconnect obwohl nie Connected
                 pass
@@ -136,7 +138,7 @@ class LBO(QtCore.QObject):
                 raise ValueError(
                     "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
         except ValueError as e:
-            print(e)
+            self.update_textBox.emit(e)
 
     def get_status(self):
         """Returns the status of the covesion controller.
@@ -149,7 +151,7 @@ class LBO(QtCore.QObject):
             status = self.oc.query("!j00CB").split(";")
             return status
         except pyvisa.errors.InvalidSession as e:
-            print(f"Device closed: {e}")
+            self.update_textBox.emit(f"Device closed: {e}")
 
     def get_status_q(self):
         """Returns the q-status (different than the j-status of get_status) of the covesion controller.
@@ -162,7 +164,7 @@ class LBO(QtCore.QObject):
             status = self.oc.query("!q").split(";")
             return status
         except pyvisa.errors.InvalidSession as e:
-            print(f"Device closed: {e}")
+            self.update_textBox.emit(f"Device closed: {e}")
 
     def get_actTemp(self):
         """Gets the current temperature of the covesion oven.
@@ -175,7 +177,7 @@ class LBO(QtCore.QObject):
             self.act_temp = float(values[1])
             return self.act_temp
         except pyvisa.errors.InvalidSession as e:
-            print(f"Device closed: {e}")
+            self.update_textBox.emit(f"Device closed: {e}")
 
     def read_values(self):
         """Reads out the set temperature and ramp speed of the oven.
@@ -195,7 +197,7 @@ class LBO(QtCore.QObject):
         when too many processes run at the same time.
         """
         if not self._autoscan_button_is_checked:
-            print("Start Autoscan")
+            self.update_textBox.emit("Start LBO Autoscan")
             try:
                 self._autoscan_button_is_checked = True
                 # Initiate QThread and WorkerLBO class:
@@ -207,6 +209,7 @@ class LBO(QtCore.QObject):
                 self.threadLBO.started.connect(self.workerLBO.temperature_auto)
                 self.workerLBO.update_act_temperature.connect(self.update_act_temperature.emit)
                 self.workerLBO.update_set_temperature.connect(self.update_set_temperature.emit)
+                self.workerLBO.update_textBox.connect(self.update_textBox.emit)
                 self.workerLBO.status.connect(self.autoscan_status.emit)
                 self.workerLBO.finished.connect(self.threadLBO.quit)
                 self.workerLBO.finished.connect(self.workerLBO.deleteLater)
@@ -215,8 +218,8 @@ class LBO(QtCore.QObject):
                 # Start the thread:
                 self.threadLBO.start()
             except AttributeError as e:
-                print(f"Error: {e}")
+                self.update_textBox.emit(f"Error: {e}")
         else:
             self._autoscan_button_is_checked = False
-            print("Stop Autoscan")
+            self.update_textBox.emit("Stop LBO Autoscan")
             self.workerLBO.stop()
