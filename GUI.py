@@ -51,6 +51,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
         self.dfb.widescan_status.connect(lambda bool:
                                          self.status_label_wideScan.setText("T[°C] =") if not bool else None)
+        self.dfb.widescan_status.connect(self.dfb_disable_buttons)
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
         self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
@@ -260,13 +261,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.update_textBox(f"Covesion oven is not connected: {e}")
 
     def lbo_disable_buttons(self, bool):
-        self.lbo_button_connectLBO.setEnabled(bool)
-        self.lbo_button_refresh.setEnabled(bool)
-        self.lbo_lineEdit_rampSpeed.setEnabled(bool)
-        self.lbo_lineEdit_targetTemp.setEnabled(bool)
-        self.lbo_button_readValues.setEnabled(bool)
-        self.lbo_button_setTemp.setEnabled(bool)
-        self.lbo_comboBox_visa.setEnabled(bool)
+        widget_list = (self.lbo_button_connectLBO, self.lbo_button_refresh, self.lbo_lineEdit_rampSpeed,
+                       self.lbo_lineEdit_targetTemp, self.lbo_button_readValues, self.lbo_button_setTemp,
+                       self.lbo_comboBox_visa)
+        for widget in widget_list:
+            widget.setEnabled(not bool)
+
+    def dfb_disable_buttons(self, bool):
+        widget_list = (self.dfb_button_connectDfb, self.dfb_lineEdit_ip, self.dfb_button_readValues,
+                       self.dfb_spinBox_setTemp, self.dfb_lineEdit_scanStartTemp, self.dfb_lineEdit_scanSpeed,
+                       self.dfb_lineEdit_scanEndTemp, self.dfb_button_startScan)
+        for widget in widget_list:
+            widget.setEnabled(not bool)
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,

@@ -1,5 +1,6 @@
 from toptica.lasersdk.dlcpro.v2_0_3 import DLCpro, NetworkConnection, DeviceNotFoundError
 from toptica.lasersdk.client import UnavailableError
+from toptica.lasersdk.decop import DecopError
 import numpy as np
 from PyQt6 import QtCore
 import time
@@ -146,6 +147,8 @@ class DFB(QtCore.QObject):
             self.widescan_loopTimer.start()
         except AttributeError as e:
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
+        except DecopError:
+            self.update_textBox.emit("WideScan is already in progress!")
 
     def abort_wideScan(self):
         """Stops the WideScan and changes the set temperature to the
@@ -156,6 +159,7 @@ class DFB(QtCore.QObject):
             temp = self.get_actual_temperature()
             self.dlc.laser1.wide_scan.stop()
             self.change_dfb_setTemp(temp)
+            self.update_values.emit(self.read_actual_dfb_values())
             # self.widescan_status.emit(False)
         except AttributeError as e:
             self.update_textBox.emit(f"DFB is not yet connected: {e}")

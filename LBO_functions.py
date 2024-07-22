@@ -223,6 +223,5 @@ class LBO(QtCore.QObject):
             try:
                 self._autoscan_button_is_checked = False
                 self.workerLBO.stop()
-                self.update_textBox.emit("Stop LBO Autoscan")
             except AttributeError as e:
                 self.update_textBox.emit(f"Error: {e}")
