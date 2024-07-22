@@ -58,7 +58,7 @@ class WorkerLBO(QtCore.QObject):
         except pyvisa.errors.InvalidSession as e:
             self.update_textBox.emit(f"LBO scan stopped working: {e}")
         except WlmDataLibError as e:  # Needed when PyLabLib is used
-            self.update_textBox.emit(e)
+            self.update_textBox.emit(f"Error: {e}")
         finally:
             # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
             # die GUI bekommt davon nichts mit. Also mit einem Signal den Knopf wieder umschalten?
@@ -138,7 +138,7 @@ class LBO(QtCore.QObject):
                 raise ValueError(
                     "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
         except ValueError as e:
-            self.update_textBox.emit(e)
+            self.update_textBox.emit(f"Error: {e}")
 
     def get_status(self):
         """Returns the status of the covesion controller.
@@ -220,6 +220,9 @@ class LBO(QtCore.QObject):
             except AttributeError as e:
                 self.update_textBox.emit(f"Error: {e}")
         else:
-            self._autoscan_button_is_checked = False
-            self.update_textBox.emit("Stop LBO Autoscan")
-            self.workerLBO.stop()
+            try:
+                self._autoscan_button_is_checked = False
+                self.workerLBO.stop()
+                self.update_textBox.emit("Stop LBO Autoscan")
+            except AttributeError as e:
+                self.update_textBox.emit(f"Error: {e}")

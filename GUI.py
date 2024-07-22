@@ -67,6 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
         self.lbo.autoscan_status.connect(lambda bool: self.status_label_lbo.setText("T[°C] =") if not bool else None)
+        self.lbo.autoscan_status.connect(self.lbo_disable_buttons)
         self.lbo.update_set_temperature.connect(
             lambda temp: self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp}"))
         self.lbo.update_act_temperature.connect(
@@ -258,6 +259,15 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             self.update_textBox(f"Covesion oven is not connected: {e}")
 
+    def lbo_disable_buttons(self, bool):
+        self.lbo_button_connectLBO.setEnabled(bool)
+        self.lbo_button_refresh.setEnabled(bool)
+        self.lbo_lineEdit_rampSpeed.setEnabled(bool)
+        self.lbo_lineEdit_targetTemp.setEnabled(bool)
+        self.lbo_button_readValues.setEnabled(bool)
+        self.lbo_button_setTemp.setEnabled(bool)
+        self.lbo_comboBox_visa.setEnabled(bool)
+
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
         start & end temperature of the WideScan and the scan speed.
@@ -276,7 +286,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             self.update_textBox(f"DFB is not connected: {e}")
         except TypeError as e:
-            self.update_textBox(e)
+            self.update_textBox(f"Error: {e}")
 
     def update_widescan_progressbar(self, progress, time):
         """

@@ -167,7 +167,7 @@ class BBO(QtCore.QObject):
                 self.update_textBox.emit("Picomotor connected")
                 self._connect_button_is_checked = True
             except NewportBackendError as e:
-                self.update_textBox.emit(e)
+                self.update_textBox.emit(f"Error: {e}")
                 self._connect_button_is_checked = True
             except NewportError as e:
                 self.update_textBox.emit(f"Picomotor application still opened? {e}")
@@ -199,7 +199,7 @@ class BBO(QtCore.QObject):
                 # TODO: Disconnect Red Pitaya
                 self._connect_rp_button_is_checked = False
         except BrokenPipeError as e:
-            self.update_textBox.emit(e)
+            self.update_textBox.emit(f"Error: {e}")
             self._connect_rp_button_is_checked = True
 
     def move_by(self, steps):

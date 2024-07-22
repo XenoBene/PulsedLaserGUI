@@ -127,7 +127,7 @@ class ASE(QtCore.QObject):
             try:
                 self.stage.close()
             except pylablib.core.devio.comm_backend.DeviceBackendError as e:
-                self.update_textBox.emit(e)
+                self.update_textBox.emit(f"Error: {e}")
             finally:
                 self.autoscan_failsafe.emit()
                 self.autoscan_status.emit(False)
