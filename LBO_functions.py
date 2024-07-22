@@ -124,8 +124,8 @@ class LBO(QtCore.QObject):
         covesion oven.
 
         Args:
-            set_temp (float): Set temperature [°C]. Only values between 15°C and 200°C are allowed.
-            rate (float): Temperature ramp speed [°C/min]. Only values under 2 °C/min are allowed.
+            set_temp (str): Set temperature [°C]. Only values between 15°C and 200°C are allowed.
+            rate (str): Temperature ramp speed [°C/min]. Only values under 2 °C/min are allowed.
 
         Raises:
             ValueError: Gets raised if the input values are not in the allowed bounds.
@@ -133,7 +133,7 @@ class LBO(QtCore.QObject):
         try:
             if ((float(set_temp) <= 200) and (float(set_temp) >= 15) and (0 < float(rate) <= 2)):
                 self.oc.write("!i191;"+str(set_temp)+";0;0;" +
-                              str(np.round(rate/60, 3))+";0;0;BF")
+                              str(np.round(float(rate)/60, 3))+";0;0;BF")
             else:
                 raise ValueError(
                     "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
