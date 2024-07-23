@@ -15,6 +15,7 @@ from datetime import datetime
 
 class MainWindow(QtWidgets.QMainWindow):
     update_textBox = QtCore.pyqtSignal(str)
+    measurement_status = QtCore.pyqtSignal(bool)
 
     def __init__(self,
                  rm: pyvisa.ResourceManager,
@@ -97,6 +98,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_textBox.connect(self.update_status_text)
         self.lbo.update_textBox.connect(self.update_status_text)
         self.update_textBox.connect(self.update_status_text)
+
+        self.measurement_status.connect(self.measurement_disable_buttons)
 
     def connect_buttons(self):
         """
@@ -209,11 +212,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
                                 "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature [°C]"])
             self.measurement_loop_timer.start(1000)
+            self.measurement_status.emit(True)
         except AttributeError:
             self.update_textBox.emit("Couldn't start measurement: No file path chosen")
 
     def stop_measurement(self):
         self.measurement_loop_timer.stop()
+        self.measurement_status.emit(False)
 
     def measurement(self, start_time):
         timestamp = time.time()
@@ -227,9 +232,15 @@ class MainWindow(QtWidgets.QMainWindow):
         data_lbo = 0.0
 
         if self.general_checkbox_savePower1.isChecked():
-            data_pm1 = self.pm1.get_power()
+            try:
+                data_pm1 = self.pm1.get_power()
+            except AttributeError:
+                data_pm1 = 0.0
         if self.general_checkbox_savePower2.isChecked():
-            data_pm2 = self.pm2.get_power()
+            try:
+                data_pm2 = self.pm2.get_power()
+            except AttributeError:
+                data_pm2 = 0.0
         if self.general_checkbox_saveWL.isChecked():
             data_wl = self.data_wl
         if self.general_checkbox_saveMotorSteps.isChecked():
@@ -291,6 +302,10 @@ class MainWindow(QtWidgets.QMainWindow):
                        self.ase_cal_y0_lower, self.ase_cal_y0_upper, self.ase_cal_x0_lower, self.ase_cal_x0_upper)
         for widget in widget_list:
             widget.setEnabled(not bool)
+
+    def measurement_disable_buttons(self, bool):
+        self.general_button_startMeasurement.setEnabled(not bool)
+        self.general_button_stopMeasurement.setEnabled(bool)
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,

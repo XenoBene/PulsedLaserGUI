@@ -171,6 +171,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="general_button_stopMeasurement">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>170</x>
