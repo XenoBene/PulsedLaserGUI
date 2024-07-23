@@ -21,7 +21,7 @@ window = GUI.MainWindow(
     wlm=WLM_functions.WavelengthMeter(debug=False),
     dfb=DFB_functions.DFB(),
     lbo=LBO_functions.LBO(),
-    bbo=BBO_functions.BBO(axis=1, addr=1),
+    bbo=BBO_functions.BBO(axis=1, addrFront=2, addrBack=1),
     ase=ASE_functions.ASE(),
     pm1=Powermeter_functions.PM(),
     pm2=Powermeter_functions.PM()

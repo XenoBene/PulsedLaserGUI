@@ -1082,10 +1082,10 @@
      <widget class="QFrame" name="frame_10">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>150</y>
+        <x>230</x>
+        <y>280</y>
         <width>211</width>
-        <height>101</height>
+        <height>121</height>
        </rect>
       </property>
       <property name="frameShape">
@@ -1098,7 +1098,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>10</y>
+         <y>30</y>
          <width>71</width>
          <height>16</height>
         </rect>
@@ -1114,7 +1114,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>30</y>
+         <y>50</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -1127,7 +1127,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>60</y>
+         <y>80</y>
          <width>91</width>
          <height>31</height>
         </rect>
@@ -1140,7 +1140,7 @@
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>60</y>
+         <y>80</y>
          <width>91</width>
          <height>31</height>
         </rect>
@@ -1153,7 +1153,7 @@
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>30</y>
+         <y>50</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -1166,7 +1166,7 @@
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>10</y>
+         <y>30</y>
          <width>71</width>
          <height>16</height>
         </rect>
@@ -1176,6 +1176,26 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_22">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>161</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Move second BBO:</string>
        </property>
       </widget>
      </widget>
@@ -1198,7 +1218,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>10</y>
+         <y>40</y>
          <width>181</width>
          <height>85</height>
         </rect>
@@ -1261,7 +1281,7 @@
        <property name="geometry">
         <rect>
          <x>200</x>
-         <y>10</y>
+         <y>40</y>
          <width>174</width>
          <height>81</height>
         </rect>
@@ -1279,6 +1299,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="bbo_button_stopUvScan">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true">color: red</string>
           </property>
@@ -1289,17 +1312,22 @@
         </item>
        </layout>
       </widget>
-      <widget class="QLabel" name="bbo_label_diodeVoltage">
+      <widget class="QLabel" name="label_19">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>100</y>
-         <width>241</width>
-         <height>16</height>
+         <y>10</y>
+         <width>361</width>
+         <height>21</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
-        <string>UV Diode Voltage [V]:</string>
+        <string>Single-BBO Setup (Second BBO)</string>
        </property>
       </widget>
      </widget>
@@ -1309,7 +1337,7 @@
         <x>400</x>
         <y>10</y>
         <width>161</width>
-        <height>111</height>
+        <height>121</height>
        </rect>
       </property>
       <property name="frameShape">
@@ -1324,7 +1352,7 @@
          <x>10</x>
          <y>10</y>
          <width>141</width>
-         <height>91</height>
+         <height>109</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -1334,7 +1362,7 @@
            <string notr="true">background-color: green</string>
           </property>
           <property name="text">
-           <string>Connect Piezomotor</string>
+           <string>Connect Piezomotors</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -1362,6 +1390,271 @@
          </widget>
         </item>
        </layout>
+      </widget>
+     </widget>
+     <widget class="QFrame" name="frame_12">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>381</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <widget class="QWidget" name="formLayoutWidget_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>181</width>
+         <height>85</height>
+        </rect>
+       </property>
+       <layout class="QFormLayout" name="formLayout_2">
+        <property name="labelAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+        <property name="formAlignment">
+         <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="bbo_label_steps_2">
+          <property name="text">
+           <string>Steps:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="bbo_lineEdit_steps_double">
+          <property name="text">
+           <string>50</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="bbo_label_velocity_2">
+          <property name="text">
+           <string>Velocity (Steps/s):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="bbo_lineEdit_scanVelocity_double">
+          <property name="text">
+           <string>500</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="bbo_label_break_2">
+          <property name="text">
+           <string>Break (s):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="bbo_lineEdit_break_double">
+          <property name="text">
+           <string>0.05</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="verticalLayoutWidget_9">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>40</y>
+         <width>174</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_13">
+        <item>
+         <widget class="QPushButton" name="bbo_button_startUvScan_double">
+          <property name="styleSheet">
+           <string notr="true">color: green</string>
+          </property>
+          <property name="text">
+           <string>Start UV Optimization</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bbo_button_stopUvScan_double">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: red</string>
+          </property>
+          <property name="text">
+           <string>Stop UV Optimization</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QLabel" name="label_20">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>361</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Double-BBO Setup</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="bbo_label_diodeVoltage">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>140</y>
+        <width>191</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>UV Diode Voltage [V]:</string>
+      </property>
+     </widget>
+     <widget class="QFrame" name="frame_19">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>280</y>
+        <width>211</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <widget class="QLabel" name="label_39">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>71</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Steps</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="bbo_lineEdit_relativeSteps_front">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>71</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>100</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="bbo_button_back_front">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Back</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="bbo_button_forwards_front">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>80</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Forwards</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="bbo_lineEdit_velocity_front">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>50</y>
+         <width>71</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>500</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_23">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>30</y>
+         <width>71</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Velocity</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_24">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>161</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Move first BBO:</string>
+       </property>
       </widget>
      </widget>
     </widget>

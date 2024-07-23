@@ -61,9 +61,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.bbo.voltageUpdated.connect(lambda value:
                                         self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
-        self.bbo.autoscan_status.connect(self.status_checkBox_bbo.setChecked)
-        self.bbo.autoscan_status.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
-        self.bbo.autoscan_status.connect(self.bbo_disable_buttons)
+        self.bbo.autoscan_status_single.connect(self.status_checkBox_bbo.setChecked)
+        self.bbo.autoscan_status_double.connect(self.status_checkBox_bbo.setChecked)
+        self.bbo.autoscan_status_single.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
+        self.bbo.autoscan_status_double.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
+        self.bbo.autoscan_status_single.connect(self.bbo_disable_buttons)
+        self.bbo.autoscan_status_double.connect(self.bbo_disable_buttons)
+        self.bbo.autoscan_status_single.connect(self.bbo_button_stopUvScan.setEnabled)
+        self.bbo.autoscan_status_double.connect(self.bbo_button_stopUvScan_double.setEnabled)
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
         self.bbo.voltageUpdated.connect(lambda value: self.status_label_bbo.setText(f"U[V] = {value}"))
         self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
@@ -97,6 +102,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.dfb.update_textBox.connect(self.update_status_text)
         self.lbo.update_textBox.connect(self.update_status_text)
+        self.bbo.update_textBox.connect(self.update_status_text)
+        self.ase.update_textBox.connect(self.update_status_text)
         self.update_textBox.connect(self.update_status_text)
 
         self.measurement_status.connect(self.measurement_disable_buttons)
@@ -147,22 +154,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo_button_connectRP.clicked.connect(
             lambda: self.bbo.connect_red_pitaya(ip=str(self.bbo_lineEdit_ipRedPitaya.text())))
 
+        # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(
-            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text())))
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text()), False))
         self.bbo_button_forwards.clicked.connect(
-            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps.text())))
+            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps.text()), False))
         self.bbo_button_back.clicked.connect(
-            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text())))
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text()), False))
         self.bbo_button_back.clicked.connect(
-            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps.text())))
+            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps.text()), False))
 
+        # Single BBO setup:
         self.bbo_button_startUvScan.clicked.connect(
             lambda: self.bbo.change_autoscan_parameters(
                 velocity=self.bbo_lineEdit_scanVelocity.text(),
                 steps=self.bbo_lineEdit_steps.text(),
-                wait=self.bbo_lineEdit_break.text()))
+                wait=self.bbo_lineEdit_break.text(),
+                double_bbo_setup=False))
         self.bbo_button_startUvScan.clicked.connect(lambda: self.bbo.start_autoscan(wlm=self.wlm))
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
+
+        # First/Front BBO:
+        self.bbo_button_forwards_front.clicked.connect(
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity_front.text()), True))
+        self.bbo_button_forwards_front.clicked.connect(
+            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps_front.text()), True))
+        self.bbo_button_back_front.clicked.connect(
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity_front.text()), True))
+        self.bbo_button_back_front.clicked.connect(
+            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps_front.text()), True))
+
+        # Double BBO setup:
+        self.bbo_button_startUvScan_double.clicked.connect(
+            lambda: self.bbo.change_autoscan_parameters(
+                velocity=self.bbo_lineEdit_scanVelocity_double.text(),
+                steps=self.bbo_lineEdit_steps_double.text(),
+                wait=self.bbo_lineEdit_break_double.text(),
+                double_bbo_setup=True))
+        self.bbo_button_startUvScan_double.clicked.connect(lambda: self.bbo.start_autoscan_double(wlm=self.wlm))
+        self.bbo_button_stopUvScan_double.clicked.connect(self.bbo.stop_autoscan_double)
 
         """ASE Tab buttons:"""
         self.ase_button_connectStage.clicked.connect(
@@ -288,9 +318,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def bbo_disable_buttons(self, bool):
         widget_list = (self.bbo_lineEdit_steps, self.bbo_lineEdit_scanVelocity, self.bbo_lineEdit_break,
-                       self.bbo_button_startUvScan, self.bbo_button_connectPiezo, self.bbo_button_connectRP,
+                       self.bbo_lineEdit_steps_double, self.bbo_lineEdit_scanVelocity_double,
+                       self.bbo_lineEdit_break_double, self.bbo_button_connectPiezo, self.bbo_button_connectRP,
                        self.bbo_lineEdit_ipRedPitaya, self.bbo_lineEdit_relativeSteps, self.bbo_lineEdit_velocity,
-                       self.bbo_button_back, self.bbo_button_forwards)
+                       self.bbo_lineEdit_relativeSteps_front, self.bbo_lineEdit_velocity_front,
+                       self.bbo_button_back, self.bbo_button_forwards, self.bbo_button_back_front,
+                       self.bbo_button_forwards_front, self.bbo_button_startUvScan, self.bbo_button_startUvScan_double)
         for widget in widget_list:
             widget.setEnabled(not bool)
 
