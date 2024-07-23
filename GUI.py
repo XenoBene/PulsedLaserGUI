@@ -245,6 +245,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.measurement_status.emit(True)
         except AttributeError:
             self.update_textBox.emit("Couldn't start measurement: No file path chosen")
+        except FileNotFoundError:
+            self.update_textBox.emit("Couldn't start measurement: No file path chosen")
 
     def stop_measurement(self):
         self.measurement_loop_timer.stop()

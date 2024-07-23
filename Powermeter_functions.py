@@ -19,6 +19,7 @@ class PM(QtCore.QObject):
             self.updateWavelength.emit(np.round(self.get_wavelength() * 1e9, 2))
         else:
             self.pm.close()
+            del self.pm
             self._connect_button_is_checked = False
 
     def get_power(self):

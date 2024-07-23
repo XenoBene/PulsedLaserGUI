@@ -87,6 +87,7 @@ class ASE(QtCore.QObject):
             try:
                 self._connect_button_is_checked = False
                 self.stage.close()
+                del self.stage
                 self.update_textBox.emit("Motor disconnected")
             except AttributeError:
                 self.update_textBox.emit("No stage was connected")

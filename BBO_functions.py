@@ -389,7 +389,7 @@ class BBO(QtCore.QObject):
         else:
             self.update_textBox.emit("Picomotor disconnected")
             self.stage.close()
-            # TODO: Das disconnected den Motor nicht wirklich, man kann ihn immer noch ansteuern
+            del self.stage
             self._connect_button_is_checked = False
 
     def connect_red_pitaya(self, ip):
@@ -410,7 +410,7 @@ class BBO(QtCore.QObject):
 
                 self._connect_rp_button_is_checked = True
             else:
-                # TODO: Disconnect Red Pitaya
+                del self.rp
                 self._connect_rp_button_is_checked = False
         except BrokenPipeError as e:
             self.update_textBox.emit(f"Error: {e}")

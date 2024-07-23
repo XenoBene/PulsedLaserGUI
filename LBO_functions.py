@@ -115,6 +115,7 @@ class LBO(QtCore.QObject):
                     self.oc.session  # Checks if the oven is really disconnected
                 except pyvisa.errors.InvalidSession:
                     self.update_textBox.emit("Device closed")
+                    del self.oc
             except pyvisa.errors.InvalidSession:
                 # TODO: Richtiger Fehler wenn Disconnect obwohl nie Connected
                 pass
