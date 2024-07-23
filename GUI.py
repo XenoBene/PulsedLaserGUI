@@ -62,6 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
         self.bbo.autoscan_status.connect(self.status_checkBox_bbo.setChecked)
         self.bbo.autoscan_status.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
+        self.bbo.autoscan_status.connect(self.bbo_disable_buttons)
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
         self.bbo.voltageUpdated.connect(lambda value: self.status_label_bbo.setText(f"U[V] = {value}"))
         self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
@@ -78,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)
-        self.ase.autoscan_status.connect(self.ase_button_connectStage.setDisabled)
+        self.ase.autoscan_status.connect(self.ase_disable_buttons)
         self.ase.update_wl_pos.connect(lambda values: (
             self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
             self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
@@ -271,6 +272,23 @@ class MainWindow(QtWidgets.QMainWindow):
         widget_list = (self.dfb_button_connectDfb, self.dfb_lineEdit_ip, self.dfb_button_readValues,
                        self.dfb_spinBox_setTemp, self.dfb_lineEdit_scanStartTemp, self.dfb_lineEdit_scanSpeed,
                        self.dfb_lineEdit_scanEndTemp, self.dfb_button_startScan)
+        for widget in widget_list:
+            widget.setEnabled(not bool)
+
+    def bbo_disable_buttons(self, bool):
+        widget_list = (self.bbo_lineEdit_steps, self.bbo_lineEdit_scanVelocity, self.bbo_lineEdit_break,
+                       self.bbo_button_startUvScan, self.bbo_button_connectPiezo, self.bbo_button_connectRP,
+                       self.bbo_lineEdit_ipRedPitaya, self.bbo_lineEdit_relativeSteps, self.bbo_lineEdit_velocity,
+                       self.bbo_button_back, self.bbo_button_forwards)
+        for widget in widget_list:
+            widget.setEnabled(not bool)
+
+    def ase_disable_buttons(self, bool):
+        widget_list = (self.ase_button_selectPath, self.ase_button_connectStage, self.ase_button_home,
+                       self.ase_lineEdit_stage, self.ase_button_moveToStart, self.ase_button_startAutoCal,
+                       self.ase_cal_startangle, self.ase_cal_endangle, self.ase_cal_B_lower, self.ase_cal_B_upper,
+                       self.ase_cal_a_lower, self.ase_cal_a_upper, self.ase_cal_n_lower, self.ase_cal_n_upper,
+                       self.ase_cal_y0_lower, self.ase_cal_y0_upper, self.ase_cal_x0_lower, self.ase_cal_x0_upper)
         for widget in widget_list:
             widget.setEnabled(not bool)
 
