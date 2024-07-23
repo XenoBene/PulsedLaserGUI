@@ -57,6 +57,8 @@ class WorkerLBO(QtCore.QObject):
                     time.sleep(0.9)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
             self.update_textBox.emit(f"LBO scan stopped working: {e}")
+        except pyvisa.errors.VisaIOError as e:
+            self.update_textBox.emit(f"LBO lost connection: {e}")
         except WlmDataLibError as e:  # Needed when PyLabLib is used
             self.update_textBox.emit(f"Error: {e}")
         finally:
