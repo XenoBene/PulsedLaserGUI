@@ -193,42 +193,6 @@ class LBO(QtCore.QObject):
         self.rate = float(values[4]) * 60
         return self.set_temp, self.rate
 
-    def toggle_autoscan(self, wlm):
-        """Starts|Stops the automatic temperature scan of the LBO depending on the
-        state of the "Autoscan" button in the GUI. This process
-        gets started in a QThread because otherwise there would be problems
-        when too many processes run at the same time.
-        """
-        if not self._autoscan_button_is_checked:
-            self.update_textBox.emit("Start LBO Autoscan")
-            try:
-                self._autoscan_button_is_checked = True
-                # Initiate QThread and WorkerLBO class:
-                self.threadLBO = QtCore.QThread()
-                self.workerLBO = WorkerLBO(wlm=wlm, oc=self.oc)
-                self.workerLBO.moveToThread(self.threadLBO)
-
-                # Connect different methods to the signals of the thread:
-                self.threadLBO.started.connect(self.workerLBO.temperature_auto)
-                self.workerLBO.update_act_temperature.connect(self.update_act_temperature.emit)
-                self.workerLBO.update_set_temperature.connect(self.update_set_temperature.emit)
-                self.workerLBO.update_textBox.connect(self.update_textBox.emit)
-                self.workerLBO.status.connect(self.autoscan_status.emit)
-                self.workerLBO.finished.connect(self.threadLBO.quit)
-                self.workerLBO.finished.connect(self.workerLBO.deleteLater)
-                self.threadLBO.finished.connect(self.threadLBO.deleteLater)
-
-                # Start the thread:
-                self.threadLBO.start()
-            except AttributeError as e:
-                self.update_textBox.emit(f"Error: {e}")
-        else:
-            try:
-                self._autoscan_button_is_checked = False
-                self.workerLBO.stop()
-            except AttributeError as e:
-                self.update_textBox.emit(f"Error: {e}")
-
     def start_autoscan(self, wlm):
         """Starts the automatic temperature scan of the LBO. This process
         gets started in a QThread because otherwise there would be problems

@@ -161,35 +161,6 @@ class ASE(QtCore.QObject):
         except AttributeError:
             self.update_textBox.emit("No stage is connected")
 
-    def autoscan(self, wlm):
-        """
-        Toggles the autoscan process.
-
-        This method starts or stops the autoscan process based on the current state.
-        If starting, it sets up a timer to repeatedly call the move_to_start method.
-        If stopping, it stops the timer and updates the autoscan status.
-
-        Behavior:
-        ---------
-        - If autoscan is not active, starts the autoscan process.
-        - If autoscan is active, stops the autoscan process.
-        - Updates the autoscan status signal at the start and stop.
-
-        Example:
-        --------
-        >>> obj.autoscan()
-        """
-        self.autoscan_loop_timer = QtCore.QTimer()
-        if not self._autoscan_button_is_checked:
-            self.autoscan_loop_timer.timeout.connect(lambda: self.move_to_start(wlm=wlm))
-            self.autoscan_loop_timer.start(10)
-            self.autoscan_status.emit(True)
-            self._autoscan_button_is_checked = True
-        else:
-            self.autoscan_loop_timer.stop()
-            self.autoscan_status.emit(False)
-            self._autoscan_button_is_checked = False
-
     def start_autoscan(self, wlm):
         """This method starts the autoscan process.
         It sets up a timer to repeatedly call the move_to_start method.
