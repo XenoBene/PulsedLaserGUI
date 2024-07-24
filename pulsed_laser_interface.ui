@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabWidget">
+   <widget class="QTabWidget" name="tabwidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -41,7 +41,7 @@
     <property name="tabBarAutoHide">
      <bool>false</bool>
     </property>
-    <widget class="QWidget" name="tab">
+    <widget class="QWidget" name="general_tab">
      <attribute name="title">
       <string>General</string>
      </attribute>
@@ -246,7 +246,7 @@
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_2">
+    <widget class="QWidget" name="PM_tab">
      <attribute name="title">
       <string>Powermeter</string>
      </attribute>
@@ -513,7 +513,7 @@
       </property>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_3">
+    <widget class="QWidget" name="ASE_tab">
      <attribute name="title">
       <string>ASE Filter</string>
      </attribute>
@@ -918,7 +918,7 @@
        <rect>
         <x>320</x>
         <y>10</y>
-        <width>141</width>
+        <width>271</width>
         <height>81</height>
        </rect>
       </property>
@@ -947,7 +947,10 @@
         <string>Connect Stage</string>
        </property>
        <property name="checkable">
-        <bool>true</bool>
+        <bool>false</bool>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
        </property>
       </widget>
       <widget class="QPushButton" name="ase_button_home">
@@ -1075,7 +1078,7 @@
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_4">
+    <widget class="QWidget" name="BBO_tab">
      <attribute name="title">
       <string>UV Opt.</string>
      </attribute>
@@ -1249,6 +1252,9 @@
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="bbo_label_velocity">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="text">
            <string>Velocity (Steps/s):</string>
           </property>
@@ -1658,7 +1664,7 @@
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_5">
+    <widget class="QWidget" name="LBO_tab">
      <attribute name="title">
       <string>LBO Oven</string>
      </attribute>
@@ -1813,7 +1819,7 @@
         <x>10</x>
         <y>220</y>
         <width>421</width>
-        <height>91</height>
+        <height>121</height>
        </rect>
       </property>
       <property name="frameShape">
@@ -1826,16 +1832,16 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>30</y>
+         <y>10</y>
          <width>113</width>
          <height>32</height>
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: green</string>
+        <string notr="true">color: green</string>
        </property>
        <property name="text">
-        <string>Auto Scan</string>
+        <string>Auto Scan Start</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -1867,9 +1873,28 @@
         </item>
        </layout>
       </widget>
+      <widget class="QPushButton" name="lbo_button_autoScan_stop">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>113</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: red</string>
+       </property>
+       <property name="text">
+        <string>Auto Scan Stop</string>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_6">
+    <widget class="QWidget" name="DFB_tab">
      <attribute name="title">
       <string>DFB</string>
      </attribute>
