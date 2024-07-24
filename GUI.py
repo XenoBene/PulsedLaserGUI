@@ -52,7 +52,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
         self.dfb.widescan_status.connect(lambda bool:
                                          self.status_label_wideScan.setText("T[°C] =") if not bool else None)
-        self.dfb.widescan_status.connect(self.dfb_disable_buttons)
+        self.dfb.widescan_status.connect(lambda bool: self.disable_tab_widgets(
+            "DFB_tab", self.dfb_button_abortScan, bool))
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
         self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
@@ -67,8 +68,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_double.connect(lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", self.bbo_button_stopUvScan, bool))
+        self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", self.bbo_button_stopUvScan_double, bool))
+        self.bbo.autoscan_status_double.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
         self.bbo.autoscan_status_single.connect(self.bbo_button_stopUvScan.setEnabled)
         self.bbo.autoscan_status_double.connect(self.bbo_button_stopUvScan_double.setEnabled)
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
@@ -78,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
         self.lbo.autoscan_status.connect(lambda bool: self.status_label_lbo.setText("T[°C] =") if not bool else None)
         self.lbo.autoscan_status.connect(lambda bool: self.disable_tab_widgets(
-            "LBO_tab", self.lbo_button_autoScan, bool))
+            "LBO_tab", self.lbo_button_autoScan_stop, bool))
         self.lbo.update_set_temperature.connect(
             lambda temp: self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp}"))
         self.lbo.update_act_temperature.connect(
@@ -88,7 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)
-        self.ase.autoscan_status.connect(self.ase_disable_buttons)
+        self.ase.autoscan_status.connect(lambda bool: self.disable_tab_widgets(
+            "ASE_tab", self.ase_button_autoScan_stop, bool))
         self.ase.update_wl_pos.connect(lambda values: (
             self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
             self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
@@ -109,7 +113,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase.update_textBox.connect(self.update_status_text)
         self.update_textBox.connect(self.update_status_text)
 
-        self.measurement_status.connect(self.measurement_disable_buttons)
+        self.measurement_status.connect(lambda bool: self.disable_tab_widgets(
+            "general_tab", self.general_button_stopMeasurement, bool))
 
     def connect_buttons(self):
         """
@@ -150,7 +155,9 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.lbo.set_temperature(self.lbo_lineEdit_targetTemp.text(),
                                              self.lbo_lineEdit_rampSpeed.text())
         )
-        self.lbo_button_autoScan.clicked.connect(lambda: self.lbo.toggle_autoscan(wlm=self.wlm))
+        # self.lbo_button_autoScan.clicked.connect(lambda: self.lbo.toggle_autoscan(wlm=self.wlm))
+        self.lbo_button_autoScan_start.clicked.connect(lambda: self.lbo.start_autoscan(wlm=self.wlm))
+        self.lbo_button_autoScan_stop.clicked.connect(self.lbo.stop_autoscan)
 
         """BBO Tab buttons:"""
         self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
@@ -201,7 +208,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_connectStage.clicked.connect(
             lambda: self.ase.connect_rotationstage(self.ase_lineEdit_stage.text()))
         self.ase_button_moveToStart.clicked.connect(lambda: self.ase.move_to_start(wlm=self.wlm))
-        self.ase_button_startAutoScan.clicked.connect(lambda: self.ase.autoscan(wlm=self.wlm))
+        self.ase_button_autoScan_start.clicked.connect(lambda: self.ase.start_autoscan(wlm=self.wlm))
+        self.ase_button_autoScan_stop.clicked.connect(self.ase.stop_autoscan)
         self.ase_button_home.clicked.connect(self.ase_homing_popup)
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
         self.ase_button_selectPath.clicked.connect(self.open_calparfile)
@@ -311,49 +319,12 @@ class MainWindow(QtWidgets.QMainWindow):
         tab = self.findChild(QtWidgets.QWidget, tab_name)
         for widget in tab.findChildren(QtWidgets.QWidget):
             if isinstance(widget, (QtWidgets.QLineEdit, QtWidgets.QPushButton,
-                                   QtWidgets.QComboBox, QtWidgets.QDoubleSpinBox)):
+                                   QtWidgets.QComboBox, QtWidgets.QDoubleSpinBox,
+                                   QtWidgets.QCheckBox)):
                 if widget == excluded_widget:
-                    pass
+                    widget.setEnabled(disable)
                 else:
                     widget.setDisabled(disable)
-
-    def disable_buttons(self, button_list, disable):
-        for button in button_list:
-            button.setDisabled(disable)
-
-    def lbo_disable_buttons(self, disable):
-        button_list = (self.lbo_button_connectLBO, self.lbo_button_refresh, self.lbo_lineEdit_rampSpeed,
-                       self.lbo_lineEdit_targetTemp, self.lbo_button_readValues, self.lbo_button_setTemp,
-                       self.lbo_comboBox_visa)
-        self.disable_buttons(button_list, disable)
-
-    def dfb_disable_buttons(self, disable):
-        button_list = (self.dfb_button_connectDfb, self.dfb_lineEdit_ip, self.dfb_button_readValues,
-                       self.dfb_spinBox_setTemp, self.dfb_lineEdit_scanStartTemp, self.dfb_lineEdit_scanSpeed,
-                       self.dfb_lineEdit_scanEndTemp, self.dfb_button_startScan)
-        self.disable_buttons(button_list, disable)
-
-    def bbo_disable_buttons(self, disable):
-        button_list = (self.bbo_lineEdit_steps, self.bbo_lineEdit_scanVelocity, self.bbo_lineEdit_break,
-                       self.bbo_lineEdit_steps_double, self.bbo_lineEdit_scanVelocity_double,
-                       self.bbo_lineEdit_break_double, self.bbo_button_connectPiezo, self.bbo_button_connectRP,
-                       self.bbo_lineEdit_ipRedPitaya, self.bbo_lineEdit_relativeSteps, self.bbo_lineEdit_velocity,
-                       self.bbo_lineEdit_relativeSteps_front, self.bbo_lineEdit_velocity_front,
-                       self.bbo_button_back, self.bbo_button_forwards, self.bbo_button_back_front,
-                       self.bbo_button_forwards_front, self.bbo_button_startUvScan, self.bbo_button_startUvScan_double)
-        self.disable_buttons(button_list, disable)
-
-    def ase_disable_buttons(self, disable):
-        button_list = (self.ase_button_selectPath, self.ase_button_connectStage, self.ase_button_home,
-                       self.ase_lineEdit_stage, self.ase_button_moveToStart, self.ase_button_startAutoCal,
-                       self.ase_cal_startangle, self.ase_cal_endangle, self.ase_cal_B_lower, self.ase_cal_B_upper,
-                       self.ase_cal_a_lower, self.ase_cal_a_upper, self.ase_cal_n_lower, self.ase_cal_n_upper,
-                       self.ase_cal_y0_lower, self.ase_cal_y0_upper, self.ase_cal_x0_lower, self.ase_cal_x0_upper)
-        self.disable_buttons(button_list, disable)
-
-    def measurement_disable_buttons(self, bool):
-        self.general_button_startMeasurement.setEnabled(not bool)
-        self.general_button_stopMeasurement.setEnabled(bool)
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,

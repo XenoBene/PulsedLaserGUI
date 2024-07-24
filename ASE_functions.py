@@ -190,6 +190,24 @@ class ASE(QtCore.QObject):
             self.autoscan_status.emit(False)
             self._autoscan_button_is_checked = False
 
+    def start_autoscan(self, wlm):
+        """This method starts the autoscan process.
+        It sets up a timer to repeatedly call the move_to_start method.
+
+        Args:
+            wlm (WavelengthMeter): WLM to measure the wavelength
+        """
+        self.autoscan_loop_timer = QtCore.QTimer()
+        self.autoscan_loop_timer.timeout.connect(lambda: self.move_to_start(wlm=wlm))
+        self.autoscan_loop_timer.start(10)
+        self.autoscan_status.emit(True)
+
+    def stop_autoscan(self):
+        """This method stops the autoscan process and updates the autoscan status.
+        """
+        self.autoscan_loop_timer.stop()
+        self.autoscan_status.emit(False)
+
     def init_wavelength_to_angle_calibration(self, wlm, dfb, temp, lowtohi, folderpath="Kalibrierung"):
         """
         Initializes the wavelength to angle calibration process.

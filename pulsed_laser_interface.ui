@@ -1036,12 +1036,28 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="ase_button_startAutoScan">
+         <widget class="QPushButton" name="ase_button_autoScan_start">
           <property name="styleSheet">
-           <string notr="true">background-color: green</string>
+           <string notr="true">color: green</string>
           </property>
           <property name="text">
            <string>Enable</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="ase_button_autoScan_stop">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: red</string>
+          </property>
+          <property name="text">
+           <string>Disable</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -1828,7 +1844,7 @@
       <property name="frameShadow">
        <enum>QFrame::Plain</enum>
       </property>
-      <widget class="QPushButton" name="lbo_button_autoScan">
+      <widget class="QPushButton" name="lbo_button_autoScan_start">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1874,6 +1890,9 @@
        </layout>
       </widget>
       <widget class="QPushButton" name="lbo_button_autoScan_stop">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1939,6 +1958,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="dfb_button_abortScan">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
