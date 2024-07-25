@@ -4,6 +4,7 @@ import numpy as np
 
 
 class PM(QtCore.QObject):
+    update_textBox = QtCore.pyqtSignal(str)
     updateWavelength = QtCore.pyqtSignal(float)
     updatePower = QtCore.pyqtSignal(float)
 
@@ -28,7 +29,18 @@ class PM(QtCore.QObject):
         return power
 
     def set_wavelength(self, wl):
-        self.pm.set_wavelength(wl)
+        try:
+            wl = float(wl)
+            wl_min = 250
+            wl_max = 1100
+            if 250.0 < wl < 1100.0:
+                self.pm.set_wavelength(wl * 1e-9)
+            else:
+                self.update_textBox.emit(f"Wavelength has to be between {wl_min} and {wl_max} nm")
+        except ValueError as e:
+            self.update_textBox.emit(f"Value has to be a number: {e}")
+        finally:
+            self.updateWavelength.emit(np.round(self.get_wavelength() * 1e9, 2))
 
     def enable_autorange(self, enable):
         self.pm.enable_autorange(enable=enable)
