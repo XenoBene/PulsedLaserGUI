@@ -158,6 +158,18 @@ class ASE(QtCore.QObject):
         try:
             self.stage.setup_homing(velocity=self.stage.to_steps(10), offset_distance=self.stage.to_steps(4))
             self.stage.home(sync=False, force=True)  # sync=False means no waiting until motor is finished. force=True means homing even if already homed
+            self.homing_loop_timer = QtCore.QTimer()
+            self.homing_loop_timer.timeout.connect(self.homing_status)
+            self.homing_loop_timer.start(100)
+            self.update_textBox.emit("Starting homing process. Please wait for confirmation of completion...")
+        except AttributeError:
+            self.update_textBox.emit("No stage is connected")
+
+    def homing_status(self):
+        try:
+            if self.stage.is_homed():
+                self.homing_loop_timer.stop()
+                self.update_textBox.emit("Homing complete! Please activate the autoscan.")
         except AttributeError:
             self.update_textBox.emit("No stage is connected")
 
