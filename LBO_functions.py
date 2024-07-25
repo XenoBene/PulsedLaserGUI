@@ -65,6 +65,7 @@ class WorkerLBO(QtCore.QObject):
             # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
             # die GUI bekommt davon nichts mit. Also mit einem Signal den Knopf wieder umschalten?
             self.status.emit(False)
+            self.cleanup()
             self.finished.emit()  # Needed to exit the QThread
 
     def stop(self):
@@ -73,6 +74,14 @@ class WorkerLBO(QtCore.QObject):
         """
         self.keep_running = False
         self.update_textBox.emit("LBO Autoscan stopped by hand")
+
+    def cleanup(self):
+        """Clean up all attributes.
+        This is very important, because otherwise there could be a memory
+        leak when the USB connection is lost to the LBO oven."""
+        attributes = list(self.__dict__.keys())
+        for attribute in attributes:
+            delattr(self, attribute)
 
 
 class LBO(QtCore.QObject):
@@ -87,6 +96,7 @@ class LBO(QtCore.QObject):
         super().__init__()
         self._connect_button_is_checked = False
         self._autoscan_button_is_checked = False
+        self.workerLBO = None
 
     def connect_covesion(self, rm, port):
         """Connects | Disconnects the covesion oven OC2 depending on if the
@@ -115,12 +125,14 @@ class LBO(QtCore.QObject):
                     self.oc.session  # Checks if the oven is really disconnected
                 except pyvisa.errors.InvalidSession:
                     self.update_textBox.emit("Device closed")
-                    del self.oc
             except pyvisa.errors.InvalidSession:
                 # TODO: Richtiger Fehler wenn Disconnect obwohl nie Connected
                 pass
+            except pyvisa.errors.VisaIOError:
+                self.update_textBox.emit("LBO is already disconnected!")
             finally:
                 self._connect_button_is_checked = False
+                del self.oc
 
     def set_temperature(self, set_temp, rate):
         """Sets the desired temperature and the speed of the ramp of the
@@ -137,11 +149,15 @@ class LBO(QtCore.QObject):
             if ((float(set_temp) <= 200) and (float(set_temp) >= 15) and (0 < float(rate) <= 2)):
                 self.oc.write("!i191;"+str(set_temp)+";0;0;" +
                               str(np.round(float(rate)/60, 3))+";0;0;BF")
+                self.update_textBox.emit("It worked!")
             else:
                 raise ValueError(
                     "Only temperatures between 15°C and 200°C and rates lower than 2°C/min allowed")
         except ValueError as e:
             self.update_textBox.emit(f"Error: {e}")
+        except pyvisa.errors.VisaIOError as e:
+            # self.update_textBox.emit(f"Error: {e}")
+            self.update_textBox.emit("It failed!")
 
     def get_status(self):
         """Returns the status of the covesion controller.
@@ -155,6 +171,8 @@ class LBO(QtCore.QObject):
             return status
         except pyvisa.errors.InvalidSession as e:
             self.update_textBox.emit(f"Device closed: {e}")
+        except pyvisa.errors.VisaIOError as e:
+            self.update_textBox.emit(f"Error: {e}")
 
     def get_status_q(self):
         """Returns the q-status (different than the j-status of get_status) of the covesion controller.
@@ -168,6 +186,8 @@ class LBO(QtCore.QObject):
             return status
         except pyvisa.errors.InvalidSession as e:
             self.update_textBox.emit(f"Device closed: {e}")
+        except pyvisa.errors.VisaIOError as e:
+            self.update_textBox.emit(f"Error: {e}")
 
     def get_actTemp(self):
         """Gets the current temperature of the covesion oven.
@@ -188,10 +208,16 @@ class LBO(QtCore.QObject):
         Returns:
             tuple: Set temp [°C] and ramp speed [°C/min] as a float tuple.
         """
-        values = self.get_status_q()
-        self.set_temp = values[1]
-        self.rate = float(values[4]) * 60
-        return self.set_temp, self.rate
+        try:
+            values = self.get_status_q()
+            self.set_temp = values[1]
+            self.rate = float(values[4]) * 60
+        except TypeError as e:
+            self.update_textBox.emit(f"Error: {e}")
+            self.set_temp = None
+            self.rate = None
+        finally:
+            return self.set_temp, self.rate
 
     def start_autoscan(self, wlm):
         """Starts the automatic temperature scan of the LBO. This process
@@ -202,7 +228,9 @@ class LBO(QtCore.QObject):
         try:
             # Initiate QThread and WorkerLBO class:
             self.threadLBO = QtCore.QThread()
-            self.workerLBO = WorkerLBO(wlm=wlm, oc=self.oc)
+
+            self.workerLBO = WorkerLBO(wlm=wlm, oc=self.oc)  # Diese Zeile führt zu Problemen!!
+
             self.workerLBO.moveToThread(self.threadLBO)
 
             # Connect different methods to the signals of the thread:
