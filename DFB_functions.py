@@ -162,7 +162,7 @@ class DFB(QtCore.QObject):
         down to the start temperature.
         """
         try:
-            temp = self.get_actual_temperature()
+            temp = np.round(self.get_actual_temperature(), 1)
             self.dlc.laser1.wide_scan.stop()
             self.change_dfb_setTemp(temp)
             self.update_values.emit(self.read_actual_dfb_values())
