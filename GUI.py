@@ -46,7 +46,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_pm1 = 0.0
         self.data_pm2 = 0.0
         self.data_wl = 0.0
-        self.data_lbo = 0.0
+        self.data_lbo_act = 0.0
+        self.data_lbo_set = 0.0
 
         # Signal/Slots:
         self.dfb.widescan_status.connect(self.status_checkBox_wideScan.setChecked)
@@ -84,10 +85,11 @@ class MainWindow(QtWidgets.QMainWindow):
             "LBO_tab", self.lbo_button_autoScan_stop, bool))
         self.lbo.update_set_temperature.connect(
             lambda temp: self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp}"))
+        self.lbo.update_set_temperature.connect(lambda temp: setattr(self, "data_lbo_set", temp))
         self.lbo.update_act_temperature.connect(
             lambda temp: self.lbo_label_actTemp.setText(f"Actual temperature [°C]: {temp}"))
         self.lbo.update_act_temperature.connect(lambda value: self.status_label_lbo.setText(f"T[°C] = {value}"))
-        self.lbo.update_act_temperature.connect(lambda temp: setattr(self, "data_lbo", temp))
+        self.lbo.update_act_temperature.connect(lambda temp: setattr(self, "data_lbo_act", temp))
 
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)
@@ -251,7 +253,8 @@ class MainWindow(QtWidgets.QMainWindow):
             with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file, delimiter=";")
                 writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
-                                "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature [°C]"])
+                                 "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature (act) [°C]",
+                                 "LBO temperature (set) [°C]"])
             self.measurement_loop_timer.start(1000)
             self.measurement_status.emit(True)
         except AttributeError:
@@ -272,7 +275,8 @@ class MainWindow(QtWidgets.QMainWindow):
         data_wl = 0.0
         data_steps = 0
         data_uv = 0.0
-        data_lbo = 0.0
+        data_lbo_act = 0.0
+        data_lbo_set = 0.0
 
         if self.general_checkbox_savePower1.isChecked():
             try:
@@ -291,19 +295,21 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.general_checkbox_saveUvPdVolt.isChecked():
             data_uv = self.data_uv
         if self.general_checkbox_saveLboTemp.isChecked():
-            data_lbo = self.data_lbo
+            data_lbo_act = self.data_lbo_act
+            data_lbo_set = self.data_lbo_set
 
         with open(self.file_path, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=";")
             writer.writerow([time_since_start, timestamp, data_wl, data_pm1,
-                             data_pm2, data_steps, data_uv, data_lbo])
+                             data_pm2, data_steps, data_uv, data_lbo_act, data_lbo_set])
         self.reset_data_storage()
 
     def reset_data_storage(self):
         self.data_uv = 0.0
         self.data_steps = 0
         self.data_wl = 0.0
-        self.data_lbo = 0.0
+        self.data_lbo_act = 0.0
+        self.data_lbo_set = 0.0
 
     def lbo_update_values(self):
         """Updates the GUI with the latest values for the

@@ -92,6 +92,8 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
         except ValueError as e:
             self.update_textBox.emit(f"Value has to be a number: {e}")
+        except DecopError as e:
+            self.update_textBox.emit(f"Error: {e}")
         finally:
             self.update_values.emit(self.read_actual_dfb_values())
 
@@ -111,6 +113,8 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
         except ValueError as e:
             self.update_textBox.emit(f"Value has to be a number: {e}")
+        except DecopError as e:
+            self.update_textBox.emit(f"Error: {e}")
         finally:
             self.update_values.emit(self.read_actual_dfb_values())
 
@@ -131,6 +135,8 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
         except ValueError as e:
             self.update_textBox.emit(f"Value has to be a number: {e}")
+        except DecopError as e:
+            self.update_textBox.emit(f"Error: {e}")
         finally:
             self.update_values.emit(self.read_actual_dfb_values())
 
