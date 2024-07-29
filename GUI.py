@@ -131,8 +131,6 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb_update_values(*self.dfb.read_actual_dfb_values()))
         self.dfb_spinBox_setTemp.valueChanged.connect(
             lambda: self.dfb.change_dfb_setTemp(self.dfb_spinBox_setTemp.value()))
-        # TODO: Bei manueller Eingabe soll mit Enter bestätigt werden bevor sich die Temperatur ändert!
-        # vllt mit self.dfb_spinBox_setTemp.editingFinished.connect() ?
         self.dfb_lineEdit_scanStartTemp.editingFinished.connect(
             lambda: self.dfb.change_wideScan_startTemp(self.dfb_lineEdit_scanStartTemp.text()))
         self.dfb_lineEdit_scanEndTemp.editingFinished.connect(

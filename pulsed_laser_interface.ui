@@ -2211,6 +2211,9 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="dfb_spinBox_setTemp">
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
             <property name="readOnly">
              <bool>false</bool>
             </property>
