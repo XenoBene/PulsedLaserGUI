@@ -2087,6 +2087,19 @@
         <string>End:</string>
        </property>
       </widget>
+      <widget class="QPushButton" name="dfb_button_setScanValues">
+       <property name="geometry">
+        <rect>
+         <x>150</x>
+         <y>70</y>
+         <width>113</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Set values</string>
+       </property>
+      </widget>
      </widget>
      <widget class="QFrame" name="frame_17">
       <property name="geometry">

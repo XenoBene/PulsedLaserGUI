@@ -133,14 +133,10 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb_update_values(*self.dfb.read_actual_dfb_values()))
         self.dfb_spinBox_setTemp.valueChanged.connect(
             lambda: self.dfb.change_dfb_setTemp(self.dfb_spinBox_setTemp.value()))
-        self.dfb_lineEdit_scanStartTemp.editingFinished.connect(
-            lambda: self.dfb.change_wideScan_startTemp(self.dfb_lineEdit_scanStartTemp.text()))
-        self.dfb_lineEdit_scanEndTemp.editingFinished.connect(
-            lambda: self.dfb.change_wideScan_endTemp(self.dfb_lineEdit_scanEndTemp.text()))
-        self.dfb_lineEdit_scanSpeed.editingFinished.connect(
-            lambda: self.dfb.change_wideScan_scanSpeed(self.dfb_lineEdit_scanSpeed.text()))
-        # TODO: Lieber einen "Set value" Knopf einbauen mit print Bestätigung statt dem editingFinished,
-        # dann ist das alles konsistenter
+        self.dfb_button_setScanValues.clicked.connect(
+            lambda: self.dfb.change_wideScan_values(self.dfb_lineEdit_scanStartTemp.text(),
+                                                    self.dfb_lineEdit_scanEndTemp.text(),
+                                                    self.dfb_lineEdit_scanSpeed.text()))
         self.dfb_button_startScan.clicked.connect(self.dfb.start_wideScan)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 

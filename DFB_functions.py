@@ -76,67 +76,25 @@ class DFB(QtCore.QObject):
         """
         self.dlc.laser1.dl.tc.temp_set.set(np.round(set_temp, 2))
 
-    def change_wideScan_startTemp(self, start_temp):
-        """Changes the start temperature of a WideScan.
-
-        Args:
-            start_temp (float): Desired start temperature [°C]
-        """
+    def change_wideScan_values(self, start_temp, end_temp, scan_speed):
         try:
             start_temp = float(start_temp)
-            if 12 <= start_temp <= 40:
-                self.dlc.laser1.wide_scan.scan_begin.set(start_temp)
-            else:
-                self.update_textBox.emit("Start temperature should be between 12 and 40 °C")
-        except AttributeError as e:
-            self.update_textBox.emit(f"DFB is not yet connected: {e}")
-        except ValueError as e:
-            self.update_textBox.emit(f"Value has to be a number: {e}")
-        except DecopError as e:
-            self.update_textBox.emit(f"Error: {e}")
-        finally:
-            self.update_values.emit(self.read_actual_dfb_values())
-
-    def change_wideScan_endTemp(self, end_temp):
-        """Changes the end temperature of a WideScan.
-
-        Args:
-            end_temp (float): Desired end temperature [°C]
-        """
-        try:
             end_temp = float(end_temp)
-            if 12 <= end_temp <= 40:
-                self.dlc.laser1.wide_scan.scan_end.set(end_temp)
-            else:
-                self.update_textBox.emit("End temperature should be between 12 and 40 °C")
-        except AttributeError as e:
-            self.update_textBox.emit(f"DFB is not yet connected: {e}")
-        except ValueError as e:
-            self.update_textBox.emit(f"Value has to be a number: {e}")
-        except DecopError as e:
-            self.update_textBox.emit(f"Error: {e}")
-        finally:
-            self.update_values.emit(self.read_actual_dfb_values())
-
-    def change_wideScan_scanSpeed(self, scan_speed):
-        """Changes the scan speed of a WideScan
-
-        Args:
-            scan_speed (float): Desired scan speed [°C/s]
-        """
-        try:
             scan_speed = float(scan_speed)
-            if 0 < scan_speed <= 2:
+
+            if 12 <= start_temp <= 40 and 12 <= end_temp <= 40 and 0 <= scan_speed <= 2:
+                self.dlc.laser1.wide_scan.scan_begin.set(start_temp)
+                self.dlc.laser1.wide_scan.scan_end.set(end_temp)
                 self.dlc.laser1.wide_scan.speed.set(scan_speed)
             else:
-                self.read_actual_dfb_values()
-                self.update_textBox.emit("Scan speed should be higher than 0 and lower than 2 K/s")
+                self.update_textBox.emit("Temperature should be between 12 and 40 °C " +
+                                         "and scan speed between 0 and 2 K/s")
         except AttributeError as e:
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
         except ValueError as e:
             self.update_textBox.emit(f"Value has to be a number: {e}")
         except DecopError as e:
-            self.update_textBox.emit(f"Error: {e}")
+            self.update_textBox.emit(f"DecopError: {e}")
         finally:
             self.update_values.emit(self.read_actual_dfb_values())
 
