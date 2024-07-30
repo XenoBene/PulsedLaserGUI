@@ -168,3 +168,4 @@ class DFB(QtCore.QObject):
             self.widescan_finished.emit()
             self.widescan_status.emit(False)
             self.widescan_loopTimer.stop()
+            self.update_values.emit(self.read_actual_dfb_values())
