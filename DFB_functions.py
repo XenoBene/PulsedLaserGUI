@@ -82,7 +82,7 @@ class DFB(QtCore.QObject):
             end_temp = float(end_temp)
             scan_speed = float(scan_speed)
 
-            if 12 <= start_temp <= 40 and 12 <= end_temp <= 40 and 0 <= scan_speed <= 2:
+            if (12 <= start_temp <= 40) and (12 <= end_temp <= 40) and (0 <= scan_speed <= 2):
                 self.dlc.laser1.wide_scan.scan_begin.set(start_temp)
                 self.dlc.laser1.wide_scan.scan_end.set(end_temp)
                 self.dlc.laser1.wide_scan.speed.set(scan_speed)
