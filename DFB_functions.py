@@ -43,7 +43,6 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit("DFB connection closed")
             self._connect_button_is_checked = False
 
-    @handle_dfb_attribute_error(default_return=(None, None, None, None))
     def read_actual_dfb_values(self):
         """Reads out the set temperature and the WideScan parameters 'Start temp.', 'End temp.' and 'Scan speed'.
         """
@@ -53,28 +52,35 @@ class DFB(QtCore.QObject):
             self.end_temp = self.dlc.laser1.wide_scan.scan_end.get()
             self.scan_speed = self.dlc.laser1.wide_scan.speed.get()
             return self.set_temp, self.start_temp, self.end_temp, self.scan_speed
+        except AttributeError as e:
+            self.update_textBox.emit(f"DFB is not yet connected: {e}")
+            return None, None, None, None
         except UnavailableError as e:
             self.update_textBox.emit(f"DFB session was closed: {e}")
             return None, None, None, None
 
-    @handle_dfb_attribute_error()
     def get_actual_temperature(self):
         """Reads out the current temperature of the DFB diode.
 
         Returns:
             float: Temperature of the DFB diode [°C]
         """
-        act_temp = self.dlc.laser1.dl.tc.temp_act.get()
-        return np.round(act_temp, 3)
+        try:
+            act_temp = self.dlc.laser1.dl.tc.temp_act.get()
+            return np.round(act_temp, 3)
+        except AttributeError as e:
+            self.update_textBox.emit(f"DFB is not yet connected: {e}")
 
-    @handle_dfb_attribute_error()
     def change_dfb_setTemp(self, set_temp):
         """Changes the set temperature of the diode.
 
         Args:
             set_temp (float): Desired set temperature [°C]
         """
-        self.dlc.laser1.dl.tc.temp_set.set(np.round(set_temp, 2))
+        try:
+            self.dlc.laser1.dl.tc.temp_set.set(np.round(set_temp, 2))
+        except AttributeError as e:
+            self.update_textBox.emit(f"DFB is not yet connected: {e}")
 
     def change_wideScan_values(self, start_temp, end_temp, scan_speed):
         try:
