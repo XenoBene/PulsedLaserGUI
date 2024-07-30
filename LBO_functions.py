@@ -62,8 +62,6 @@ class WorkerLBO(QtCore.QObject):
         except WlmDataLibError as e:  # Needed when PyLabLib is used
             self.update_textBox.emit(f"Error: {e}")
         finally:
-            # TODO: Wenn es mal einen Fehler gibt, wird hier der Thread beendet, aber
-            # die GUI bekommt davon nichts mit. Also mit einem Signal den Knopf wieder umschalten?
             self.status.emit(False)
             self.cleanup()
             self.finished.emit()  # Needed to exit the QThread

@@ -100,34 +100,38 @@ class WorkerBBO(QtCore.QObject):
         self.keep_running = True
         self.status.emit(True)
 
-        while self.keep_running:
-            start_time = time.time()
-            direction = self.steps if self.going_right else -self.steps
-            self.stage.move_by(axis=self.axis, addr=self.addr, steps=direction)
-            time.sleep(float(self.steps / self.velocity) + self.wait)
+        try:
+            while self.keep_running:
+                start_time = time.time()
+                direction = self.steps if self.going_right else -self.steps
+                self.stage.move_by(axis=self.axis, addr=self.addr, steps=direction)
+                time.sleep(float(self.steps / self.velocity) + self.wait)
 
-            uv_power = measure_uv_power()
-            self.update_diodeVoltage.emit(uv_power)
-            new_pos = update_position_and_measure()
+                uv_power = measure_uv_power()
+                self.update_diodeVoltage.emit(uv_power)
+                new_pos = update_position_and_measure()
 
-            slope = (uv_power - self.old_power) / (new_pos - self.old_pos)
-            self.going_right = slope > 0
-            # self.going_right = not self.going_right  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            self.old_power, self.old_pos = uv_power, new_pos
+                slope = (uv_power - self.old_power) / (new_pos - self.old_pos)
+                self.going_right = slope > 0
+                # self.going_right = not self.going_right  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                self.old_power, self.old_pos = uv_power, new_pos
 
-            wl = np.round(self.wlm.GetWavelength(1), 6)
-            self.iterator_steps += 1
+                wl = np.round(self.wlm.GetWavelength(1), 6)
+                self.iterator_steps += 1
 
-            if self.iterator_steps > 20:
-                self.delta_wl_start, self.start_pos, self.threshold_power = wl, new_pos, uv_power
-                self.iterator_steps = 0
+                if self.iterator_steps > 20:
+                    self.delta_wl_start, self.start_pos, self.threshold_power = wl, new_pos, uv_power
+                    self.iterator_steps = 0
 
-            new_pos = correct_position_if_needed(wl, uv_power, new_pos)  # Rettungsalgorithmus
+                new_pos = correct_position_if_needed(wl, uv_power, new_pos)  # Rettungsalgorithmus
 
-            # self.update_textBox.emit(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")  # Debugging
-
-        self.status.emit(False)
-        self.finished.emit()
+                # self.update_textBox.emit(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")  # Debugging
+        except Newport.base.NewportBackendError as e:
+            self.update_textBox.emit(f"USB connection to Newport motors lost: {e}")
+        finally:
+            self.status.emit(False)
+            self.cleanup()
+            self.finished.emit()
 
     def stop(self):
         """Sets the attribute keep_running to False. This is needed
@@ -135,6 +139,14 @@ class WorkerBBO(QtCore.QObject):
         """
         self.keep_running = False
         self.update_textBox.emit("UV Autoscan stopped")
+
+    def cleanup(self):
+        """Clean up all attributes.
+        This is very important, because otherwise there could be a memory
+        leak when the USB connection is lost to the LBO oven."""
+        attributes = list(self.__dict__.keys())
+        for attribute in attributes:
+            delattr(self, attribute)
 
 
 class WorkerBBO_Double(QtCore.QObject):
@@ -193,153 +205,151 @@ class WorkerBBO_Double(QtCore.QObject):
         lower than before. Based on the measurement, the next step will be in the same
         or opposite direction.
         """
+
+        def measure_uv_power():
+            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
+            buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+            return np.round(np.mean(buff), 4)
+
+        def update_position_and_measure(addr):
+            new_pos = self.stage.get_position(axis=self.axis, addr=addr)
+            self.update_motorSteps.emit(new_pos)
+            return new_pos
+
+        def correct_position_if_needed(wl, uv_power, new_pos):
+            if self.threshold_power * 0.8 > uv_power > 0:
+                delta_wl = wl - self.delta_wl_start
+                calculated_steps = -delta_wl * (3233 if delta_wl > 0 else 3500)
+                delta_pos = calculated_steps - (new_pos - self.start_pos)
+                self.stage.move_by(axis=self.axis, addr=self.addr, steps=int(delta_pos))
+                time.sleep(float(abs(delta_pos) / self.velocity))
+                return self.stage.get_position(axis=self.axis, addr=self.addr)
+            return new_pos
+
         self.keep_running = True
         start_time = time.time()
         self.status.emit(True)
-        while self.keep_running:
-            # Makes a number of steps (self.steps) in one direction:
-            # TODO: addr1 and addr2 ? (class stage)
 
-            # Move BBO 1
-            # -------------------------------------------------------------------------
-            if self.going_right1:
-                self.stage.move_by(axis=self.axis, addr=self.addrFront, steps=self.steps)
-            else:
-                self.stage.move_by(axis=self.axis, addr=self.addrFront, steps=-self.steps)
+        try:
+            while self.keep_running:
+                # Makes a number of steps (self.steps) in one direction:
+                # TODO: addr1 and addr2 ? (class stage)
 
-            # Break while the motor is moving (plus some additional wait time):
-            time.sleep(float(self.steps / self.velocity))
-            time.sleep(float(self.wait))
+                # Move BBO 1
+                # -------------------------------------------------------------------------
+                direction = self.steps if self.going_right1 else -self.steps
+                self.stage.move_by(axis=self.axis, addr=self.addrFront, steps=direction)
+                time.sleep(float(self.steps / self.velocity) + self.wait)
 
-            # Measure the voltage of the uv diode (proportional
-            # to the uv output power):
-            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
-            buff_string = self.rp.rx_txt()
-            buff_string = buff_string.strip(
-                '{}\n\r').replace("  ", "").split(',')
-            buff = list(map(float, buff_string))
-            uv_power = np.round(np.mean(buff), 4)
+                # Measure the voltage of the uv diode (proportional
+                # to the uv output power):
+                uv_power = measure_uv_power()
 
-            # Signal for the GUI:
-            self.update_diodeVoltage.emit(uv_power)
+                # Signal for the GUI:
+                self.update_diodeVoltage.emit(uv_power)
 
-            # Measure the current position (absolute steps):
-            new_pos_front = self.stage.get_position(axis=self.axis, addr=self.addrFront)
+                # Measure the current position (absolute steps):
+                new_pos_front = update_position_and_measure(self.addrFront)
 
-            # Signal for the GUI or writing data:
-            # self.update_motorSteps1.emit(new_pos_front) # TODO: pos1 und pos2 wegschreiben
+                # Signal for the GUI or writing data:
+                # self.update_motorSteps1.emit(new_pos_front) # TODO: pos1 und pos2 wegschreiben
 
-            # Calculate the slope for BBO 1 (i.e. calculate if the power got higher
-            # or not). The direction of the next step depends on the slope:
-            slope1 = (uv_power - self.old_power) / (new_pos_front - self.old_pos_front)
-            """if slope1 > 0:
-                self.going_right1 = True
-            else:
-                self.going_right1 = False"""
-            self.going_right1 = not self.going_right1  # DELETE!!!!!!!!!!!!!!!!!
+                # Calculate the slope for BBO 1 (i.e. calculate if the power got higher
+                # or not). The direction of the next step depends on the slope:
+                slope1 = (uv_power - self.old_power) / (new_pos_front - self.old_pos_front)
+                self.going_right1 = slope1 > 0
+                # self.going_right1 = not self.going_right1  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            # Assign the newest values to attributes for the next iteration:
-            self.old_power = uv_power
-            self.old_pos_front = new_pos_front
+                # Assign the newest values to attributes for the next iteration:
+                self.old_power, self.old_pos_front = uv_power, new_pos_front
 
-            # Measure the current wavelength:
-            wl = np.round(self.wlm.GetWavelength(1), 6)
+                # Measure the current wavelength:
+                wl = np.round(self.wlm.GetWavelength(1), 6)
 
-            """ --> for testing 2 BBO Greedy off
-            Here starts the implementation of a kind of power failsafe:
-            If the output power suddenly drops down a certain threshold, the picomotor
-            will not just take the usual steps in one direction. Instead, the wavelength difference
-            between the last checkpoint and the current wavelength gets converted to the needed
-            steps for this wavelength difference (based on empirical data).
-            """
-            """
-            # Checkpoint: Every 20 iterations, the current values get saved to the
-            # instance attributes and the iteration counter gets resetted.
-            self.iterator_steps1 += 1
-            if self.iterator_steps1 > 20:
-                self.delta_wl_start = wl
-                self.start_pos1 = new_pos1
-                self.threshold_power1 = uv_power
-                self.iterator_steps1 = 0
-                print("Iteratorsteps reset")
+                """ --> for testing 2 BBO Greedy off
+                Here starts the implementation of a kind of power failsafe:
+                If the output power suddenly drops down a certain threshold, the picomotor
+                will not just take the usual steps in one direction. Instead, the wavelength difference
+                between the last checkpoint and the current wavelength gets converted to the needed
+                steps for this wavelength difference (based on empirical data).
+                """
+                """
+                # Checkpoint: Every 20 iterations, the current values get saved to the
+                # instance attributes and the iteration counter gets resetted.
+                self.iterator_steps1 += 1
+                if self.iterator_steps1 > 20:
+                    self.delta_wl_start = wl
+                    self.start_pos1 = new_pos1
+                    self.threshold_power1 = uv_power
+                    self.iterator_steps1 = 0
+                    print("Iteratorsteps reset")
 
-            # Calculates the difference between the current wavelength and the wl at the last checkpoint
-            delta_wl = wl - self.delta_wl_start
-            print(f"Delta wl: {delta_wl}")
+                # Calculates the difference between the current wavelength and the wl at the last checkpoint
+                delta_wl = wl - self.delta_wl_start
+                print(f"Delta wl: {delta_wl}")
 
-            # compare steps to calculated steps and move the necessary steps to the theoretical position,
-            # if current power is a lot lower than control power
-            if (self.threshold_power1 * 0.8 > uv_power > 0):
-                if delta_wl > 0:
-                    print(f"Position vor Korr1: {new_pos}")
-                    calculated_steps1 = -delta_wl * 3233  # Empirical data
-                elif delta_wl < 0:
-                    print(f"Position vor Korr2: {new_pos}")
-                    calculated_steps1 = -delta_wl * 3500  # Empirical data
+                # compare steps to calculated steps and move the necessary steps to the theoretical position,
+                # if current power is a lot lower than control power
+                if (self.threshold_power1 * 0.8 > uv_power > 0):
+                    if delta_wl > 0:
+                        print(f"Position vor Korr1: {new_pos}")
+                        calculated_steps1 = -delta_wl * 3233  # Empirical data
+                    elif delta_wl < 0:
+                        print(f"Position vor Korr2: {new_pos}")
+                        calculated_steps1 = -delta_wl * 3500  # Empirical data
 
-                # Calculates and moves the motor to the theoretical position:
-                delta_pos = (calculated_steps1 - (new_pos1 - self.start_pos1))
-                self.stage.move_by(axis=self.axis, addrFront
-=self.addr1, steps=int(delta_pos))  # TODO addr1
-                time.sleep(float(abs(delta_pos) / self.velocity))
+                    # Calculates and moves the motor to the theoretical position:
+                    delta_pos = (calculated_steps1 - (new_pos1 - self.start_pos1))
+                    self.stage.move_by(axis=self.axis, addrFront
+    =self.addr1, steps=int(delta_pos))  # TODO addr1
+                    time.sleep(float(abs(delta_pos) / self.velocity))
 
-                new_pos1 = self.stage.get_position(axis=self.axis, addrFront
-=self.addr1) # TODO addr1
-                print(f"Position nach Korrektur: {new_pos}")
+                    new_pos1 = self.stage.get_position(axis=self.axis, addrFront
+    =self.addr1) # TODO addr1
+                    print(f"Position nach Korrektur: {new_pos}")
 
-                # Reset the old values:
-                self.old_pos1 = new_pos1
-                self.iterator_steps1 = 0
-                self.threshold_power1 = uv_power
-            print(f"Fertig: {time.time() - start_time}")
-            """
+                    # Reset the old values:
+                    self.old_pos1 = new_pos1
+                    self.iterator_steps1 = 0
+                    self.threshold_power1 = uv_power
+                print(f"Fertig: {time.time() - start_time}")
+                """
 
-            # Move BBO 2
-            # -------------------------------------------------------------------------
-            if self.going_right2:
-                self.stage.move_by(axis=self.axis, addr=self.addrBack, steps=self.steps)
-            else:
-                self.stage.move_by(axis=self.axis, addr=self.addrBack, steps=-self.steps)
+                # Move BBO 2
+                # -------------------------------------------------------------------------
+                direction = self.steps if self.going_right2 else -self.steps
+                self.stage.move_by(axis=self.axis, addr=self.addrBack, steps=direction)
+                time.sleep(float(self.steps / self.velocity) + self.wait)
 
-            # Break while the motor is moving (plus some additional wait time):
-            time.sleep(float(self.steps / self.velocity))
-            time.sleep(float(self.wait))
+                # Measure the voltage of the uv diode (proportional
+                # to the uv output power):
+                uv_power = measure_uv_power()
 
-            # Measure the voltage of the uv diode (proportional
-            # to the uv output power):
-            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
-            buff_string = self.rp.rx_txt()
-            buff_string = buff_string.strip(
-                '{}\n\r').replace("  ", "").split(',')
-            buff = list(map(float, buff_string))
-            uv_power = np.round(np.mean(buff), 4)
+                # Signal for the GUI:
+                self.update_diodeVoltage.emit(uv_power)
 
-            # Signal for the GUI:
-            self.update_diodeVoltage.emit(uv_power)
+                # Measure the current position (absolute steps):
+                new_pos_back = update_position_and_measure(self.addrBack)
 
-            # Measure the current position (absolute steps):
-            new_pos_back = self.stage.get_position(axis=self.axis, addr=self.addrBack)
+                # Signal for the GUI or writing data:
+                # self.update_motorSteps2.emit(new_pos_back)  # TODO: pos1 und pos2 wegschreiben
 
-            # Signal for the GUI or writing data:
-            # self.update_motorSteps2.emit(new_pos_back)  # TODO: pos1 und pos2 wegschreiben
+                # Calculate the slope for BBO 2 (i.e. calculate if the power got higher
+                # or not). The direction of the next step depends on the slope:
+                slope2 = (uv_power - self.old_power) / (new_pos_back - self.old_pos_back)
+                self.going_right2 = slope2 > 0
+                # self.going_right2 = not self.going_right2  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            # Calculate the slope for BBO 2 (i.e. calculate if the power got higher
-            # or not). The direction of the next step depends on the slope:
-            slope2 = (uv_power - self.old_power) / (new_pos_back - self.old_pos_back)  # TODO: old_pos1 und old_pos2 initialisieren
-            """if slope2 > 0:
-                self.going_right2 = True
-            else:
-                self.going_right2 = False"""
-            self.going_right2 = not self.going_right2  # DELETE!!!!!!!!!!!!
+                # Assign the newest values to attributes for the next iteration:
+                self.old_power, self.old_pos_back = uv_power, new_pos_back
 
-            # Assign the newest values to attributes for the next iteration:
-            self.old_power = uv_power
-            self.old_pos_back = new_pos_back
-
-        # TODO nach Test noch failsafe für 2 BBOs implementieren
-
-        self.status.emit(False)
-        self.finished.emit()
+            # TODO nach Test noch failsafe für 2 BBOs implementieren
+        except Newport.base.NewportBackendError as e:
+            self.update_textBox.emit(f"USB connection to Newport motors lost: {e}")
+        finally:
+            self.status.emit(False)
+            self.cleanup()
+            self.finished.emit()
 
     def stop(self):
         """Sets the attribute keep_running to False. This is needed
@@ -347,6 +357,14 @@ class WorkerBBO_Double(QtCore.QObject):
         """
         self.keep_running = False
         print("UV Autoscan stopped")
+
+    def cleanup(self):
+        """Clean up all attributes.
+        This is very important, because otherwise there could be a memory
+        leak when the USB connection is lost to the LBO oven."""
+        attributes = list(self.__dict__.keys())
+        for attribute in attributes:
+            delattr(self, attribute)
 
 
 class BBO(QtCore.QObject):
