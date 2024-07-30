@@ -3,8 +3,6 @@ from toptica.lasersdk.client import UnavailableError
 from toptica.lasersdk.decop import DecopError
 import numpy as np
 from PyQt6 import QtCore
-import time
-from Error_Decorator import handle_dfb_attribute_error
 
 
 class DFB(QtCore.QObject):
