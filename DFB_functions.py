@@ -80,6 +80,14 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
 
     def change_wideScan_values(self, start_temp, end_temp, scan_speed):
+        """Changes the parameters for the WideScan of the connected
+        DFB laser.
+
+        Args:
+            start_temp (float): Start temperature [°C] of the WideScan
+            end_temp (float): End temperature [°C] of the WideScan
+            scan_speed (float): WideScan speed [K/s]
+        """
         try:
             self.dlc.laser1.wide_scan.scan_begin.set(start_temp)
             self.dlc.laser1.wide_scan.scan_end.set(end_temp)
@@ -94,7 +102,9 @@ class DFB(QtCore.QObject):
             self.update_values.emit(self.read_actual_dfb_values())
 
     def start_wideScan(self):
-        """Starts the WideScan
+        """Creates a QTimer and starts the WideScan. The QTimer is
+        connected to a method that updates the GUI with the WideScan
+        progress.
         """
         try:
             # TODO: Absicherung durch if/else damit man nur WideScan starten
@@ -153,6 +163,11 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
 
     def update_wideScan_progress(self):
+        """Gets the progress of the WideScan and the current
+        temperature and sends signals to update the GUI with these values.
+
+        When the WideScan is finished, stops the QTimer.
+        """
         progress, remaining_time = self.get_wideScan_progress()
         act_temp = self.get_actual_temperature()
 

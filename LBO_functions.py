@@ -42,13 +42,18 @@ class WorkerLBO(QtCore.QObject):
             old_wl = 0
             while self.keep_running:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
-                time.sleep(0.1)    # This sleep timer is important, otherwise the WLM is overloaded when the ASE filter
-                # also measure the wavelength all the time
+                # This sleep timer is important, otherwise the WLM is overloaded
+                # when the ASE filter also measure the wavelength all the time:
+                time.sleep(0.1)
 
                 # wl = self.wlm.get_wavelength(channel=1, wait=False)  # PyLabLib
                 if 1028 < wl < 1032:
+                    # To reduce unnecessary commands to the OC oven, the temperature gets
+                    # changed only when the wavelength differs 0.001 nm from the previous value:
                     if abs(old_wl - wl) > 0.001:
-                        needed_temperature = np.round(1357.13 - wl * 1.1369, 2)  # Empirical data
+                        # Empirical data to calculate the needed LBO temperature for the current wavelength:
+                        needed_temperature = np.round(1357.13 - wl * 1.1369, 2)
+
                         self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                         self.update_set_temperature.emit(needed_temperature)
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
@@ -137,14 +142,14 @@ class LBO(QtCore.QObject):
         covesion oven.
 
         Args:
-            set_temp (str): Set temperature [°C]. Only values between 15°C and 200°C are allowed.
-            rate (str): Temperature ramp speed [°C/min]. Only values under 2 °C/min are allowed.
+            set_temp (float): Set temperature [°C]. Only values between 15°C and 200°C are allowed.
+            rate (float): Temperature ramp speed [°C/min]. Only values under 2 °C/min are allowed.
 
         Raises:
             ValueError: Gets raised if the input values are not in the allowed bounds.
         """
         try:
-            if ((float(set_temp) <= 200) and (float(set_temp) >= 15) and (0 < float(rate) <= 2)):
+            if (set_temp <= 200) and (set_temp >= 15) and (0 < rate <= 2):
                 self.oc.write("!i191;"+str(set_temp)+";0;0;" +
                               str(np.round(float(rate)/60, 3))+";0;0;BF")
                 self.update_textBox.emit("It worked!")
@@ -246,6 +251,7 @@ class LBO(QtCore.QObject):
             self.update_textBox.emit(f"Error: {e}")
 
     def stop_autoscan(self):
+        """Stops the QTimer and therefore the LBO autoscan."""
         try:
             self.workerLBO.stop()
         except AttributeError as e:
