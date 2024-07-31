@@ -156,7 +156,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo_button_setTemp.clicked.connect(
             lambda: self.lbo.set_temperature(self.lbo_lineEdit_targetTemp.value(),
                                              self.lbo_lineEdit_rampSpeed.value()))
-        self.lbo_button_autoScan_start.clicked.connect(lambda: self.lbo.start_autoscan(wlm=self.wlm))
+        self.lbo_button_autoScan_start.clicked.connect(
+            lambda: self.lbo.start_autoscan(wlm=self.wlm,
+                                            wl_to_T_slope=self.lbo_lineEdit_slope.value(),
+                                            wl_to_T_offset=self.lbo_lineEdit_offset.value()))
         self.lbo_button_autoScan_stop.clicked.connect(self.lbo.stop_autoscan)
 
     def connect_bbo_buttons(self):

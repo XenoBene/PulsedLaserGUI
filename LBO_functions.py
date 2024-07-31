@@ -22,10 +22,12 @@ class WorkerLBO(QtCore.QObject):
     update_act_temperature = QtCore.pyqtSignal(float)
     update_textBox = QtCore.pyqtSignal(str)
 
-    def __init__(self, wlm, oc):
+    def __init__(self, wlm, oc, slope, offset):
         super().__init__()
         self.wlm = wlm
         self.oc = oc
+        self.slope = slope
+        self.offset = offset
 
     def temperature_auto(self):
         """Loop that measures the wavelength and calculates the needed LBO temperature
@@ -52,7 +54,7 @@ class WorkerLBO(QtCore.QObject):
                     # changed only when the wavelength differs 0.001 nm from the previous value:
                     if abs(old_wl - wl) > 0.001:
                         # Empirical data to calculate the needed LBO temperature for the current wavelength:
-                        needed_temperature = np.round(1357.13 - wl * 1.1369, 2)
+                        needed_temperature = np.round(self.offset - wl * self.slope, 2)
 
                         self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                         self.update_set_temperature.emit(needed_temperature)
@@ -221,7 +223,7 @@ class LBO(QtCore.QObject):
         finally:
             return self.set_temp, self.rate
 
-    def start_autoscan(self, wlm):
+    def start_autoscan(self, wlm, wl_to_T_slope, wl_to_T_offset):
         """Starts the automatic temperature scan of the LBO. This process
         gets started in a QThread because otherwise there would be problems
         when too many processes run at the same time.
@@ -231,7 +233,7 @@ class LBO(QtCore.QObject):
             # Initiate QThread and WorkerLBO class:
             self.threadLBO = QtCore.QThread()
 
-            self.workerLBO = WorkerLBO(wlm=wlm, oc=self.oc)  # Diese Zeile führt zu Problemen!!
+            self.workerLBO = WorkerLBO(wlm=wlm, oc=self.oc, slope=wl_to_T_slope, offset=wl_to_T_offset)
 
             self.workerLBO.moveToThread(self.threadLBO)
 
