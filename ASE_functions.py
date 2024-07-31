@@ -64,10 +64,6 @@ class ASE(QtCore.QObject):
         ---------------
         - Prints "Device not found" if the stage cannot be found.
         - Prints "No stage was connected" if no stage was previously connected.
-
-        Example:
-        --------
-        >>> obj.connect_rotationstage('12345')
         """
         if not self._connect_button_is_checked:
             try:
@@ -113,10 +109,6 @@ class ASE(QtCore.QObject):
         ---------------
         - Handles `DeviceBackendError` and `AttributeError`.
         - If an error occurs, attempts to close the stage and emits fail-safe signals.
-
-        Example:
-        --------
-        >>> obj.move_to_start()
         """
         try:
             wl = np.round(wlm.GetWavelength(1), 6)
@@ -150,10 +142,6 @@ class ASE(QtCore.QObject):
         Error Handling:
         ---------------
         - Prints "No stage is connected" if there is an AttributeError.
-
-        Example:
-        --------
-        >>> obj.homing_motor()
         """
         try:
             self.stage.setup_homing(velocity=self.stage.to_steps(10), offset_distance=self.stage.to_steps(4))
@@ -166,6 +154,9 @@ class ASE(QtCore.QObject):
             self.update_textBox.emit("No stage is connected")
 
     def homing_status(self):
+        """Checks if the rotation stage is homed.
+        If it is, it stops the QTimer homing_loop_timer.
+        """
         try:
             if self.stage.is_homed():
                 self.homing_loop_timer.stop()
@@ -218,10 +209,6 @@ class ASE(QtCore.QObject):
         - Creates directories for calibration data.
         - Initializes file paths and names for calibration data based on the wavelength and direction.
         - Writes the CSV header for the calibration file.
-
-        Example:
-        --------
-        >>> obj.init_wavelength_to_angle_calibration(dfb, 25.0, True)
         """
         if lowtohi:
             dfb.change_dfb_setTemp(float(temp))
@@ -286,10 +273,6 @@ class ASE(QtCore.QObject):
         - Logs the current time, wavelength, power, and angle to the CSV file while the stage is scanned.
         - Toggles calibration direction and updates progress.
         - When all temperatures are processed, stops the calibration, calculates results, and emits completion signals.
-
-        Example:
-        --------
-        >>> obj.wavelength_to_angle_calibration(dfb, powermeter, [25.0, 30.0, 35.0], (400, 700), 0, 180)
         """
         def handle_initcal(lowtohi, temp):
             self.init_wavelength_to_angle_calibration(wlm, dfb, temp, lowtohi)
@@ -371,10 +354,6 @@ class ASE(QtCore.QObject):
         - Sets calibration control flags and iterator to initial values.
         - Connects the timer to the calibration method with specified parameters.
         - Starts the timer, logging and printing the initiation message.
-
-        Example:
-        --------
-        >>> obj.start_autocalibration(dfb, powermeter, (400, 700), 0, 180)
         """
         powermeter.enable_autorange(False)
         powermeter.set_range("full")
@@ -420,10 +399,6 @@ class ASE(QtCore.QObject):
         - Calculates calibration parameters based on the fitted data.
         - Writes the calibration parameters to a CSV file.
         - Optionally displays plots of the fitted data.
-
-        Example:
-        --------
-        >>> obj.calculate_autocalibration(showplots=True)
         """
 
         def flattopgauss(x, B=0.01, x0=23, a=1, n=2, y0=0):
@@ -449,11 +424,6 @@ class ASE(QtCore.QObject):
             --------
             numpy array
                 The computed Flat-Top-Gaussian values for the input data points.
-
-            Example:
-            --------
-            >>> flattopgauss(np.array([20, 21, 22, 23, 24, 25]))
-            array([0.01004962, 0.0100025 , 0.01000004, 0.01      , 0.01000004, 0.0100025 ])
             """
             return B * np.exp(-(((x - x0) ** 2) / (a ** 2)) ** n) + y0
 
