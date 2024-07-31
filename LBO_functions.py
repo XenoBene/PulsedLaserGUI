@@ -207,7 +207,7 @@ class LBO(QtCore.QObject):
         """
         try:
             values = self.get_status_q()
-            self.set_temp = values[1]
+            self.set_temp = float(values[1])
             self.rate = float(values[4]) * 60
         except TypeError as e:
             self.update_textBox.emit(f"Error: {e}")
