@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, uic, QtCore, QtTest
+from PyQt6 import QtWidgets, uic, QtCore, QtGui
 import ASE_functions
 import WLM_functions
 import DFB_functions
@@ -138,9 +138,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_spinBox_setTemp.valueChanged.connect(
             lambda: self.dfb.change_dfb_setTemp(self.dfb_spinBox_setTemp.value()))
         self.dfb_button_setScanValues.clicked.connect(
-            lambda: self.dfb.change_wideScan_values(self.dfb_lineEdit_scanStartTemp.text(),
-                                                    self.dfb_lineEdit_scanEndTemp.text(),
-                                                    self.dfb_lineEdit_scanSpeed.text()))
+            lambda: self.dfb.change_wideScan_values(self.dfb_lineEdit_scanStartTemp.value(),
+                                                    self.dfb_lineEdit_scanEndTemp.value(),
+                                                    self.dfb_lineEdit_scanSpeed.value()))
         self.dfb_button_startScan.clicked.connect(self.dfb.start_wideScan)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
@@ -154,8 +154,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo_button_readValues.clicked.connect(self.lbo.read_values)
         self.lbo_button_readValues.clicked.connect(self.lbo_update_values)
         self.lbo_button_setTemp.clicked.connect(
-            lambda: self.lbo.set_temperature(self.lbo_lineEdit_targetTemp.text(),
-                                             self.lbo_lineEdit_rampSpeed.text()))
+            lambda: self.lbo.set_temperature(self.lbo_lineEdit_targetTemp.value(),
+                                             self.lbo_lineEdit_rampSpeed.value()))
         self.lbo_button_autoScan_start.clicked.connect(lambda: self.lbo.start_autoscan(wlm=self.wlm))
         self.lbo_button_autoScan_stop.clicked.connect(self.lbo.stop_autoscan)
 
@@ -167,40 +167,40 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(
-            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text()), False))
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.value()), False))
         self.bbo_button_forwards.clicked.connect(
-            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps.text()), False))
+            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps.value()), False))
         self.bbo_button_back.clicked.connect(
-            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.text()), False))
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity.value()), False))
         self.bbo_button_back.clicked.connect(
-            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps.text()), False))
+            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps.value()), False))
 
         # Single BBO setup:
         self.bbo_button_startUvScan.clicked.connect(
             lambda: self.bbo.change_autoscan_parameters(
-                velocity=self.bbo_lineEdit_scanVelocity.text(),
-                steps=self.bbo_lineEdit_steps.text(),
-                wait=self.bbo_lineEdit_break.text(),
+                velocity=self.bbo_lineEdit_scanVelocity.value(),
+                steps=self.bbo_lineEdit_steps.value(),
+                wait=self.bbo_lineEdit_break.value(),
                 double_bbo_setup=False))
         self.bbo_button_startUvScan.clicked.connect(lambda: self.bbo.start_autoscan(wlm=self.wlm))
         self.bbo_button_stopUvScan.clicked.connect(self.bbo.stop_autoscan)
 
         # First/Front BBO:
         self.bbo_button_forwards_front.clicked.connect(
-            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity_front.text()), True))
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity_front.value()), True))
         self.bbo_button_forwards_front.clicked.connect(
-            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps_front.text()), True))
+            lambda: self.bbo.move_by(int(self.bbo_lineEdit_relativeSteps_front.value()), True))
         self.bbo_button_back_front.clicked.connect(
-            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity_front.text()), True))
+            lambda: self.bbo.change_velocity(int(self.bbo_lineEdit_velocity_front.value()), True))
         self.bbo_button_back_front.clicked.connect(
-            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps_front.text()), True))
+            lambda: self.bbo.move_by(-int(self.bbo_lineEdit_relativeSteps_front.value()), True))
 
         # Double BBO setup:
         self.bbo_button_startUvScan_double.clicked.connect(
             lambda: self.bbo.change_autoscan_parameters(
-                velocity=self.bbo_lineEdit_scanVelocity_double.text(),
-                steps=self.bbo_lineEdit_steps_double.text(),
-                wait=self.bbo_lineEdit_break_double.text(),
+                velocity=self.bbo_lineEdit_scanVelocity_double.value(),
+                steps=self.bbo_lineEdit_steps_double.value(),
+                wait=self.bbo_lineEdit_break_double.value(),
                 double_bbo_setup=True))
         self.bbo_button_startUvScan_double.clicked.connect(lambda: self.bbo.start_autoscan_double(wlm=self.wlm))
         self.bbo_button_stopUvScan_double.clicked.connect(self.bbo.stop_autoscan_double)
@@ -360,8 +360,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ramp rate and the set temperature.
         """
         try:
-            self.lbo_lineEdit_rampSpeed.setText(str(self.lbo.rate))
-            self.lbo_lineEdit_targetTemp.setText(str(self.lbo.set_temp))
+            self.lbo_lineEdit_rampSpeed.setValue(self.lbo.rate)
+            self.lbo_lineEdit_targetTemp.setValue(self.lbo.set_temp)
         except AttributeError as e:
             self.update_textBox(f"Covesion oven is not connected: {e}")
 
@@ -401,9 +401,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         try:
             self.dfb_spinBox_setTemp.setValue(set_temp)
-            self.dfb_lineEdit_scanStartTemp.setText(str(start_temp))
-            self.dfb_lineEdit_scanEndTemp.setText(str(end_temp))
-            self.dfb_lineEdit_scanSpeed.setText(str(scan_speed))
+            self.dfb_lineEdit_scanStartTemp.setValue(start_temp)
+            self.dfb_lineEdit_scanEndTemp.setValue(end_temp)
+            self.dfb_lineEdit_scanSpeed.setValue(scan_speed)
         except AttributeError as e:
             self.update_textBox(f"DFB is not connected: {e}")
         except TypeError as e:

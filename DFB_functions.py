@@ -42,8 +42,7 @@ class DFB(QtCore.QObject):
             self._connect_button_is_checked = False
 
     def read_actual_dfb_values(self):
-        """Reads out the set temperature and the WideScan parameters 'Start temp.', 'End temp.' and 'Scan speed'.
-        """
+        """Reads out the set temperature and the WideScan parameters 'Start temp.', 'End temp.' and 'Scan speed'."""
         try:
             self.set_temp = self.dlc.laser1.dl.tc.temp_set.get()
             self.start_temp = self.dlc.laser1.wide_scan.scan_begin.get()
@@ -82,17 +81,9 @@ class DFB(QtCore.QObject):
 
     def change_wideScan_values(self, start_temp, end_temp, scan_speed):
         try:
-            start_temp = float(start_temp)
-            end_temp = float(end_temp)
-            scan_speed = float(scan_speed)
-
-            if (12 <= start_temp <= 40) and (12 <= end_temp <= 40) and (0 <= scan_speed <= 2):
-                self.dlc.laser1.wide_scan.scan_begin.set(start_temp)
-                self.dlc.laser1.wide_scan.scan_end.set(end_temp)
-                self.dlc.laser1.wide_scan.speed.set(scan_speed)
-            else:
-                self.update_textBox.emit("Temperature should be between 12 and 40 °C " +
-                                         "and scan speed between 0 and 2 K/s")
+            self.dlc.laser1.wide_scan.scan_begin.set(start_temp)
+            self.dlc.laser1.wide_scan.scan_end.set(end_temp)
+            self.dlc.laser1.wide_scan.speed.set(scan_speed)
         except AttributeError as e:
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
         except ValueError as e:

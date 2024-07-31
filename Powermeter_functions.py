@@ -33,7 +33,7 @@ class PM(QtCore.QObject):
             wl = float(wl)
             wl_min = 250
             wl_max = 1100
-            if 250.0 < wl < 1100.0:
+            if wl_min < wl < wl_max:
                 self.pm.set_wavelength(wl * 1e-9)
             else:
                 self.update_textBox.emit(f"Wavelength has to be between {wl_min} and {wl_max} nm")

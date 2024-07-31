@@ -1210,19 +1210,6 @@
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLineEdit" name="bbo_lineEdit_relativeSteps">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>50</y>
-         <width>71</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>100</string>
-       </property>
-      </widget>
       <widget class="QPushButton" name="bbo_button_back">
        <property name="geometry">
         <rect>
@@ -1247,19 +1234,6 @@
        </property>
        <property name="text">
         <string>Forwards</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="bbo_lineEdit_velocity">
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>50</y>
-         <width>71</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>500</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_3">
@@ -1298,6 +1272,74 @@
         <string>Move second BBO:</string>
        </property>
       </widget>
+      <widget class="QDoubleSpinBox" name="bbo_lineEdit_velocity">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>50</y>
+         <width>91</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string> Steps/s</string>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1500.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>500.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="bbo_lineEdit_relativeSteps">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>50</y>
+         <width>61</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>100.000000000000000</double>
+       </property>
+      </widget>
      </widget>
      <widget class="QFrame" name="frame_11">
       <property name="geometry">
@@ -1319,8 +1361,8 @@
         <rect>
          <x>10</x>
          <y>40</y>
-         <width>181</width>
-         <height>85</height>
+         <width>192</width>
+         <height>91</height>
         </rect>
        </property>
        <layout class="QFormLayout" name="formLayout">
@@ -1340,13 +1382,6 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="bbo_lineEdit_steps">
-          <property name="text">
-           <string>50</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="bbo_label_velocity">
           <property name="enabled">
@@ -1357,13 +1392,6 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="bbo_lineEdit_scanVelocity">
-          <property name="text">
-           <string>500</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QLabel" name="bbo_label_break">
           <property name="text">
@@ -1371,10 +1399,87 @@
           </property>
          </widget>
         </item>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="bbo_lineEdit_steps">
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>50.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="bbo_lineEdit_scanVelocity">
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1500.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>500.000000000000000</double>
+          </property>
+         </widget>
+        </item>
         <item row="2" column="1">
-         <widget class="QLineEdit" name="bbo_lineEdit_break">
-          <property name="text">
-           <string>0.05</string>
+         <widget class="QDoubleSpinBox" name="bbo_lineEdit_break">
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.050000000000000</double>
           </property>
          </widget>
         </item>
@@ -1386,7 +1491,7 @@
          <x>200</x>
          <y>40</y>
          <width>174</width>
-         <height>81</height>
+         <height>91</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -1515,8 +1620,8 @@
         <rect>
          <x>10</x>
          <y>40</y>
-         <width>181</width>
-         <height>85</height>
+         <width>191</width>
+         <height>91</height>
         </rect>
        </property>
        <layout class="QFormLayout" name="formLayout_2">
@@ -1536,24 +1641,10 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="bbo_lineEdit_steps_double">
-          <property name="text">
-           <string>50</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="bbo_label_velocity_2">
           <property name="text">
            <string>Velocity (Steps/s):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="bbo_lineEdit_scanVelocity_double">
-          <property name="text">
-           <string>500</string>
           </property>
          </widget>
         </item>
@@ -1564,10 +1655,87 @@
           </property>
          </widget>
         </item>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="bbo_lineEdit_steps_double">
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>50.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="bbo_lineEdit_scanVelocity_double">
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1500.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>500.000000000000000</double>
+          </property>
+         </widget>
+        </item>
         <item row="2" column="1">
-         <widget class="QLineEdit" name="bbo_lineEdit_break_double">
-          <property name="text">
-           <string>0.05</string>
+         <widget class="QDoubleSpinBox" name="bbo_lineEdit_break_double">
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.050000000000000</double>
           </property>
          </widget>
         </item>
@@ -1579,7 +1747,7 @@
          <x>200</x>
          <y>40</y>
          <width>174</width>
-         <height>81</height>
+         <height>91</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -1671,19 +1839,6 @@
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLineEdit" name="bbo_lineEdit_relativeSteps_front">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>50</y>
-         <width>71</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>100</string>
-       </property>
-      </widget>
       <widget class="QPushButton" name="bbo_button_back_front">
        <property name="geometry">
         <rect>
@@ -1708,19 +1863,6 @@
        </property>
        <property name="text">
         <string>Forwards</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="bbo_lineEdit_velocity_front">
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>50</y>
-         <width>71</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>500</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_23">
@@ -1757,6 +1899,74 @@
        </property>
        <property name="text">
         <string>Move first BBO:</string>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="bbo_lineEdit_relativeSteps_front">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>50</y>
+         <width>61</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>100.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="bbo_lineEdit_velocity_front">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>50</y>
+         <width>91</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string> Steps/s</string>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1500.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>500.000000000000000</double>
        </property>
       </widget>
      </widget>
@@ -1877,26 +2087,6 @@
         <string>Target Temperature [°C]:</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="lbo_lineEdit_rampSpeed">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>20</y>
-         <width>61</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lbo_lineEdit_targetTemp">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>70</y>
-         <width>61</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
       <widget class="QPushButton" name="lbo_button_readValues">
        <property name="geometry">
         <rect>
@@ -1957,6 +2147,68 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="lbo_lineEdit_targetTemp">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>70</y>
+         <width>81</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="minimum">
+        <double>20.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>200.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>20.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="lbo_lineEdit_rampSpeed">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>20</y>
+         <width>71</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>2.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>2.000000000000000</double>
        </property>
       </widget>
      </widget>
@@ -2107,16 +2359,6 @@
         <string>Abort</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="dfb_lineEdit_scanSpeed">
-       <property name="geometry">
-        <rect>
-         <x>100</x>
-         <y>100</y>
-         <width>71</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
       <widget class="QProgressBar" name="dfb_progressBar_scan">
        <property name="geometry">
         <rect>
@@ -2128,16 +2370,6 @@
        </property>
        <property name="value">
         <number>0</number>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="dfb_lineEdit_scanStartTemp">
-       <property name="geometry">
-        <rect>
-         <x>100</x>
-         <y>40</y>
-         <width>71</width>
-         <height>20</height>
-        </rect>
        </property>
       </widget>
       <widget class="QLabel" name="dfb_label_scanStart">
@@ -2198,16 +2430,6 @@
         <string>Remaining time:</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="dfb_lineEdit_scanEndTemp">
-       <property name="geometry">
-        <rect>
-         <x>100</x>
-         <y>70</y>
-         <width>71</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
       <widget class="QLabel" name="dfb_label_scanEnd">
        <property name="geometry">
         <rect>
@@ -2232,6 +2454,102 @@
        </property>
        <property name="text">
         <string>Set values</string>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_scanStartTemp">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>40</y>
+         <width>68</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="minimum">
+        <double>12.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>40.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>12.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_scanEndTemp">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>70</y>
+         <width>68</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="minimum">
+        <double>12.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>40.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>40.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_scanSpeed">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>100</y>
+         <width>68</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="minimum">
+        <double>0.001000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>2.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.200000000000000</double>
        </property>
       </widget>
      </widget>

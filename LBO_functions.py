@@ -154,8 +154,7 @@ class LBO(QtCore.QObject):
         except ValueError as e:
             self.update_textBox.emit(f"Error: {e}")
         except pyvisa.errors.VisaIOError as e:
-            # self.update_textBox.emit(f"Error: {e}")
-            self.update_textBox.emit("It failed!")
+            self.update_textBox.emit(f"Error: {e}")
 
     def get_status(self):
         """Returns the status of the covesion controller.
