@@ -384,6 +384,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="pm_button_changeWL1">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>490</x>
@@ -397,6 +400,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="pm_lineEdit_enterWL1">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>400</x>
@@ -496,6 +502,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="pm_lineEdit_enterWL2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>400</x>
@@ -506,6 +515,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="pm_button_changeWL2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>490</x>
@@ -578,6 +590,9 @@
        <enum>QFrame::Plain</enum>
       </property>
       <widget class="QLineEdit" name="ase_cal_x0_lower">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>310</x>
@@ -591,6 +606,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_x0_upper">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>310</x>
@@ -617,6 +635,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_y0_lower">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>260</x>
@@ -630,6 +651,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_y0_upper">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>260</x>
@@ -643,6 +667,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_n_lower">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>210</x>
@@ -656,6 +683,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_n_upper">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>210</x>
@@ -695,6 +725,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_startangle">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>60</x>
@@ -741,6 +774,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_a_upper">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>160</x>
@@ -767,6 +803,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_B_upper">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -793,6 +832,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_B_lower">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -806,6 +848,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_a_lower">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>160</x>
@@ -819,6 +864,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="ase_button_startAutoCal">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -864,6 +912,9 @@
        </property>
       </widget>
       <widget class="QLineEdit" name="ase_cal_endangle">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>60</x>
@@ -1035,6 +1086,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="ase_button_home">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1092,6 +1146,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="ase_button_moveToStart">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Move to Start</string>
           </property>
@@ -1118,6 +1175,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="ase_button_autoScan_start">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true">color: green</string>
           </property>
@@ -1211,6 +1271,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="bbo_button_back">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1224,6 +1287,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="bbo_button_forwards">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -1273,6 +1339,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="bbo_lineEdit_velocity">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -1307,6 +1376,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="bbo_lineEdit_relativeSteps">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -1401,6 +1473,9 @@
         </item>
         <item row="0" column="1">
          <widget class="QDoubleSpinBox" name="bbo_lineEdit_steps">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="buttonSymbols">
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
@@ -1429,6 +1504,9 @@
         </item>
         <item row="1" column="1">
          <widget class="QDoubleSpinBox" name="bbo_lineEdit_scanVelocity">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="buttonSymbols">
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
@@ -1457,6 +1535,9 @@
         </item>
         <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="bbo_lineEdit_break">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="buttonSymbols">
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
@@ -1497,6 +1578,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="QPushButton" name="bbo_button_startUvScan">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true">color: green</string>
           </property>
@@ -1657,6 +1741,9 @@
         </item>
         <item row="0" column="1">
          <widget class="QDoubleSpinBox" name="bbo_lineEdit_steps_double">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="buttonSymbols">
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
@@ -1685,6 +1772,9 @@
         </item>
         <item row="1" column="1">
          <widget class="QDoubleSpinBox" name="bbo_lineEdit_scanVelocity_double">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="buttonSymbols">
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
@@ -1713,6 +1803,9 @@
         </item>
         <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="bbo_lineEdit_break_double">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="buttonSymbols">
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
@@ -1753,6 +1846,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_13">
         <item>
          <widget class="QPushButton" name="bbo_button_startUvScan_double">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true">color: green</string>
           </property>
@@ -1840,6 +1936,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="bbo_button_back_front">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1853,6 +1952,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="bbo_button_forwards_front">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -1902,6 +2004,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="bbo_lineEdit_relativeSteps_front">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -1936,6 +2041,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="bbo_lineEdit_velocity_front">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -2088,6 +2196,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="lbo_button_readValues">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>280</x>
@@ -2101,6 +2212,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="lbo_button_setTemp">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>280</x>
@@ -2150,6 +2264,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="lbo_lineEdit_targetTemp">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>180</x>
@@ -2181,6 +2298,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="lbo_lineEdit_rampSpeed">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>180</x>
@@ -2228,6 +2348,9 @@
        <enum>QFrame::Plain</enum>
       </property>
       <widget class="QPushButton" name="lbo_button_autoScan_start">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -2365,6 +2488,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="lbo_lineEdit_slope">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -2399,6 +2525,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="lbo_lineEdit_offset">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -2483,6 +2612,9 @@
        <enum>QFrame::Plain</enum>
       </property>
       <widget class="QPushButton" name="dfb_button_startScan">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -2521,6 +2653,9 @@
        </property>
       </widget>
       <widget class="QProgressBar" name="dfb_progressBar_scan">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -2579,6 +2714,9 @@
        </property>
       </widget>
       <widget class="QLabel" name="dfb_label_remainingTime">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -2605,6 +2743,9 @@
        </property>
       </widget>
       <widget class="QPushButton" name="dfb_button_setScanValues">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>170</x>
@@ -2618,6 +2759,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="dfb_lineEdit_scanStartTemp">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -2649,6 +2793,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="dfb_lineEdit_scanEndTemp">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -2680,6 +2827,9 @@
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="dfb_lineEdit_scanSpeed">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -2773,6 +2923,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="dfb_button_readValues">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Read values</string>
           </property>
@@ -2837,6 +2990,9 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="dfb_spinBox_setTemp">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="focusPolicy">
              <enum>Qt::NoFocus</enum>
             </property>

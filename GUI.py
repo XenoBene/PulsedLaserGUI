@@ -55,7 +55,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.widescan_status.connect(lambda bool:
                                          self.status_label_wideScan.setText("T[°C] =") if not bool else None)
         self.dfb.widescan_status.connect(lambda bool: self.disable_tab_widgets(
-            "DFB_tab", self.dfb_button_abortScan, bool))
+            "DFB_tab", bool, excluded_widget=self.dfb_button_abortScan))
         self.dfb.update_values.connect(lambda values: self.dfb_update_values(*values))
         self.dfb.widescan_finished.connect(self.reset_wideScan_progressBar)
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
@@ -72,10 +72,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_double.connect(
             lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", self.bbo_button_stopUvScan, bool))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", self.bbo_button_stopUvScan_double, bool))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan_double))
         self.bbo.autoscan_status_double.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
         self.bbo.autoscan_status_single.connect(self.bbo_button_stopUvScan.setEnabled)
         self.bbo.autoscan_status_double.connect(self.bbo_button_stopUvScan_double.setEnabled)
@@ -87,7 +87,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
         self.lbo.autoscan_status.connect(lambda bool: self.status_label_lbo.setText("T[°C] =") if not bool else None)
         self.lbo.autoscan_status.connect(lambda bool: self.disable_tab_widgets(
-            "LBO_tab", self.lbo_button_autoScan_stop, bool))
+            "LBO_tab", bool, excluded_widget=self.lbo_button_autoScan_stop))
         self.lbo.update_set_temperature.connect(
             lambda temp: self.lbo_label_setTemp.setText(f"Set temperature [°C]: {temp}"))
         self.lbo.update_set_temperature.connect(lambda temp: setattr(self, "data_lbo_set", temp))
@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase.autoscan_status.connect(self.status_checkBox_ase.setChecked)
         self.ase.autoscan_status.connect(lambda bool: self.status_label_ase.setText("theta[°] =") if not bool else None)
         self.ase.autoscan_status.connect(lambda bool: self.disable_tab_widgets(
-            "ASE_tab", self.ase_button_autoScan_stop, bool))
+            "ASE_tab", bool, excluded_widget=self.ase_button_autoScan_stop))
         self.ase.update_wl_pos.connect(lambda values: (
             self.ase_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
             self.ase_label_currentAngle.setText(f"Current Angle: {values[1]}")
@@ -144,6 +144,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_startScan.clicked.connect(self.dfb.start_wideScan)
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
+        self.dfb_button_connectDfb.clicked.connect(
+            lambda: self.disable_tab_widgets("DFB_tab",
+                                             disable=not self.dfb._connect_button_is_checked,
+                                             ignored_widgets=[self.dfb_button_connectDfb, self.dfb_lineEdit_ip,
+                                                              self.dfb_button_abortScan]))
+
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
         self.lbo_comboBox_visa.addItems(self.rm.list_resources())
@@ -162,11 +168,31 @@ class MainWindow(QtWidgets.QMainWindow):
                                             wl_to_T_offset=self.lbo_lineEdit_offset.value()))
         self.lbo_button_autoScan_stop.clicked.connect(self.lbo.stop_autoscan)
 
+        self.lbo_button_connectLBO.clicked.connect(
+            lambda: self.disable_tab_widgets("LBO_tab",
+                                             disable=not self.lbo._connect_button_is_checked,
+                                             ignored_widgets=[self.lbo_button_connectLBO, self.lbo_comboBox_visa,
+                                                              self.lbo_button_refresh, self.lbo_button_autoScan_stop]))
+
     def connect_bbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the BBO tab to the methods that should be performed"""
         self.bbo_button_connectPiezo.clicked.connect(self.bbo.connect_piezos)
         self.bbo_button_connectRP.clicked.connect(
             lambda: self.bbo.connect_red_pitaya(ip=str(self.bbo_lineEdit_ipRedPitaya.text())))
+        self.bbo_button_connectPiezo.clicked.connect(
+            lambda: self.disable_tab_widgets("BBO_tab",
+                                             disable=not (self.bbo._connect_button_is_checked
+                                                          and self.bbo._connect_rp_button_is_checked),
+                                             ignored_widgets=[self.bbo_button_connectPiezo, self.bbo_button_connectRP,
+                                                              self.bbo_lineEdit_ipRedPitaya, self.bbo_button_stopUvScan,
+                                                              self.bbo_button_stopUvScan_double]))
+        self.bbo_button_connectRP.clicked.connect(
+            lambda: self.disable_tab_widgets("BBO_tab",
+                                             disable=not (self.bbo._connect_button_is_checked
+                                                          and self.bbo._connect_rp_button_is_checked),
+                                             ignored_widgets=[self.bbo_button_connectPiezo, self.bbo_button_connectRP,
+                                                              self.bbo_lineEdit_ipRedPitaya, self.bbo_button_stopUvScan,
+                                                              self.bbo_button_stopUvScan_double]))
 
         # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(
@@ -219,6 +245,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ase_button_startAutoCal.clicked.connect(self.autocalibration_popup)
         self.ase_button_selectPath.clicked.connect(self.open_calparfile)
 
+        self.ase_button_connectStage.clicked.connect(
+            lambda: self.disable_tab_widgets("ASE_tab",
+                                             disable=not self.ase._connect_button_is_checked,
+                                             ignored_widgets=[self.ase_button_connectStage, self.ase_button_selectPath,
+                                                              self.ase_lineEdit_stage, self.ase_button_autoScan_stop]))
+
     def connect_pm_buttons(self):
         """Connect the buttons/lineEdits/etc of the PM tab to the methods that should be performed"""
         self.pm_comboBox_visaResources1.addItems(self.rm.list_resources())
@@ -233,6 +265,27 @@ class MainWindow(QtWidgets.QMainWindow):
                                                  self.pm1.set_wavelength(self.pm_lineEdit_enterWL1.text()))
         self.pm_button_changeWL2.clicked.connect(lambda:
                                                  self.pm2.set_wavelength(self.pm_lineEdit_enterWL2.text()))
+
+        self.pm_button_connectPM1.clicked.connect(
+            lambda: self.disable_tab_widgets("PM_tab",
+                                             disable=not self.pm1._connect_button_is_checked,
+                                             ignored_widgets=[self.pm_button_connectPM1,
+                                                              self.pm_comboBox_visaResources1,
+                                                              self.pm_button_refresh,
+                                                              self.pm_comboBox_visaResources2,
+                                                              self.pm_button_connectPM2,
+                                                              self.pm_lineEdit_enterWL2,
+                                                              self.pm_button_changeWL2]))
+        self.pm_button_connectPM2.clicked.connect(
+            lambda: self.disable_tab_widgets("PM_tab",
+                                             disable=not self.pm2._connect_button_is_checked,
+                                             ignored_widgets=[self.pm_button_connectPM1,
+                                                              self.pm_comboBox_visaResources1,
+                                                              self.pm_button_refresh,
+                                                              self.pm_comboBox_visaResources2,
+                                                              self.pm_button_connectPM2,
+                                                              self.pm_lineEdit_enterWL1,
+                                                              self.pm_button_changeWL1]))
 
     def connect_general_buttons(self):
         """Connect the buttons/lineEdits/etc of the general tab to the methods that should be performed"""
@@ -368,11 +421,12 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError as e:
             self.update_textBox(f"Covesion oven is not connected: {e}")
 
-    def disable_tab_widgets(self, tab_name, excluded_widget, disable):
+    def disable_tab_widgets(self, tab_name, disable, excluded_widget=None, ignored_widgets=[]):
         """This method goes through every QWidget in a specified QTabWidget
         and disables (disable=True) or enables (disable=False) every QWidget,
-        except for the excluded widget. This excluded widget will get the
-        reversed treatment: It will be enabled if disable=True and vice versa.
+        except for the excluded widget and the ignored widgets. The excluded widget will get the
+        reversed treatment: It will be enabled if disable=True and vice versa. The ignored widgets
+        will not change their state at all
 
         This method will be used for example when an autoscan gets started,
         so that the only clickable QWidget is the Stop-Button of the autoscan.
@@ -380,6 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Args:
             tab_name (str): Name of the QTabWidget where the QWidgets should be dis-/enabled.
             excluded_widget (QWidget): QWidget that will not be disabled, but rather enabled
+            ignored_widget (list of QWidgets): List of widgets that should be ignored
             disable (bool): Boolean that decides wether all QWidgets should be disabled or enabled
         """
         tab = self.findChild(QtWidgets.QWidget, tab_name)
@@ -389,8 +444,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                    QtWidgets.QCheckBox, QtWidgets.QSpinBox)):
                 if widget == excluded_widget:
                     widget.setEnabled(disable)
-                else:
+                elif widget not in ignored_widgets:
                     widget.setDisabled(disable)
+                else:
+                    pass
 
     def dfb_update_values(self, set_temp, start_temp, end_temp, scan_speed):
         """Updates the GUI with the last known attributes of the set temperature,
