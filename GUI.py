@@ -285,7 +285,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
                                  "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature (act) [°C]",
                                  "LBO temperature (set) [°C]"])
-            self.measurement_loop_timer.start(1000 / samples)
+            self.measurement_loop_timer.start(int(1000 / samples))
             self.measurement_status.emit(True)
         except AttributeError:
             self.update_textBox.emit("Couldn't start measurement: No file path chosen")

@@ -88,7 +88,7 @@ class WorkerBBO(QtCore.QObject):
             return new_pos
 
         def correct_position_if_needed(wl, uv_power, new_pos):
-            if self.threshold_power * 0.8 > uv_power > 0:
+            if self.threshold_power * 0.8 > uv_power > 0 and (1028 < wl < 1032):
                 delta_wl = wl - self.delta_wl_start
                 calculated_steps = -delta_wl * (3233 if delta_wl > 0 else 3500)
                 delta_pos = calculated_steps - (new_pos - self.start_pos)
