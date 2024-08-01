@@ -141,7 +141,8 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.dfb.change_wideScan_values(self.dfb_lineEdit_scanStartTemp.value(),
                                                     self.dfb_lineEdit_scanEndTemp.value(),
                                                     self.dfb_lineEdit_scanSpeed.value()))
-        self.dfb_button_startScan.clicked.connect(self.dfb.start_wideScan)
+        self.dfb_button_startScan.clicked.connect(
+            lambda: self.dfb_wideScan_popup(*self.dfb.read_actual_dfb_values()[:2]))
         self.dfb_button_abortScan.clicked.connect(self.dfb.abort_wideScan)
 
         self.dfb_button_connectDfb.clicked.connect(
@@ -484,6 +485,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_label_actTemp.setText("Actual temperature: ")
         self.dfb_progressBar_scan.reset()
         self.dfb_label_remainingTime.setText("Remaining time: ")
+
+    def dfb_wideScan_popup(self, set_temp, start_temp):
+        if abs(set_temp - start_temp) > 0.1 or not self.status_checkBox_ase.isChecked():
+            message = ""
+            if abs(set_temp - start_temp) > 0.1:
+                message += (f"The current DFB temperature {set_temp} °C doesn't match the "
+                            f"WideScan start temperature {start_temp} °C.\n")
+            if not self.status_checkBox_ase.isChecked():
+                message += "The autoscan of the ASE filters is currently disabled.\n"
+            message += "Are you sure to start the WideScan?"
+
+            popup = QtWidgets.QMessageBox.question(
+                self, 'WideScan', message,
+                buttons=QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+
+            if popup == QtWidgets.QMessageBox.StandardButton.Yes:
+                self.dfb.start_wideScan()
+        else:
+            self.dfb.start_wideScan()
 
     def ase_homing_popup(self):
         """Creates a pop-up if the ASE filter rotation stage should be homed.
