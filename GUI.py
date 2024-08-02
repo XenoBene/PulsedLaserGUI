@@ -127,7 +127,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Signal/Slot for the General tab:
         self.measurement_status.connect(lambda bool: self.disable_tab_widgets(
-            "general_tab", self.general_button_stopMeasurement, bool))
+            "general_tab", bool, excluded_widget=self.general_button_stopMeasurement))
 
     def connect_dfb_buttons(self):
         """Connect the buttons/lineEdits/etc of the DFB tab to the methods that should be performed"""
