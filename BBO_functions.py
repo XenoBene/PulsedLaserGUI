@@ -154,7 +154,8 @@ class WorkerBBO_Double(QtCore.QObject):
     status = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
     update_diodeVoltage = QtCore.pyqtSignal(float)
-    update_motorSteps = QtCore.pyqtSignal(int)
+    update_motorStepsFront = QtCore.pyqtSignal(int)
+    update_motorStepsBack = QtCore.pyqtSignal(int)
 
     def __init__(self, wlm, rp, stage, axis, addrFront, addrBack, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -213,7 +214,10 @@ class WorkerBBO_Double(QtCore.QObject):
 
         def update_position_and_measure(addr):
             new_pos = self.stage.get_position(axis=self.axis, addr=addr)
-            self.update_motorSteps.emit(new_pos)
+            if addr == self.addrFront:
+                self.update_motorStepsFront.emit(new_pos)
+            elif addr == self.addrBack:
+                self.update_motorStepsBack.emit(new_pos)
             return new_pos
 
         def correct_position_if_needed(wl, uv_power, new_pos):
@@ -371,7 +375,8 @@ class BBO(QtCore.QObject):
     autoscan_status_single = QtCore.pyqtSignal(bool)
     autoscan_status_double = QtCore.pyqtSignal(bool)
     voltageUpdated = QtCore.pyqtSignal(float)
-    stepsUpdated = QtCore.pyqtSignal(int)
+    stepsUpdatedFront = QtCore.pyqtSignal(int)
+    stepsUpdatedBack = QtCore.pyqtSignal(int)
     update_textBox = QtCore.pyqtSignal(str)
 
     def __init__(self, axis, addrFront, addrBack):
@@ -495,7 +500,7 @@ class BBO(QtCore.QObject):
             self.threadBBO.started.connect(self.workerBBO.autoscan)
             self.workerBBO.status.connect(self.autoscan_status_single.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
-            self.workerBBO.update_motorSteps.connect(self.stepsUpdated.emit)
+            self.workerBBO.update_motorSteps.connect(self.stepsUpdatedBack.emit)
             self.workerBBO.update_textBox.connect(self.update_textBox.emit)
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
@@ -529,7 +534,8 @@ class BBO(QtCore.QObject):
             self.threadBBO2.started.connect(self.workerBBO2.autoscan)
             self.workerBBO2.status.connect(self.autoscan_status_double.emit)
             self.workerBBO2.update_diodeVoltage.connect(self.voltageUpdated.emit)
-            self.workerBBO2.update_motorSteps.connect(self.stepsUpdated.emit)
+            self.workerBBO2.update_motorStepsFront.connect(self.stepsUpdatedFront.emit)
+            self.workerBBO2.update_motorStepsBack.connect(self.stepsUpdatedBack.emit)
             self.workerBBO2.finished.connect(self.threadBBO2.quit)
             self.workerBBO2.finished.connect(self.workerBBO2.deleteLater)
             self.threadBBO2.finished.connect(self.threadBBO2.deleteLater)

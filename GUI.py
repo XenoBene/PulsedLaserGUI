@@ -43,7 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Initialise all values that can be written to file:
         self.data_uv = 0.0
-        self.data_steps = 0
+        self.data_steps_front = 0
+        self.data_steps_back = 0
         self.data_pm1 = 0.0
         self.data_pm2 = 0.0
         self.data_wl = 0.0
@@ -81,7 +82,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_double.connect(self.bbo_button_stopUvScan_double.setEnabled)
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
         self.bbo.voltageUpdated.connect(lambda value: self.status_label_bbo.setText(f"U[V] = {value}"))
-        self.bbo.stepsUpdated.connect(lambda value: setattr(self, "data_steps", value))
+        self.bbo.stepsUpdatedFront.connect(lambda value: setattr(self, "data_steps_front", value))
+        self.bbo.stepsUpdatedBack.connect(lambda value: setattr(self, "data_steps_back", value))
 
         # Signal/Slot connection for LBO tab:
         self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
@@ -337,7 +339,7 @@ class MainWindow(QtWidgets.QMainWindow):
             with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file, delimiter=";")
                 writer.writerow(["Time [s]", "Timestamp", "Wavelength [nm]", "Power PM1 [W]", "Power PM2 [W]",
-                                 "Motor position [steps]", "UV photodiode voltage [V]", "LBO temperature (act) [°C]",
+                                 "Motor position Front BBO [steps]", "Motor position Back BBO [steps]", "UV photodiode voltage [V]", "LBO temperature (act) [°C]",
                                  "LBO temperature (set) [°C]"])
             self.measurement_loop_timer.start(int(1000 / samples))
             self.measurement_status.emit(True)
@@ -369,7 +371,8 @@ class MainWindow(QtWidgets.QMainWindow):
         data_pm1 = 0.0
         data_pm2 = 0.0
         data_wl = 0.0
-        data_steps = 0
+        data_steps_front = 0
+        data_steps_back = 0
         data_uv = 0.0
         data_lbo_act = 0.0
         data_lbo_set = 0.0
@@ -388,7 +391,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.general_checkbox_saveWL.isChecked():
             data_wl = self.data_wl
         if self.general_checkbox_saveMotorSteps.isChecked():
-            data_steps = self.data_steps
+            data_steps_front = self.data_steps_front
+            data_steps_back = self.data_steps_back
         if self.general_checkbox_saveUvPdVolt.isChecked():
             data_uv = self.data_uv
         if self.general_checkbox_saveLboTemp.isChecked():
@@ -399,7 +403,7 @@ class MainWindow(QtWidgets.QMainWindow):
         with open(self.file_path, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=";")
             writer.writerow([time_since_start, timestamp, data_wl, data_pm1,
-                             data_pm2, data_steps, data_uv, data_lbo_act, data_lbo_set])
+                             data_pm2, data_steps_front, data_steps_back, data_uv, data_lbo_act, data_lbo_set])
 
         # Reset all instance variables for the next cycle:
         self.reset_data_storage()
@@ -407,7 +411,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def reset_data_storage(self):
         """Sets all instance variables for the measurement back to Zero."""
         self.data_uv = 0.0
-        self.data_steps = 0
+        self.data_steps_front = 0
+        self.data_steps_back = 0
         self.data_wl = 0.0
         self.data_lbo_act = 0.0
         self.data_lbo_set = 0.0
