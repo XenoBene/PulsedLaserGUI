@@ -75,15 +75,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
+        self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan_double))
         self.bbo.autoscan_status_double.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
+        self.bbo.autoscan_status_double.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_single.connect(self.bbo_button_stopUvScan.setEnabled)
         self.bbo.autoscan_status_double.connect(self.bbo_button_stopUvScan_double.setEnabled)
         self.bbo.voltageUpdated.connect(lambda value: setattr(self, "data_uv", value))
         self.bbo.voltageUpdated.connect(lambda value: self.status_label_bbo.setText(f"U[V] = {value}"))
         self.bbo.stepsUpdatedFront.connect(lambda value: setattr(self, "data_steps_front", value))
         self.bbo.stepsUpdatedBack.connect(lambda value: setattr(self, "data_steps_back", value))
+        self.bbo.measurement_status.connect(lambda bool: self.disable_tab_widgets(
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage))
+        self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
+        self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
 
         # Signal/Slot connection for LBO tab:
         self.lbo.autoscan_status.connect(self.status_checkBox_lbo.setChecked)
@@ -195,7 +201,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                           and self.bbo._connect_rp_button_is_checked),
                                              ignored_widgets=[self.bbo_button_connectPiezo, self.bbo_button_connectRP,
                                                               self.bbo_lineEdit_ipRedPitaya, self.bbo_button_stopUvScan,
-                                                              self.bbo_button_stopUvScan_double]))
+                                                              self.bbo_button_stopUvScan_double,
+                                                              self.bbo_button_stopDiodeVoltage]))
 
         # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(
@@ -236,6 +243,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 double_bbo_setup=True))
         self.bbo_button_startUvScan_double.clicked.connect(lambda: self.bbo.start_autoscan_double(wlm=self.wlm))
         self.bbo_button_stopUvScan_double.clicked.connect(self.bbo.stop_autoscan_double)
+
+        # UV Measurement:
+        self.bbo_button_startDiodeVoltage.clicked.connect(
+            lambda: self.bbo.change_autoscan_parameters(
+                velocity=self.bbo_lineEdit_scanVelocity.value(),
+                steps=self.bbo_lineEdit_steps.value(),
+                wait=self.bbo_lineEdit_break.value(),
+                double_bbo_setup=False))
+        self.bbo_button_startDiodeVoltage.clicked.connect(lambda: self.bbo.start_UV_measurement(wlm=self.wlm))
+        self.bbo_button_stopDiodeVoltage.clicked.connect(self.bbo.stop_UV_measurement)
 
     def connect_ase_buttons(self):
         """Connect the buttons/lineEdits/etc of the ASE filter tab to the methods that should be performed"""

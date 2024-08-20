@@ -9,6 +9,7 @@ import redpitaya_scpi as scpi
 class WorkerBBO(QtCore.QObject):
     # Signals need to be class variables, not instance variables:
     status = QtCore.pyqtSignal(bool)
+    status_measurement = QtCore.pyqtSignal(bool)
     finished = QtCore.pyqtSignal()
     update_diodeVoltage = QtCore.pyqtSignal(float)
     update_motorSteps = QtCore.pyqtSignal(int)
@@ -47,6 +48,21 @@ class WorkerBBO(QtCore.QObject):
         self.delta_wl_start = np.round(self.wlm.GetWavelength(1), 6)
         self.threshold_power = 0
         self.start_pos = self.old_pos
+
+    def measure_UV_power(self):
+        """Measures the UV Photodiode voltage and sends a signal to the GUI after each measurement
+        """
+        self.keep_running = True
+        self.status_measurement.emit(True)
+
+        while self.keep_running:
+            self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
+            buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+            self.update_diodeVoltage.emit(np.round(np.mean(buff), 4))
+            time.sleep(0.15)
+        self.status_measurement.emit(False)
+        self.cleanup()
+        self.finished.emit()
 
     def autoscan(self):
         """
@@ -129,6 +145,7 @@ class WorkerBBO(QtCore.QObject):
         except Newport.base.NewportBackendError as e:
             self.update_textBox.emit(f"USB connection to Newport motors lost: {e}")
         finally:
+            self.update_textBox.emit("UV Autoscan stopped")
             self.status.emit(False)
             self.cleanup()
             self.finished.emit()
@@ -138,7 +155,6 @@ class WorkerBBO(QtCore.QObject):
         to end the autoscan method to end the QThread.
         """
         self.keep_running = False
-        self.update_textBox.emit("UV Autoscan stopped")
 
     def cleanup(self):
         """Clean up all attributes.
@@ -374,6 +390,7 @@ class WorkerBBO_Double(QtCore.QObject):
 class BBO(QtCore.QObject):
     autoscan_status_single = QtCore.pyqtSignal(bool)
     autoscan_status_double = QtCore.pyqtSignal(bool)
+    measurement_status = QtCore.pyqtSignal(bool)
     voltageUpdated = QtCore.pyqtSignal(float)
     stepsUpdatedFront = QtCore.pyqtSignal(int)
     stepsUpdatedBack = QtCore.pyqtSignal(int)
@@ -483,6 +500,41 @@ class BBO(QtCore.QObject):
             self.stage.setup_velocity(axis=self.axis, addr=addr, speed=velocity)
         except AttributeError:
             self.update_textBox.emit("Picomotor not connected!")
+
+    def start_UV_measurement(self, wlm):
+        """Starts the QThread (the WorkerBBO class) where the UV measurement will operate.
+
+        Args:
+            wlm (WavelengthMeter): Device to measure the wavelength
+        """
+        self.update_textBox.emit("Start UV Measurement")
+        try:
+            # Initiate QThread and WorkerLBO class:
+            self.threadBBO = QtCore.QThread()
+            self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
+                                       axis=self.axis, addr=self.addrBack, steps=self.autoscan_steps,
+                                       velocity=self.autoscan_velocity, wait=self.autoscan_wait)
+            self.workerBBO.moveToThread(self.threadBBO)
+
+            # Connect different methods to the signals of the thread:
+            self.threadBBO.started.connect(self.workerBBO.measure_UV_power)
+            self.workerBBO.status_measurement.connect(self.measurement_status.emit)
+            self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
+            self.workerBBO.update_textBox.connect(self.update_textBox.emit)
+            self.workerBBO.finished.connect(self.threadBBO.quit)
+            self.workerBBO.finished.connect(self.workerBBO.deleteLater)
+            self.threadBBO.finished.connect(self.threadBBO.deleteLater)
+
+            # Start the thread:
+            self.threadBBO.start()
+        except AttributeError as e:
+            self.update_textBox.emit(f"Error: {e}")
+
+    def stop_UV_measurement(self):
+        """Stops the QThread (WorkerBBO class).
+        """
+        self.update_textBox.emit("Stop UV Measurement")
+        self.workerBBO.stop()
 
     def start_autoscan(self, wlm):
         """Starts the QThread (the WorkerBBO class) where the UV autoscan will operate.
