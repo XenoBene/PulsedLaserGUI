@@ -116,6 +116,8 @@ class WorkerBBO(QtCore.QObject):
         self.keep_running = True
         self.status.emit(True)
 
+        self.stage.setup_velocity(axis=self.axis, addr=self.addr, speed=self.velocity)
+
         try:
             while self.keep_running:
                 start_time = time.time()
@@ -247,8 +249,10 @@ class WorkerBBO_Double(QtCore.QObject):
             return new_pos
 
         self.keep_running = True
-        start_time = time.time()
         self.status.emit(True)
+
+        self.stage.setup_velocity(axis=self.axis, addr=self.addrFront, speed=self.velocity)
+        self.stage.setup_velocity(axis=self.axis, addr=self.addrBack, speed=self.velocity)
 
         try:
             while self.keep_running:
