@@ -367,6 +367,40 @@ class WorkerBBO_Double(QtCore.QObject):
                 # Assign the newest values to attributes for the next iteration:
                 self.old_power, self.old_pos_back = uv_power, new_pos_back
 
+                '''
+                # Alternative algorithm: the second BBO makes two steps according to measured slopes, and the first BBO only makes one step
+
+                # Second movement of BBO 2 - identical to first step
+
+                direction = self.steps if self.going_right2 else -self.steps
+                self.stage.move_by(axis=self.axis, addr=self.addrBack, steps=direction)
+                time.sleep(float(self.steps / self.velocity) + self.wait)
+
+                # Measure the voltage of the uv diode (proportional
+                # to the uv output power):
+
+                uv_power = measure_uv_power()
+
+                # Signal for the GUI:
+                self.update_diodeVoltage.emit(uv_power)
+
+                # Measure the current position (absolute steps):
+                new_pos_back = update_position_and_measure(self.addrBack)
+
+                # Signal for the GUI or writing data:
+                # self.update_motorSteps2.emit(new_pos_back)  
+
+                # Calculate the slope for BBO 2 (i.e. calculate if the power got higher
+                # or not). The direction of the next step depends on the slope:
+
+                slope2 = (uv_power - self.old_power) / (new_pos_back - self.old_pos_back)
+                self.going_right2 = slope2 > 0
+                # self.going_right2 = not self.going_right2  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                # Assign the newest values to attributes for the next iteration:
+                self.old_power, self.old_pos_back = uv_power, new_pos_back
+                
+                '''
             # TODO nach Test noch failsafe für 2 BBOs implementieren
         except Newport.base.NewportBackendError as e:
             self.update_textBox.emit(f"USB connection to Newport motors lost: {e}")
@@ -550,6 +584,9 @@ class BBO(QtCore.QObject):
             self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
                                        axis=self.axis, addr=self.addrBack, steps=self.autoscan_steps,
                                        velocity=self.autoscan_velocity, wait=self.autoscan_wait)
+            #self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
+            #                           axis=self.axis, addr=self.addrFront, steps=self.autoscan_steps,
+            #                           velocity=self.autoscan_velocity, wait=self.autoscan_wait)
             self.workerBBO.moveToThread(self.threadBBO)
 
             # Connect different methods to the signals of the thread:

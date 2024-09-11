@@ -23,13 +23,22 @@ class PM(QtCore.QObject):
             visa (str): VISA string of the powermeter
         """
         if not self._connect_button_is_checked:
-            self.pm = Thorlabs.PM160(visa)
-            self._connect_button_is_checked = True
-            self.updateWavelength.emit(np.round(self.get_wavelength() * 1e9, 2))
+            try:
+                self.pm = Thorlabs.PM160(visa)
+                self.updateWavelength.emit(np.round(self.get_wavelength() * 1e9, 2))
+                self._connect_button_is_checked = True
+
+            except Thorlabs.base.ThorlabsBackendError:
+                self._connect_button_is_checked = False
+                print("Powermeter not connectable")
         else:
-            self.pm.close()
-            del self.pm
-            self._connect_button_is_checked = False
+            try:
+                self.pm.close()
+                del self.pm
+            except Thorlabs.base.ThorlabsBackendError:
+                print("No device to close")
+            finally:
+                self._connect_button_is_checked = False
 
     def get_power(self):
         """Uses the get_power method of the Thorlabs
@@ -37,11 +46,17 @@ class PM(QtCore.QObject):
         in the GUI.
 
         Returns:
-            float: Measured power [W] by the pwoermeter
+            float: Measured power [W] by the powermeter
         """
-        power = self.pm.get_power()
-        self.updatePower.emit(power)
-        return power
+        try:
+            power = self.pm.get_power()
+        except Thorlabs.base.ThorlabsBackendError:
+            power = 0
+        except AttributeError:
+            power = 0
+        finally:
+            self.updatePower.emit(power)
+            return power
 
     def set_wavelength(self, wl):
         """Sets the wavelength of the powermeter. If the wavelength

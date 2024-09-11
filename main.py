@@ -26,6 +26,7 @@ window = GUI.MainWindow(
     pm1=Powermeter_functions.PM(),
     pm2=Powermeter_functions.PM()
     )
+
 window.connect_dfb_buttons()
 window.connect_ase_buttons()
 window.connect_lbo_buttons()
