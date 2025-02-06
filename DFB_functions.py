@@ -179,3 +179,15 @@ class DFB(QtCore.QObject):
             self.widescan_status.emit(False)
             self.widescan_loopTimer.stop()
             self.update_values.emit(self.read_actual_dfb_values())
+
+    def read_actual_current(self):
+        """Reads out the injection current.
+
+        Returns:
+            float: Injection current of the DFB diode [mA]
+        """
+        try:
+            act_current = self.dlc.laser1.dl.cc.current_act.get()
+            return np.round(act_current, 3)
+        except AttributeError as e:
+            self.update_textBox.emit(f"DFB is not yet connected: {e}")
