@@ -1677,7 +1677,7 @@
         <item>
          <widget class="QLineEdit" name="bbo_lineEdit_ipRedPitaya">
           <property name="text">
-           <string>192.168.12.69</string>
+           <string>169.254.204.79</string>
           </property>
          </widget>
         </item>
@@ -2955,7 +2955,7 @@
         <item>
          <widget class="QLineEdit" name="dfb_lineEdit_ip">
           <property name="text">
-           <string>192.168.12.38</string>
+           <string>140.181.91.46</string>
           </property>
          </widget>
         </item>
