@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import redpitaya_scpi as scpi
+import struct
 
 rp = scpi.scpi("169.254.204.79")  # Ersetze mit der IP deines Red Pitaya
 
@@ -10,6 +11,7 @@ rp.acq_set(1)
 rp.tx_txt('ACQ:DATA:FORMAT ASCII')
 rp.tx_txt('ACQ:DATA:UNITS VOLTS')"""
 rp.tx_txt("ACQ:DEC 1")  # Maximale Abtastrate (125 MSa/s)
+rp.tx_txt("ACQ:DATA:FORMAT BIN")
 rp.tx_txt("ACQ:START")  # Starte kontinuierliche Messung
 
 print("Warte auf Signal...")
@@ -23,7 +25,11 @@ while True:
     print(time.time() - startzeit)
     rp.tx_txt('ACQ:SOUR1:DATA?')
     print(time.time() - startzeit)
-    response = list(map(float, rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+    # response = list(map(float, rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+    # response = np.array([float(v) for v in rp.rx_txt().strip('{}\n\r').split(',')])
+    raw_data = rp.rx_bin()
+    num_samples = len(raw_data) // 4
+    response = np.array(struct.unpack(f"{num_samples}f", raw_data))
     print(time.time() - startzeit)
 
     # Umwandeln in ein numpy-Array mit Spannungswerten
