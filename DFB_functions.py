@@ -12,10 +12,23 @@ class DFB(QtCore.QObject):
     update_progressbar = QtCore.pyqtSignal(tuple)
     update_actTemp = QtCore.pyqtSignal(float)
     update_textBox = QtCore.pyqtSignal(str)
+    update_wl_current = QtCore.pyqtSignal(tuple)
+    wl_stabil_status = QtCore.pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
         self._connect_button_is_checked = False
+        self.current_set_current = None
+
+        # PID-Parameter
+        self.Kp = 0.5
+        self.Ki = 0.1
+        self.Kd = 0.01
+        self.dt = 0.1  # Abtastzeit (100 ms)
+
+        # Regelgrößen
+        self.integral = 0
+        self.prev_error = 0
 
     def connect_dfb(self, ip):
         """Connects/disconnects the DFB laser depending on if the connect button
@@ -180,6 +193,8 @@ class DFB(QtCore.QObject):
             self.widescan_loopTimer.stop()
             self.update_values.emit(self.read_actual_dfb_values())
 
+    # Ab hier werden neue Funktionen für die Strahlzeit 2025 implementiert:
+
     def read_actual_current(self):
         """Reads out the injection current.
 
@@ -191,3 +206,59 @@ class DFB(QtCore.QObject):
             return np.round(act_current, 3)
         except AttributeError as e:
             self.update_textBox.emit(f"DFB is not yet connected: {e}")
+
+    def change_dfb_setCurrent(self, set_current):
+        """Ändert den Set-Strom der Laserdiode.
+
+        Args:
+            set_current (float): Gewünschter Set-Strom [mA]
+        """
+        try:
+            self.dlc.laser1.dl.cc.current_set.set(np.round(set_current, 5))
+        except AttributeError as e:
+            self.update_textBox.emit(f"DFB ist nicht verbunden: {e}")
+        except ValueError as e:
+            self.update_textBox.emit(f"Ungültiger Wert für den Set-Strom: {e}")
+        except DecopError as e:
+            self.update_textBox.emit(f"Fehler beim Setzen des Stroms: {e}")
+
+    def control_wavelength(self, wlm, target_wavelength):
+        """PID-Regelung für die Wellenlängenstabilisierung."""
+        try:
+            wl = np.round(wlm.GetWavelength(1), 6)  # Aktuelle Wellenlänge messen
+            error = target_wavelength - wl  # Regelabweichung berechnen
+
+            # PID-Berechnung
+            self.integral += error * self.dt
+            derivative = (error - self.prev_error) / self.dt
+            correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
+
+            new_current = self.current_set_current + correction  # Anpassung des Stroms
+            self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
+            self.current_set_current = new_current  # Speichere neuen Wert
+            self.prev_error = error  # Update den vorherigen Fehlerwert
+
+            self.update_wl_current.emit((wl, new_current))
+            self.update_textBox.emit(f"Aktuelle Wellenlänge: {wl} nm, Fehler: {error:.6f} nm")
+
+        except Exception as e:
+            self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
+            self.stop_wavelength_stabilization()
+
+    def start_wl_stabilisation(self, wlm, target_wavelength):
+        """This method starts the wavelength stabilisation.
+
+        Args:
+            wlm (WavelengthMeter): WLM to measure the wavelength
+        """
+        self.wl_stabil_timer = QtCore.QTimer()
+        self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(
+            wlm=wlm, target_wavelength=target_wavelength))
+        self.wl_stabil_timer.start(100)
+        self.wl_stabil_status.emit(True)
+
+    def stop_wl_stabilisation(self):
+        """This method stops the wavelength stabilisation and updates the status.
+        """
+        self.wl_stabil_status.emit(False)
+        self.wl_stabil_timer.stop()
