@@ -30,7 +30,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>0</number>
     </property>
     <property name="usesScrollButtons">
      <bool>false</bool>
@@ -3103,7 +3103,7 @@
         <string>Injection Current:</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="dfb_button_startStabilize">
+      <widget class="QPushButton" name="dfb_button_start_wl_stabil">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -3125,7 +3125,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QPushButton" name="dfb_button_stopStabilize">
+      <widget class="QPushButton" name="dfb_button_stop_wl_stabil">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -3144,7 +3144,7 @@
         <string>Stop</string>
        </property>
       </widget>
-      <widget class="QDoubleSpinBox" name="dfb_lineEdit_wlStabil">
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_wl_stabil">
        <property name="enabled">
         <bool>false</bool>
        </property>

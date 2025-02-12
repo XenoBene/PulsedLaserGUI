@@ -62,6 +62,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
         self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
         self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
+        self.dfb.wl_stabil_status.connect(lambda bool: self.disable_tab_widgets(
+            "ASE_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil))
+        self.dfb.update_wl_current.connect(lambda values: (
+            self.dfb_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
+            self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
+            ))
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -157,7 +163,12 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.disable_tab_widgets("DFB_tab",
                                              disable=not self.dfb._connect_button_is_checked,
                                              ignored_widgets=[self.dfb_button_connectDfb, self.dfb_lineEdit_ip,
-                                                              self.dfb_button_abortScan]))
+                                                              self.dfb_button_abortScan, self.dfb_button_stop_wl_stabil]))
+        self.dfb_button_start_wl_stabil.clicked.connect(
+            lambda: self.dfb.start_wl_stabilisation(
+                wlm=self.wlm, target_wavelength=self.dfb_lineEdit_wl_stabil.value()))
+        self.dfb_button_stop_wl_stabil.clicked.connect(
+            lambda: self.dfb.stop_wl_stabilisation())
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
