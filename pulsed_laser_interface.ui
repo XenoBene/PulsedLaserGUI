@@ -3215,7 +3215,7 @@
         <double>0.010000000000000</double>
        </property>
        <property name="value">
-        <double>0.500000000000000</double>
+        <double>75.000000000000000</double>
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="dfb_lineEdit_ki">
@@ -3252,7 +3252,7 @@
         <double>0.010000000000000</double>
        </property>
        <property name="value">
-        <double>0.100000000000000</double>
+        <double>0.000000000000000</double>
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="dfb_lineEdit_kd">
@@ -3289,7 +3289,7 @@
         <double>0.010000000000000</double>
        </property>
        <property name="value">
-        <double>0.010000000000000</double>
+        <double>0.020000000000000</double>
        </property>
       </widget>
      </widget>

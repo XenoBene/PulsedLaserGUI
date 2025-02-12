@@ -2,7 +2,7 @@ from toptica.lasersdk.dlcpro.v2_0_3 import DLCpro, NetworkConnection, DeviceNotF
 from toptica.lasersdk.client import UnavailableError
 from toptica.lasersdk.decop import DecopError
 import numpy as np
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtTest
 
 
 class DFB(QtCore.QObject):
@@ -229,6 +229,17 @@ class DFB(QtCore.QObject):
             error = target_wavelength - wl  # Regelabweichung berechnen
 
             # PID-Berechnung
+            if not self.temp_step:
+                self.temp_step = True
+                temperature_step = error * 9.33
+                current_temperature = self.read_actual_dfb_values()[0]
+                self.update_textBox.emit(f"Aktuelle Temp: {current_temperature}")
+                new_temp = np.round(current_temperature + temperature_step, 2)
+                self.change_dfb_setTemp(set_temp=new_temp)
+                self.update_textBox.emit(f"Neue Temp: {new_temp}")
+                QtTest.QTest.qWait(1000)
+                return
+
             if (1027 < wl < 1032) and (wl != self.old_wl):
                 self.integral += error * self.dt
                 derivative = (error - self.prev_error) / self.dt
@@ -262,6 +273,7 @@ class DFB(QtCore.QObject):
         self.Ki = ki
         self.Kd = kd
 
+        self.temp_step = False
         self.old_wl = 0
         self.integral = 0
         self.prev_error = 0
