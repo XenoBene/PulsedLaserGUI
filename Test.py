@@ -1,6 +1,7 @@
 from pyrpl import Pyrpl
+import numpy as np
 
-p = Pyrpl()
+p = Pyrpl("169.254.204.79")
 scope = p.rp.scope  # Nutzt den schnellen FPGA-Puffer
 
 scope.decimation = 1  # Volle Geschwindigkeit (125 MSa/s)
@@ -14,6 +15,6 @@ while True:
         max_voltage = np.max(data)
         print(f"Maximale Spannung: {max_voltage:.2f} V")
 
-        if max_voltage > 2.5:
-            print("✅ TTL-Puls erkannt!")
+        if max_voltage > 0:
+            print("✅ Puls erkannt!")
             break

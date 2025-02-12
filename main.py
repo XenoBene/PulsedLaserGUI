@@ -18,7 +18,7 @@ app = QtWidgets.QApplication(sys.argv)
 # TODO: pylablib für WLM benutzen
 window = GUI.MainWindow(
     rm=pyvisa.ResourceManager(),
-    wlm=WLM_functions.WavelengthMeter(debug=True),
+    wlm=WLM_functions.WavelengthMeter(debug=False),
     dfb=DFB_functions.DFB(),
     lbo=LBO_functions.LBO(),
     bbo=BBO_functions.BBO(axis=1, addrFront=2, addrBack=1),
