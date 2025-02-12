@@ -166,7 +166,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                                               self.dfb_button_abortScan, self.dfb_button_stop_wl_stabil]))
         self.dfb_button_start_wl_stabil.clicked.connect(
             lambda: self.dfb.start_wl_stabilisation(
-                wlm=self.wlm, target_wavelength=self.dfb_lineEdit_wl_stabil.value()))
+                wlm=self.wlm, target_wavelength=self.dfb_lineEdit_wl_stabil.value(),
+                kp=self.dfb_lineEdit_kp.value(), ki=self.dfb_lineEdit_ki.value(),
+                kd=self.dfb_lineEdit_kd.value()))
         self.dfb_button_stop_wl_stabil.clicked.connect(
             lambda: self.dfb.stop_wl_stabilisation())
 

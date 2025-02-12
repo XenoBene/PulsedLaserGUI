@@ -239,7 +239,6 @@ class DFB(QtCore.QObject):
             self.prev_error = error  # Update den vorherigen Fehlerwert
 
             self.update_wl_current.emit((wl, new_current))
-            self.update_textBox.emit(f"Aktuelle Wellenlänge: {wl} nm, Fehler: {error:.6f} nm")
 
         except AttributeError as e:
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
