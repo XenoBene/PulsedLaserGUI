@@ -63,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
         self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
         self.dfb.wl_stabil_status.connect(lambda bool: self.disable_tab_widgets(
-            "ASE_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil))
+            "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil))
         self.dfb.update_wl_current.connect(lambda values: (
             self.dfb_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
             self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")

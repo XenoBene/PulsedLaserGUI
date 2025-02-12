@@ -226,7 +226,6 @@ class DFB(QtCore.QObject):
         """PID-Regelung für die Wellenlängenstabilisierung."""
         try:
             wl = np.round(wlm.GetWavelength(1), 6)  # Aktuelle Wellenlänge messen
-            self.update_textBox.emit(f"Wellenlänge: {wl}")
             error = target_wavelength - wl  # Regelabweichung berechnen
 
             # PID-Berechnung
@@ -234,27 +233,32 @@ class DFB(QtCore.QObject):
             derivative = (error - self.prev_error) / self.dt
             correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
 
-            new_current = self.current_set_current + correction  # Anpassung des Stroms
-            # self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
-            self.update_textBox.emit(f"Strom: {new_current}")
+            new_current = np.round(self.current_set_current + correction, 5)  # Anpassung des Stroms
+            self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
             self.current_set_current = new_current  # Speichere neuen Wert
             self.prev_error = error  # Update den vorherigen Fehlerwert
 
             self.update_wl_current.emit((wl, new_current))
             self.update_textBox.emit(f"Aktuelle Wellenlänge: {wl} nm, Fehler: {error:.6f} nm")
 
-        except Exception as e:
+        except AttributeError as e:
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
             self.stop_wl_stabilisation()
 
-    def start_wl_stabilisation(self, wlm, target_wavelength):
+    def start_wl_stabilisation(self, wlm, target_wavelength, kp, ki, kd):
         """This method starts the wavelength stabilisation.
 
         Args:
             wlm (WavelengthMeter): WLM to measure the wavelength
         """
+        # PID-Parameter
+        self.Kp = kp
+        self.Ki = ki
+        self.Kd = kd
+
         self.integral = 0
         self.prev_error = 0
+        self.current_set_current = self.read_actual_current()
 
         self.wl_stabil_timer = QtCore.QTimer()
         self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(
