@@ -567,8 +567,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
             autocal_msg_str = (previous_cal +
                                "To perform the calibration of the rotation stage, please place "
-                               "the desired powermeter directly after the first fibre amplifier. "
-                               "Ensure that the WLM and rotation stage are connected beforehand. "
+                               "the desired powermeter directly after the first fibre amplifier and the roataion stage with the ASE filters. "
+                               "Ensure that the WLM and rotation stage are connected beforehand als well as the DFB laser. "
                                "Please connect the required powermeter with the 'PM1' button. "
                                "Then, please click 'Yes'.")
             autocal_request = QtWidgets.QMessageBox.question(self,

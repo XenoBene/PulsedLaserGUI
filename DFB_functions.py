@@ -226,6 +226,7 @@ class DFB(QtCore.QObject):
         """PID-Regelung für die Wellenlängenstabilisierung."""
         try:
             wl = np.round(wlm.GetWavelength(1), 6)  # Aktuelle Wellenlänge messen
+            self.update_textBox.emit(f"Wellenlänge: {wl}")
             error = target_wavelength - wl  # Regelabweichung berechnen
 
             # PID-Berechnung
@@ -234,7 +235,8 @@ class DFB(QtCore.QObject):
             correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
 
             new_current = self.current_set_current + correction  # Anpassung des Stroms
-            self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
+            # self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
+            self.update_textBox.emit(f"Strom: {new_current}")
             self.current_set_current = new_current  # Speichere neuen Wert
             self.prev_error = error  # Update den vorherigen Fehlerwert
 
@@ -243,7 +245,7 @@ class DFB(QtCore.QObject):
 
         except Exception as e:
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
-            self.stop_wavelength_stabilization()
+            self.stop_wl_stabilisation()
 
     def start_wl_stabilisation(self, wlm, target_wavelength):
         """This method starts the wavelength stabilisation.
@@ -251,6 +253,9 @@ class DFB(QtCore.QObject):
         Args:
             wlm (WavelengthMeter): WLM to measure the wavelength
         """
+        self.integral = 0
+        self.prev_error = 0
+
         self.wl_stabil_timer = QtCore.QTimer()
         self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(
             wlm=wlm, target_wavelength=target_wavelength))
