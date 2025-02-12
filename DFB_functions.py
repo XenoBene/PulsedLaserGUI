@@ -229,16 +229,23 @@ class DFB(QtCore.QObject):
             error = target_wavelength - wl  # Regelabweichung berechnen
 
             # PID-Berechnung
-            self.integral += error * self.dt
-            derivative = (error - self.prev_error) / self.dt
-            correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
+            if (1027 < wl < 1032) and (wl != self.old_wl):
+                self.integral += error * self.dt
+                derivative = (error - self.prev_error) / self.dt
+                correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
 
-            new_current = np.round(self.current_set_current + correction, 5)  # Anpassung des Stroms
-            self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
-            self.current_set_current = new_current  # Speichere neuen Wert
-            self.prev_error = error  # Update den vorherigen Fehlerwert
+                new_current = np.round(self.current_set_current + correction, 5)  # Anpassung des Stroms
+                if new_current >= 130:
+                    new_current = 130
+                elif new_current <= 110:
+                    new_current = 110
+                else:
+                    self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
+                self.current_set_current = new_current  # Speichere neuen Wert
+                self.prev_error = error  # Update den vorherigen Fehlerwert
 
-            self.update_wl_current.emit((wl, new_current))
+                self.old_wl = wl
+                self.update_wl_current.emit((wl, new_current))
 
         except AttributeError as e:
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
@@ -255,6 +262,7 @@ class DFB(QtCore.QObject):
         self.Ki = ki
         self.Kd = kd
 
+        self.old_wl = 0
         self.integral = 0
         self.prev_error = 0
         self.current_set_current = self.read_actual_current()

@@ -167,7 +167,7 @@ class Stage(Thorlabs.KinesisMotor):
         """
         old_pos = self.to_degree(self.get_position())
         new_pos = wavelength_to_angle(wavelength, df, bool)
-        if (wavelength > 1028 and wavelength < 1032
+        if (wavelength > 1027 and wavelength < 1032
         and np.round(old_pos, decimals = 2) != np.round(new_pos, decimals=2)):
             if old_pos > new_pos:
                 new_pos = wavelength_to_angle(wavelength, df, False)

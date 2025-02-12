@@ -65,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.wl_stabil_status.connect(lambda bool: self.disable_tab_widgets(
             "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil))
         self.dfb.update_wl_current.connect(lambda values: (
-            self.dfb_label_currentWL.setText(f"Current Wavelength: {values[0]}"),
+            self.dfb_label_currentWL.setText(f"Wavelength: {values[0]}"),
             self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
             ))
 
