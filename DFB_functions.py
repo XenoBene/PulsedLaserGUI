@@ -14,11 +14,14 @@ class DFB(QtCore.QObject):
     update_textBox = QtCore.pyqtSignal(str)
     update_wl_current = QtCore.pyqtSignal(tuple)
     wl_stabil_status = QtCore.pyqtSignal(bool)
+    update_target_wavelength = QtCore.pyqtSignal(float)
 
     def __init__(self):
         super().__init__()
         self._connect_button_is_checked = False
         self.current_set_current = None
+
+        self.target_wavelength = 0.0
 
         # PID-Parameter
         self.Kp = 0.5
@@ -222,11 +225,11 @@ class DFB(QtCore.QObject):
         except DecopError as e:
             self.update_textBox.emit(f"Fehler beim Setzen des Stroms: {e}")
 
-    def control_wavelength(self, wlm, target_wavelength):
+    def control_wavelength(self, wlm):
         """PID-Regelung für die Wellenlängenstabilisierung."""
         try:
             wl = np.round(wlm.GetWavelength(1), 6)  # Aktuelle Wellenlänge messen
-            error = target_wavelength - wl  # Regelabweichung berechnen
+            error = self.target_wavelength - wl  # Regelabweichung berechnen
 
             # PID-Berechnung
             if not self.temp_step:
@@ -262,7 +265,7 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
             self.stop_wl_stabilisation()
 
-    def start_wl_stabilisation(self, wlm, target_wavelength, kp, ki, kd):
+    def start_wl_stabilisation(self, wlm, kp, ki, kd):
         """This method starts the wavelength stabilisation.
 
         Args:
@@ -280,8 +283,7 @@ class DFB(QtCore.QObject):
         self.current_set_current = self.read_actual_current()
 
         self.wl_stabil_timer = QtCore.QTimer()
-        self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(
-            wlm=wlm, target_wavelength=target_wavelength))
+        self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(wlm=wlm))
         self.wl_stabil_timer.start(100)
         self.wl_stabil_status.emit(True)
 
@@ -290,3 +292,7 @@ class DFB(QtCore.QObject):
         """
         self.wl_stabil_status.emit(False)
         self.wl_stabil_timer.stop()
+
+    def change_target_wavelength(self, delta_wl):
+        self.target_wavelength = self.target_wavelength + delta_wl
+        self.update_target_wavelength.emit(self.target_wavelength)

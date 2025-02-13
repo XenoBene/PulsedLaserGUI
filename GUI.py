@@ -68,6 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dfb_label_currentWL.setText(f"Wavelength: {values[0]}"),
             self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
             ))
+        self.dfb.update_target_wavelength.connect(lambda wl: self.dfb_lineEdit_wl_stabil.setValue(wl))
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -165,12 +166,17 @@ class MainWindow(QtWidgets.QMainWindow):
                                              ignored_widgets=[self.dfb_button_connectDfb, self.dfb_lineEdit_ip,
                                                               self.dfb_button_abortScan, self.dfb_button_stop_wl_stabil]))
         self.dfb_button_start_wl_stabil.clicked.connect(
+            lambda: setattr(self.dfb, "target_wavelength", self.dfb_lineEdit_wl_stabil.value()))
+        self.dfb_button_start_wl_stabil.clicked.connect(
             lambda: self.dfb.start_wl_stabilisation(
-                wlm=self.wlm, target_wavelength=self.dfb_lineEdit_wl_stabil.value(),
-                kp=self.dfb_lineEdit_kp.value(), ki=self.dfb_lineEdit_ki.value(),
-                kd=self.dfb_lineEdit_kd.value()))
+                wlm=self.wlm, kp=self.dfb_lineEdit_kp.value(),
+                ki=self.dfb_lineEdit_ki.value(), kd=self.dfb_lineEdit_kd.value()))
         self.dfb_button_stop_wl_stabil.clicked.connect(
             lambda: self.dfb.stop_wl_stabilisation())
+        self.dfb_button_wl_step_forward.clicked.connect(
+            lambda: self.dfb.change_target_wavelength(self.dfb_lineEdit_wl_step.value()))
+        self.dfb_button_wl_step_back.clicked.connect(
+            lambda: self.dfb.change_target_wavelength(-self.dfb_lineEdit_wl_step.value()))
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
