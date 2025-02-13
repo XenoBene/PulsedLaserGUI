@@ -79,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_double.connect(
             lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan, ignored_widgets=[self.bbo_button_generateSignal]))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
@@ -93,7 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.stepsUpdatedFront.connect(lambda value: setattr(self, "data_steps_front", value))
         self.bbo.stepsUpdatedBack.connect(lambda value: setattr(self, "data_steps_back", value))
         self.bbo.measurement_status.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage, ignored_widgets=[self.bbo_button_generateSignal]))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
 
@@ -216,6 +216,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                               self.bbo_lineEdit_ipRedPitaya, self.bbo_button_stopUvScan,
                                                               self.bbo_button_stopUvScan_double,
                                                               self.bbo_button_stopDiodeVoltage]))
+        self.bbo_button_generateSignal.clicked.connect(self.bbo.generate_signal)
 
         # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(

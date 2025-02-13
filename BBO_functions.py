@@ -643,3 +643,27 @@ class BBO(QtCore.QObject):
         """
         self.update_textBox.emit("Stop Autoscan")
         self.workerBBO2.stop()
+
+    # Ab hier neue Funktionen für die Strahlzeit 2025:
+
+    def generate_signal(self):
+        """Generiert ein Signal am Ouput 1 des RedPitaya.
+        """
+        wave_form = 'pwm'
+        freq = 1
+        ampl = 0.5
+        offset = 0.5
+        duty = 0.05
+
+        self.rp.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
+        self.rp.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
+        self.rp.tx_txt('SOUR1:VOLT ' + str(ampl))
+        self.rp.tx_txt('SOUR1:VOLT:OFFS ' + str(offset))
+        self.rp.tx_txt('SOUR1:DCYC ' + str(duty))
+        self.rp.tx_txt('SOUR1:BURS:STAT BURST')                # activate Burst mode
+        self.rp.tx_txt('SOUR1:BURS:NCYC 1')                    # Signal periods in a Burst pulse
+        self.rp.tx_txt('SOUR1:BURS:NOR 1');                # Total number of bursts (set to 65536 for INF pulses)
+        # rp.tx_txt('SOUR1:BURS:INT:PER 5000');             # Burst period (time between two bursts (signal + delay in microseconds))
+
+        self.rp.tx_txt('OUTPUT1:STATE ON')
+        self.rp.tx_txt('SOUR1:TRig:INT')
