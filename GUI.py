@@ -63,7 +63,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
         self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
         self.dfb.wl_stabil_status.connect(lambda bool: self.disable_tab_widgets(
-            "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil))
+            "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil,
+            ignored_widgets=[self.dfb_button_wl_step_forward, self.dfb_button_wl_step_back, self.dfb_lineEdit_wl_step]))
         self.dfb.update_wl_current.connect(lambda values: (
             self.dfb_label_currentWL.setText(f"Wavelength: {values[0]}"),
             self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
@@ -80,7 +81,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_double.connect(
             lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan, ignored_widgets=[self.bbo_button_generateSignal]))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan,
+            ignored_widgets=[self.bbo_button_generateSignal]))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
@@ -94,7 +96,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.stepsUpdatedFront.connect(lambda value: setattr(self, "data_steps_front", value))
         self.bbo.stepsUpdatedBack.connect(lambda value: setattr(self, "data_steps_back", value))
         self.bbo.measurement_status.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage, ignored_widgets=[self.bbo_button_generateSignal]))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage,
+            ignored_widgets=[self.bbo_button_generateSignal]))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
 
