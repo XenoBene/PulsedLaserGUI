@@ -70,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
             ))
         self.dfb.update_target_wavelength.connect(lambda wl: self.dfb_lineEdit_wl_stabil.setValue(wl))
+        # self.dfb.laser_wavelength_ready.connect()
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -151,6 +152,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """Connect the buttons/lineEdits/etc of the DFB tab to the methods that should be performed"""
         self.dfb_button_connectDfb.clicked.connect(
             lambda: self.dfb.connect_dfb(ip=str(self.dfb_lineEdit_ip.text())))
+        self.dfb_button_connectDfb.clicked.connect(
+            lambda: setattr(self.dfb, "target_wavelength", self.dfb_lineEdit_wl_stabil.value()))
         self.dfb_button_readValues.clicked.connect(
             lambda: self.dfb_update_values(*self.dfb.read_actual_dfb_values()))
         self.dfb_spinBox_setTemp.valueChanged.connect(

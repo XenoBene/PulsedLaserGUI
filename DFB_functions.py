@@ -15,6 +15,7 @@ class DFB(QtCore.QObject):
     update_wl_current = QtCore.pyqtSignal(tuple)
     wl_stabil_status = QtCore.pyqtSignal(bool)
     update_target_wavelength = QtCore.pyqtSignal(float)
+    laser_wavelength_ready = QtCore.pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -22,6 +23,7 @@ class DFB(QtCore.QObject):
         self.current_set_current = None
 
         self.target_wavelength = 0.0
+        self.wl_history = []
 
         # PID-Parameter
         self.Kp = 0.5
@@ -231,17 +233,35 @@ class DFB(QtCore.QObject):
             wl = np.round(wlm.GetWavelength(1), 6)  # Aktuelle Wellenlänge messen
             error = self.target_wavelength - wl  # Regelabweichung berechnen
 
+            self.wl_history.append(wl)
+            if len(self.wl_history) > 5:  # Maximal 5 Werte speichern
+                self.wl_history.pop(0)
+            # Standardabweichung der letzten 5 Werte berechnen
+            if len(self.wl_history) >= 5:
+                wl_std = np.std(self.wl_history)
+
+            # Bedingung für stabile Wellenlänge
+                wl_threshold = 0.00005  # Max. Differenz zwischen Target & wl
+                std_threshold = 0.00005  # Max. Schwankung über Zeit
+
+                # Ausgabe, wenn Laserwellenlänge eingependelt ist:
+                if not self.wavelength_ready and (error <= wl_threshold) and (wl_std <= std_threshold):
+                    self.update_textBox.emit("Wellenlänge eingependelt!")
+                    # self.laser_wavelength_ready.emit()
+                    self.wavelength_ready = True
+
             # PID-Berechnung
             if not self.temp_step:
                 self.temp_step = True
-                temperature_step = error * 9.33
-                current_temperature = self.read_actual_dfb_values()[0]
-                self.update_textBox.emit(f"Aktuelle Temp: {current_temperature}")
-                new_temp = np.round(current_temperature + temperature_step, 2)
-                self.change_dfb_setTemp(set_temp=new_temp)
-                self.update_textBox.emit(f"Neue Temp: {new_temp}")
-                QtTest.QTest.qWait(1000)
-                return
+                if abs(error) > 0.001:
+                    temperature_step = error * 9.33
+                    current_temperature = self.read_actual_dfb_values()[0]
+                    self.update_textBox.emit(f"Aktuelle Temp: {current_temperature}")
+                    new_temp = np.round(current_temperature + temperature_step, 2)
+                    self.change_dfb_setTemp(set_temp=new_temp)
+                    self.update_textBox.emit(f"Neue Temp: {new_temp}")
+                    QtTest.QTest.qWait(1000)
+                    return
 
             if (1027 < wl < 1032) and (wl != self.old_wl):
                 self.integral += error * self.dt
@@ -249,19 +269,15 @@ class DFB(QtCore.QObject):
                 correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
 
                 new_current = np.round(self.current_set_current + correction, 5)  # Anpassung des Stroms
-                if new_current >= 130:
-                    new_current = 130
-                elif new_current <= 110:
-                    new_current = 110
-                else:
-                    self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
+                new_current = np.clip(new_current, 110, 130)
+                self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
                 self.current_set_current = new_current  # Speichere neuen Wert
                 self.prev_error = error  # Update den vorherigen Fehlerwert
 
                 self.old_wl = wl
                 self.update_wl_current.emit((wl, new_current))
 
-        except AttributeError as e:
+        except Exception as e:
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
             self.stop_wl_stabilisation()
 
@@ -277,6 +293,7 @@ class DFB(QtCore.QObject):
         self.Kd = kd
 
         self.temp_step = False
+        self.wavelength_ready = False
         self.old_wl = 0
         self.integral = 0
         self.prev_error = 0
@@ -294,5 +311,8 @@ class DFB(QtCore.QObject):
         self.wl_stabil_timer.stop()
 
     def change_target_wavelength(self, delta_wl):
+        self.temp_step = False
+        self.wavelength_ready = False
+        self.wl_history = []
         self.target_wavelength = self.target_wavelength + delta_wl
         self.update_target_wavelength.emit(self.target_wavelength)
