@@ -245,7 +245,7 @@ class DFB(QtCore.QObject):
                 std_threshold = 0.00005  # Max. Schwankung über Zeit
 
                 # Ausgabe, wenn Laserwellenlänge eingependelt ist:
-                if not self.wavelength_ready and (error <= wl_threshold) and (wl_std <= std_threshold):
+                if not self.wavelength_ready and (abs(error) <= wl_threshold) and (wl_std <= std_threshold):
                     self.update_textBox.emit("Wellenlänge eingependelt!")
                     # self.laser_wavelength_ready.emit()
                     self.wavelength_ready = True
