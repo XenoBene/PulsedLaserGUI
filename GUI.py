@@ -83,7 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan,
-            ignored_widgets=[self.bbo_button_generateSignal]))
+            ignored_widgets=[self.bbo_button_generateSignal,self.bbo_button_generateSignal2]))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
@@ -98,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.stepsUpdatedBack.connect(lambda value: setattr(self, "data_steps_back", value))
         self.bbo.measurement_status.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage,
-            ignored_widgets=[self.bbo_button_generateSignal]))
+            ignored_widgets=[self.bbo_button_generateSignal, self.bbo_button_generateSignal2]))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
 
@@ -229,6 +229,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                               self.bbo_button_stopUvScan_double,
                                                               self.bbo_button_stopDiodeVoltage]))
         self.bbo_button_generateSignal.clicked.connect(self.bbo.generate_signal)
+        self.bbo_button_generateSignal2.clicked.connect(self.bbo.generate_signal2)
 
         # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(

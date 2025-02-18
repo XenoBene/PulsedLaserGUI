@@ -646,14 +646,14 @@ class BBO(QtCore.QObject):
 
     # Ab hier neue Funktionen für die Strahlzeit 2025:
 
-    def generate_signal(self):
+    def generate_signal(self, output=1):
         """Generiert ein Signal am Ouput 1 des RedPitaya.
         """
         wave_form = 'pwm'
         freq = 1
         ampl = 0.5
         offset = 0.5
-        duty = 0.05
+        duty = 0.0005
 
         self.rp.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
         self.rp.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
@@ -667,3 +667,25 @@ class BBO(QtCore.QObject):
 
         self.rp.tx_txt('OUTPUT1:STATE ON')
         self.rp.tx_txt('SOUR1:TRig:INT')
+
+    def generate_signal2(self, output=2):
+        """Generiert ein Signal am Ouput 2 des RedPitaya.
+        """
+        wave_form = 'pwm'
+        freq = 1
+        ampl = 0.5
+        offset = 0.5
+        duty = 0.0005
+
+        self.rp.tx_txt('SOUR2:FUNC ' + str(wave_form).upper())
+        self.rp.tx_txt('SOUR2:FREQ:FIX ' + str(freq))
+        self.rp.tx_txt('SOUR2:VOLT ' + str(ampl))
+        self.rp.tx_txt('SOUR2:VOLT:OFFS ' + str(offset))
+        self.rp.tx_txt('SOUR2:DCYC ' + str(duty))
+        self.rp.tx_txt('SOUR2:BURS:STAT BURST')                # activate Burst mode
+        self.rp.tx_txt('SOUR2:BURS:NCYC 1')                    # Signal periods in a Burst pulse
+        self.rp.tx_txt('SOUR2:BURS:NOR 1');                # Total number of bursts (set to 65536 for INF pulses)
+        # rp.tx_txt('SOUR2:BURS:INT:PER 5000');             # Burst period (time between two bursts (signal + delay in microseconds))
+
+        self.rp.tx_txt('OUTPUT2:STATE ON')
+        self.rp.tx_txt('SOUR2:TRig:INT')
