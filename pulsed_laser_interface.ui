@@ -3519,6 +3519,9 @@
          <height>31</height>
         </rect>
        </property>
+       <property name="text">
+        <string>0</string>
+       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>
@@ -3628,6 +3631,9 @@
        </property>
       </widget>
       <widget class="QCheckBox" name="dfb_checkBox_activateSignals">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
@@ -3645,6 +3651,12 @@
        </property>
        <property name="text">
         <string>Activate Auto Signals</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </widget>
@@ -3783,6 +3795,9 @@
        </property>
        <property name="text">
         <string>Auto?</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="dfb_lineEdit_numberOfLasersteps_auto">
