@@ -15,12 +15,17 @@ class DFB(QtCore.QObject):
     update_wl_current = QtCore.pyqtSignal(tuple)
     wl_stabil_status = QtCore.pyqtSignal(bool)
     update_target_wavelength = QtCore.pyqtSignal(float)
-    laser_wavelength_ready = QtCore.pyqtSignal()
+    send_signal_laserBusy = QtCore.pyqtSignal()
+    send_signal_nextLaserstep = QtCore.pyqtSignal()
+    counter_laser_steps_signal = QtCore.pyqtSignal(int)
+    automation_running = QtCore.pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
         self._connect_button_is_checked = False
         self.current_set_current = None
+
+        self.counter_laser_steps = 0
 
         self.target_wavelength = 0.0
         self.wl_history = []
@@ -227,7 +232,7 @@ class DFB(QtCore.QObject):
         except DecopError as e:
             self.update_textBox.emit(f"Fehler beim Setzen des Stroms: {e}")
 
-    def control_wavelength(self, wlm):
+    def control_wavelength(self, wlm, checkBox):
         """PID-Regelung für die Wellenlängenstabilisierung."""
         try:
             wl = np.round(wlm.GetWavelength(1), 6)  # Aktuelle Wellenlänge messen
@@ -247,7 +252,8 @@ class DFB(QtCore.QObject):
                 # Ausgabe, wenn Laserwellenlänge eingependelt ist:
                 if not self.wavelength_ready and (abs(error) <= wl_threshold) and (wl_std <= std_threshold):
                     self.update_textBox.emit("Wellenlänge eingependelt!")
-                    # self.laser_wavelength_ready.emit()
+                    if checkBox:
+                        self.send_signal_nextLaserstep.emit()
                     self.wavelength_ready = True
 
             # PID-Berechnung
@@ -263,7 +269,7 @@ class DFB(QtCore.QObject):
                     QtTest.QTest.qWait(1000)
                     return
 
-            if (1027 < wl < 1032) and (wl != self.old_wl):
+            if (1028 < wl < 1032) and (wl != self.old_wl):
                 self.integral += error * self.dt
                 derivative = (error - self.prev_error) / self.dt
                 correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
@@ -281,7 +287,7 @@ class DFB(QtCore.QObject):
             self.update_textBox.emit(f"Fehler in der Stabilisierung: {e}")
             self.stop_wl_stabilisation()
 
-    def start_wl_stabilisation(self, wlm, kp, ki, kd):
+    def start_wl_stabilisation(self, wlm, kp, ki, kd, checkBox):
         """This method starts the wavelength stabilisation.
 
         Args:
@@ -300,7 +306,7 @@ class DFB(QtCore.QObject):
         self.current_set_current = self.read_actual_current()
 
         self.wl_stabil_timer = QtCore.QTimer()
-        self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(wlm=wlm))
+        self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(wlm=wlm, checkBox=checkBox))
         self.wl_stabil_timer.start(100)
         self.wl_stabil_status.emit(True)
 
@@ -310,9 +316,26 @@ class DFB(QtCore.QObject):
         self.wl_stabil_status.emit(False)
         self.wl_stabil_timer.stop()
 
-    def change_target_wavelength(self, delta_wl):
+    def change_target_wavelength(self, delta_wl, checkBox):
+        if checkBox:
+            self.send_signal_laserBusy.emit()
         self.temp_step = False
         self.wavelength_ready = False
         self.wl_history = []
         self.target_wavelength = self.target_wavelength + delta_wl
+        self.counter_laser_steps += 1
         self.update_target_wavelength.emit(self.target_wavelength)
+        self.counter_laser_steps_signal.emit(self.counter_laser_steps)
+
+    def delay_change_target_wavelength(self, checkBox_ticked, delta_wl, timer, number_of_steps):
+        if checkBox_ticked:
+            self.laser_step_timer = QtCore.QTimer()
+            self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
+            self.laser_step_timer.timeout.connect(lambda: self.change_target_wavelength(delta_wl=delta_wl))
+            self.laser_step_timer.start(timer * 1000)
+            if self.counter_laser_steps == number_of_steps - 1:
+                self.automation_running.emit(False)
+        else:
+            # self.counter_laser_steps = 0
+            # self.counter_laser_steps_signal.emit(self.counter_laser_steps)
+            return

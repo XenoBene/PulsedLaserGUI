@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>770</width>
-    <height>658</height>
+    <width>761</width>
+    <height>786</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>0</x>
       <y>10</y>
       <width>601</width>
-      <height>441</height>
+      <height>561</height>
      </rect>
     </property>
     <property name="tabPosition">
@@ -2597,7 +2597,7 @@
         <double>0.100000000000000</double>
        </property>
        <property name="value">
-        <double>1.173100000000000</double>
+        <double>1.139600000000000</double>
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="lbo_lineEdit_offset">
@@ -2631,7 +2631,7 @@
         <double>0.100000000000000</double>
        </property>
        <property name="value">
-        <double>1394.529999999999973</double>
+        <double>1359.230000000000018</double>
        </property>
       </widget>
       <widget class="QLabel" name="label_27">
@@ -2765,6 +2765,13 @@
          <width>261</width>
          <height>16</height>
         </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
        </property>
        <property name="text">
         <string>WideScan</string>
@@ -3119,20 +3126,20 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>10</y>
+         <y>40</y>
          <width>201</width>
          <height>21</height>
         </rect>
        </property>
        <property name="text">
-        <string>Wavelength:</string>
+        <string>Wavelength IR:</string>
        </property>
       </widget>
       <widget class="QLabel" name="dfb_label_injectionCurrent">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>40</y>
+         <y>90</y>
          <width>201</width>
          <height>20</height>
         </rect>
@@ -3148,7 +3155,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>70</y>
+         <y>120</y>
          <width>91</width>
          <height>32</height>
         </rect>
@@ -3170,7 +3177,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>100</y>
+         <y>150</y>
          <width>91</width>
          <height>32</height>
         </rect>
@@ -3189,7 +3196,7 @@
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>70</y>
+         <y>120</y>
          <width>121</width>
          <height>24</height>
         </rect>
@@ -3226,7 +3233,7 @@
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>100</y>
+         <y>150</y>
          <width>41</width>
          <height>24</height>
         </rect>
@@ -3263,7 +3270,7 @@
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>100</y>
+         <y>150</y>
          <width>41</width>
          <height>24</height>
         </rect>
@@ -3300,7 +3307,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>100</y>
+         <y>150</y>
          <width>41</width>
          <height>24</height>
         </rect>
@@ -3333,14 +3340,14 @@
       <widget class="QLabel" name="label_40">
        <property name="geometry">
         <rect>
-         <x>20</x>
-         <y>155</y>
+         <x>10</x>
+         <y>190</y>
          <width>71</width>
          <height>21</height>
         </rect>
        </property>
        <property name="text">
-        <string>WL Step</string>
+        <string>Step [nm]:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -3352,9 +3359,9 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>100</x>
-         <y>180</y>
-         <width>71</width>
+         <x>170</x>
+         <y>190</y>
+         <width>51</width>
          <height>31</height>
         </rect>
        </property>
@@ -3368,9 +3375,9 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>100</x>
-         <y>150</y>
-         <width>71</width>
+         <x>220</x>
+         <y>190</y>
+         <width>51</width>
          <height>31</height>
         </rect>
        </property>
@@ -3384,8 +3391,8 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>20</x>
-         <y>180</y>
+         <x>90</x>
+         <y>190</y>
          <width>71</width>
          <height>24</height>
         </rect>
@@ -3400,19 +3407,419 @@
         <string/>
        </property>
        <property name="decimals">
-        <number>5</number>
+        <number>6</number>
        </property>
        <property name="minimum">
-        <double>0.000000000000000</double>
+        <double>0.000001000000000</double>
        </property>
        <property name="maximum">
-        <double>1.000000000000000</double>
+        <double>0.100000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
        </property>
        <property name="value">
         <double>0.010000000000000</double>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_42">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>10</y>
+         <width>171</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Wavelength Stabilisation:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="dfb_label_currentWL_uv">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>60</y>
+         <width>201</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Wavelength UV:</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QFrame" name="frame_22">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>320</y>
+        <width>281</width>
+        <height>211</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <widget class="QLabel" name="label_33">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>171</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Injections w/o WL change:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_34">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>161</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Laser steps counter:</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="dfb_lineEdit_numberOfInjections">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>30</y>
+         <width>31</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="dfb_lineEdit_numberOfLasersteps">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>70</y>
+         <width>31</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="dfb_pushButton_resetNumberOfInjections">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>30</y>
+         <width>61</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Reset</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="dfb_pushButton_resetNumberOfLasersteps">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>70</y>
+         <width>61</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Reset</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="dfb_button_laserBusy">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>170</y>
+         <width>131</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: green</string>
+       </property>
+       <property name="text">
+        <string>Laser Busy</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="dfb_button_nextLaserstep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>140</x>
+         <y>170</y>
+         <width>131</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: green</string>
+       </property>
+       <property name="text">
+        <string>Next Laserstep</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_37">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>140</y>
+         <width>61</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Signals:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_43">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>10</y>
+         <width>71</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Counters:</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="dfb_checkBox_activateSignals">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>140</y>
+         <width>161</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+         <underline>false</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Activate Auto Signals</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QFrame" name="frame_23">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>400</y>
+        <width>281</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <widget class="QLabel" name="label_35">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>40</y>
+         <width>111</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Number of steps:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_36">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>100</y>
+         <width>191</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Number of injections per step:</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="dfb_lineEdit_numberOfLasersteps_auto_2">
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>100</y>
+         <width>41</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_41">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>70</y>
+         <width>121</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Time per laserstep:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_44">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>10</y>
+         <width>171</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Automated Laser Steps:</string>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_timePerLaserstep_auto">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>70</y>
+         <width>41</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="minimum">
+        <double>0.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>60.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>5.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="dfb_checkBox_auto">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>40</y>
+         <width>61</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Auto?</string>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_numberOfLasersteps_auto">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>40</y>
+         <width>41</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>300.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
        </property>
       </widget>
      </widget>
@@ -3422,7 +3829,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>460</y>
+      <y>600</y>
       <width>581</width>
       <height>161</height>
      </rect>

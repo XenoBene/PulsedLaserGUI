@@ -66,11 +66,20 @@ class MainWindow(QtWidgets.QMainWindow):
             "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil,
             ignored_widgets=[self.dfb_button_wl_step_forward, self.dfb_button_wl_step_back, self.dfb_lineEdit_wl_step]))
         self.dfb.update_wl_current.connect(lambda values: (
-            self.dfb_label_currentWL.setText(f"Wavelength: {values[0]}"),
+            self.dfb_label_currentWL.setText(f"Wavelength IR: {values[0]}"),
+            self.dfb_label_currentWL_uv.setText(f"Wavelength UV: {values[0] / 4}"),
             self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
             ))
         self.dfb.update_target_wavelength.connect(lambda wl: self.dfb_lineEdit_wl_stabil.setValue(wl))
-        # self.dfb.laser_wavelength_ready.connect()
+        self.dfb.send_signal_laserBusy.connect(self.bbo.generate_signal2)
+        self.dfb.send_signal_nextLaserstep.connect(self.bbo.generate_signal)
+        self.dfb.send_signal_nextLaserstep.connect(lambda: self.dfb.delay_change_target_wavelength(
+            checkBox_ticked=self.dfb_checkBox_auto.isChecked(),
+            delta_wl=self.dfb_lineEdit_wl_step,
+            timer=self.dfb_lineEdit_timePerLaserstep_auto,
+            number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto))
+        self.dfb.automation_running.connect(self.dfb_checkBox_auto.setChecked)
+        self.dfb.counter_laser_steps_signal(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -83,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
             "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan,
-            ignored_widgets=[self.bbo_button_generateSignal,self.bbo_button_generateSignal2]))
+            ignored_widgets=[self.bbo_button_generateSignal, self.bbo_button_generateSignal2]))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
@@ -176,13 +185,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_start_wl_stabil.clicked.connect(
             lambda: self.dfb.start_wl_stabilisation(
                 wlm=self.wlm, kp=self.dfb_lineEdit_kp.value(),
-                ki=self.dfb_lineEdit_ki.value(), kd=self.dfb_lineEdit_kd.value()))
+                ki=self.dfb_lineEdit_ki.value(), kd=self.dfb_lineEdit_kd.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked()))
         self.dfb_button_stop_wl_stabil.clicked.connect(
             lambda: self.dfb.stop_wl_stabilisation())
         self.dfb_button_wl_step_forward.clicked.connect(
-            lambda: self.dfb.change_target_wavelength(self.dfb_lineEdit_wl_step.value()))
+            lambda: self.dfb.change_target_wavelength(
+                delta_wl=self.dfb_lineEdit_wl_step.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked()))
         self.dfb_button_wl_step_back.clicked.connect(
-            lambda: self.dfb.change_target_wavelength(-self.dfb_lineEdit_wl_step.value()))
+            lambda: self.dfb.change_target_wavelength(
+                delta_wl=-self.dfb_lineEdit_wl_step.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+        self.dfb_button_laserBusy.clicked.connect(self.bbo.generate_signal2)
+        self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
+        self.dfb_pushButton_resetNumberOfLasersteps.connect(
+            lambda: self.dfb_lineEdit_numberOfLasersteps.setText(str(0))
+        )
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
