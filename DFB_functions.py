@@ -332,7 +332,7 @@ class DFB(QtCore.QObject):
             self.laser_step_timer = QtCore.QTimer()
             self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
             self.laser_step_timer.timeout.connect(lambda: self.change_target_wavelength(delta_wl=delta_wl))
-            self.laser_step_timer.start(timer * 1000)
+            self.laser_step_timer.start(int(timer * 1000))
             if self.counter_laser_steps == number_of_steps - 1:
                 self.automation_running.emit(False)
         else:

@@ -76,10 +76,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.send_signal_nextLaserstep.connect(lambda: self.dfb.delay_change_target_wavelength(
             checkBox_ticked=self.dfb_checkBox_auto.isChecked(),
             delta_wl=self.dfb_lineEdit_wl_step,
-            timer=self.dfb_lineEdit_timePerLaserstep_auto,
-            number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto))
+            timer=self.dfb_lineEdit_timePerLaserstep_auto.value(),
+            number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto.value()))
         self.dfb.automation_running.connect(self.dfb_checkBox_auto.setChecked)
-        self.dfb.counter_laser_steps_signal(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
+        self.dfb.counter_laser_steps_signal.connect(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -199,7 +199,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 checkBox=self.dfb_checkBox_activateSignals.isChecked()))
         self.dfb_button_laserBusy.clicked.connect(self.bbo.generate_signal2)
         self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
-        self.dfb_pushButton_resetNumberOfLasersteps.connect(
+        self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(
             lambda: self.dfb_lineEdit_numberOfLasersteps.setText(str(0))
         )
 
