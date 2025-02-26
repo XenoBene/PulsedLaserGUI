@@ -16,6 +16,7 @@ from datetime import datetime
 class MainWindow(QtWidgets.QMainWindow):
     update_textBox = QtCore.pyqtSignal(str)
     measurement_status = QtCore.pyqtSignal(bool)
+    automation_running = QtCore.pyqtSignal(bool)
 
     def __init__(self,
                  rm: pyvisa.ResourceManager,
@@ -64,7 +65,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
         self.dfb.wl_stabil_status.connect(lambda bool: self.disable_tab_widgets(
             "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil,
-            ignored_widgets=[self.dfb_button_wl_step_forward, self.dfb_button_wl_step_back, self.dfb_lineEdit_wl_step]))
+            ignored_widgets=[self.dfb_button_wl_step_forward, self.dfb_button_wl_step_back, self.dfb_lineEdit_wl_step,
+                             self.dfb_checkBox_auto, self.dfb_checkBox_activateSignals, self.dfb_button_laserBusy,
+                             self.dfb_button_nextLaserstep, self.dfb_pushButton_resetNumberOfLasersteps,
+                             self.dfb_pushButton_resetNumberOfInjections, self.dfb_lineEdit_numberOfLasersteps_auto,
+                             self.dfb_lineEdit_timePerLaserstep_auto]))
         self.dfb.update_wl_current.connect(lambda values: (
             self.dfb_label_currentWL.setText(f"Wavelength IR: {values[0]}"),
             self.dfb_label_currentWL_uv.setText(f"Wavelength UV: {values[0] / 4}"),
@@ -73,12 +78,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_target_wavelength.connect(lambda wl: self.dfb_lineEdit_wl_stabil.setValue(wl))
         self.dfb.send_signal_laserBusy.connect(self.bbo.generate_signal2)
         self.dfb.send_signal_nextLaserstep.connect(self.bbo.generate_signal)
-        self.dfb.send_signal_nextLaserstep.connect(lambda: self.dfb.delay_change_target_wavelength(
+        self.dfb.send_signal_nextLaserstep.connect(lambda: self.delay_change_target_wavelength(
             checkBox_ticked=self.dfb_checkBox_auto.isChecked(),
-            delta_wl=self.dfb_lineEdit_wl_step,
+            delta_wl=self.dfb_lineEdit_wl_step.value(),
             timer=self.dfb_lineEdit_timePerLaserstep_auto.value(),
             number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto.value()))
-        self.dfb.automation_running.connect(self.dfb_checkBox_auto.setChecked)
+        self.automation_running.connect(self.dfb_checkBox_auto.setChecked)
         self.dfb.counter_laser_steps_signal.connect(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
 
         # Signal/Slot connection for BBO tab:
@@ -657,3 +662,16 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_textBox("Please select a valid file with the motor calibration parameters!")
         except FileNotFoundError:
             self.update_textBox("File not found!")
+
+    def delay_change_target_wavelength(self, checkBox_ticked, delta_wl, timer, number_of_steps):
+        if checkBox_ticked:
+            self.laser_step_timer = QtCore.QTimer()
+            self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
+            self.laser_step_timer.timeout.connect(lambda: self.dfb.change_target_wavelength(
+                delta_wl=delta_wl, checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+            self.laser_step_timer.start(int(timer * 1000))
+            if self.dfb.counter_laser_steps == number_of_steps - 1:
+                self.automation_running.emit(False)
+        else:
+            self.dfb.counter_laser_steps = 0
+            self.dfb.counter_laser_steps_signal.emit(self.dfb.counter_laser_steps)

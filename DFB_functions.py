@@ -18,10 +18,11 @@ class DFB(QtCore.QObject):
     send_signal_laserBusy = QtCore.pyqtSignal()
     send_signal_nextLaserstep = QtCore.pyqtSignal()
     counter_laser_steps_signal = QtCore.pyqtSignal(int)
-    automation_running = QtCore.pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
+        self.debug = False
+
         self._connect_button_is_checked = False
         self.current_set_current = None
 
@@ -49,20 +50,28 @@ class DFB(QtCore.QObject):
         Args:
             ip (str): IP adress of the DLC laser controller
         """
-        if not self._connect_button_is_checked:
-            try:
-                self.dlc = DLCpro(NetworkConnection(ip))
-                self.dlc.open()
+        if self.debug:
+            if not self._connect_button_is_checked:
                 self.update_textBox.emit("DFB connected")
-                self.update_values.emit(self.read_actual_dfb_values())
                 self._connect_button_is_checked = True
-            except DeviceNotFoundError:
-                self.update_textBox.emit("DFB not found")
-                self._connect_button_is_checked = True
+            else:
+                self.update_textBox.emit("DFB connection closed")
+                self._connect_button_is_checked = False
         else:
-            self.dlc.close()
-            self.update_textBox.emit("DFB connection closed")
-            self._connect_button_is_checked = False
+            if not self._connect_button_is_checked:
+                try:
+                    self.dlc = DLCpro(NetworkConnection(ip))
+                    self.dlc.open()
+                    self.update_textBox.emit("DFB connected")
+                    self.update_values.emit(self.read_actual_dfb_values())
+                    self._connect_button_is_checked = True
+                except DeviceNotFoundError:
+                    self.update_textBox.emit("DFB not found")
+                    self._connect_button_is_checked = True
+            else:
+                self.dlc.close()
+                self.update_textBox.emit("DFB connection closed")
+                self._connect_button_is_checked = False
 
     def read_actual_dfb_values(self):
         """Reads out the set temperature and the WideScan parameters 'Start temp.', 'End temp.' and 'Scan speed'."""
@@ -261,22 +270,30 @@ class DFB(QtCore.QObject):
                 self.temp_step = True
                 if abs(error) > 0.001:
                     temperature_step = error * 9.33
-                    current_temperature = self.read_actual_dfb_values()[0]
+                    if not self.debug:
+                        current_temperature = self.read_actual_dfb_values()[0]
+                    else:
+                        current_temperature = 20.0
                     self.update_textBox.emit(f"Aktuelle Temp: {current_temperature}")
                     new_temp = np.round(current_temperature + temperature_step, 2)
-                    self.change_dfb_setTemp(set_temp=new_temp)
+                    if not self.debug:
+                        self.change_dfb_setTemp(set_temp=new_temp)
                     self.update_textBox.emit(f"Neue Temp: {new_temp}")
                     QtTest.QTest.qWait(1000)
+                    if self.debug:
+                        self.update_textBox.emit("DEBUG: Wellenlänge stabil")
+                        self.generate_signal()
                     return
 
-            if (1028 < wl < 1032) and (wl != self.old_wl):
+            if self.debug or ((1028 < wl < 1032) and (wl != self.old_wl)):
                 self.integral += error * self.dt
                 derivative = (error - self.prev_error) / self.dt
                 correction = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
 
                 new_current = np.round(self.current_set_current + correction, 5)  # Anpassung des Stroms
                 new_current = np.clip(new_current, 110, 130)
-                self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
+                if not self.debug:
+                    self.change_dfb_setCurrent(new_current)  # Neuen Strom setzen
                 self.current_set_current = new_current  # Speichere neuen Wert
                 self.prev_error = error  # Update den vorherigen Fehlerwert
 
@@ -303,7 +320,10 @@ class DFB(QtCore.QObject):
         self.old_wl = 0
         self.integral = 0
         self.prev_error = 0
-        self.current_set_current = self.read_actual_current()
+        if not self.debug:
+            self.current_set_current = self.read_actual_current()
+        else:
+            self.current_set_current = 125.0
 
         self.wl_stabil_timer = QtCore.QTimer()
         self.wl_stabil_timer.timeout.connect(lambda: self.control_wavelength(wlm=wlm, checkBox=checkBox))
@@ -319,6 +339,8 @@ class DFB(QtCore.QObject):
     def change_target_wavelength(self, delta_wl, checkBox):
         if checkBox:
             self.send_signal_laserBusy.emit()
+        elif self.debug:
+            self.generate_signal2()
         self.temp_step = False
         self.wavelength_ready = False
         self.wl_history = []
@@ -327,15 +349,10 @@ class DFB(QtCore.QObject):
         self.update_target_wavelength.emit(self.target_wavelength)
         self.counter_laser_steps_signal.emit(self.counter_laser_steps)
 
-    def delay_change_target_wavelength(self, checkBox_ticked, delta_wl, timer, number_of_steps):
-        if checkBox_ticked:
-            self.laser_step_timer = QtCore.QTimer()
-            self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
-            self.laser_step_timer.timeout.connect(lambda: self.change_target_wavelength(delta_wl=delta_wl))
-            self.laser_step_timer.start(int(timer * 1000))
-            if self.counter_laser_steps == number_of_steps - 1:
-                self.automation_running.emit(False)
-        else:
-            # self.counter_laser_steps = 0
-            # self.counter_laser_steps_signal.emit(self.counter_laser_steps)
-            return
+    def generate_signal(self):
+        self.send_signal_nextLaserstep.emit()
+        self.update_textBox.emit("DEBUG: Next Laserstep")
+
+    def generate_signal2(self):
+        self.send_signal_laserBusy.emit()
+        self.update_textBox.emit("DEBUG: Laser Busy")

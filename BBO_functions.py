@@ -32,6 +32,8 @@ class WorkerBBO(QtCore.QObject):
                 the uv power gets measured.
         """
         super().__init__()
+        self.debug = True
+
         self.wlm = wlm
         self.rp = rp
         self.stage = stage
@@ -655,18 +657,21 @@ class BBO(QtCore.QObject):
         offset = 0.5
         duty = 0.0005
 
-        self.rp.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
-        self.rp.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
-        self.rp.tx_txt('SOUR1:VOLT ' + str(ampl))
-        self.rp.tx_txt('SOUR1:VOLT:OFFS ' + str(offset))
-        self.rp.tx_txt('SOUR1:DCYC ' + str(duty))
-        self.rp.tx_txt('SOUR1:BURS:STAT BURST')                # activate Burst mode
-        self.rp.tx_txt('SOUR1:BURS:NCYC 1')                    # Signal periods in a Burst pulse
-        self.rp.tx_txt('SOUR1:BURS:NOR 1')                # Total number of bursts (set to 65536 for INF pulses)
-        # rp.tx_txt('SOUR1:BURS:INT:PER 5000')             # Burst period (time between two bursts (signal + delay in microseconds))
+        if not self.debug:
+            self.rp.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
+            self.rp.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
+            self.rp.tx_txt('SOUR1:VOLT ' + str(ampl))
+            self.rp.tx_txt('SOUR1:VOLT:OFFS ' + str(offset))
+            self.rp.tx_txt('SOUR1:DCYC ' + str(duty))
+            self.rp.tx_txt('SOUR1:BURS:STAT BURST')                # activate Burst mode
+            self.rp.tx_txt('SOUR1:BURS:NCYC 1')                    # Signal periods in a Burst pulse
+            self.rp.tx_txt('SOUR1:BURS:NOR 1')                # Total number of bursts (set to 65536 for INF pulses)
+            # rp.tx_txt('SOUR1:BURS:INT:PER 5000')             # Burst period (time between two bursts (signal + delay in microseconds))
 
-        self.rp.tx_txt('OUTPUT1:STATE ON')
-        self.rp.tx_txt('SOUR1:TRig:INT')
+            self.rp.tx_txt('OUTPUT1:STATE ON')
+            self.rp.tx_txt('SOUR1:TRig:INT')
+
+        self.update_textBox.emit("Next Laserstep Signal sent")
 
     def generate_signal2(self, output=2):
         """Generiert ein Signal am Ouput 2 des RedPitaya.
@@ -677,15 +682,18 @@ class BBO(QtCore.QObject):
         offset = 0.5
         duty = 0.0005
 
-        self.rp.tx_txt('SOUR2:FUNC ' + str(wave_form).upper())
-        self.rp.tx_txt('SOUR2:FREQ:FIX ' + str(freq))
-        self.rp.tx_txt('SOUR2:VOLT ' + str(ampl))
-        self.rp.tx_txt('SOUR2:VOLT:OFFS ' + str(offset))
-        self.rp.tx_txt('SOUR2:DCYC ' + str(duty))
-        self.rp.tx_txt('SOUR2:BURS:STAT BURST')                # activate Burst mode
-        self.rp.tx_txt('SOUR2:BURS:NCYC 1')                    # Signal periods in a Burst pulse
-        self.rp.tx_txt('SOUR2:BURS:NOR 1')                # Total number of bursts (set to 65536 for INF pulses)
-        # rp.tx_txt('SOUR2:BURS:INT:PER 5000')             # Burst period (time between two bursts (signal + delay in microseconds))
+        if not self.debug:
+            self.rp.tx_txt('SOUR2:FUNC ' + str(wave_form).upper())
+            self.rp.tx_txt('SOUR2:FREQ:FIX ' + str(freq))
+            self.rp.tx_txt('SOUR2:VOLT ' + str(ampl))
+            self.rp.tx_txt('SOUR2:VOLT:OFFS ' + str(offset))
+            self.rp.tx_txt('SOUR2:DCYC ' + str(duty))
+            self.rp.tx_txt('SOUR2:BURS:STAT BURST')                # activate Burst mode
+            self.rp.tx_txt('SOUR2:BURS:NCYC 1')                    # Signal periods in a Burst pulse
+            self.rp.tx_txt('SOUR2:BURS:NOR 1')                # Total number of bursts (set to 65536 for INF pulses)
+            # rp.tx_txt('SOUR2:BURS:INT:PER 5000')             # Burst period (time between two bursts (signal + delay in microseconds))
 
-        self.rp.tx_txt('OUTPUT2:STATE ON')
-        self.rp.tx_txt('SOUR2:TRig:INT')
+            self.rp.tx_txt('OUTPUT2:STATE ON')
+            self.rp.tx_txt('SOUR2:TRig:INT')
+
+        self.update_textBox.emit("Laser Busy Signal sent")

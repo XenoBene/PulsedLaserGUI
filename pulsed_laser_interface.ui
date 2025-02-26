@@ -3401,7 +3401,7 @@
         <enum>QAbstractSpinBox::NoButtons</enum>
        </property>
        <property name="correctionMode">
-        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+        <enum>QAbstractSpinBox::CorrectToPreviousValue</enum>
        </property>
        <property name="suffix">
         <string/>
@@ -3678,7 +3678,7 @@
       <widget class="QLabel" name="label_35">
        <property name="geometry">
         <rect>
-         <x>110</x>
+         <x>90</x>
          <y>40</y>
          <width>111</width>
          <height>16</height>
@@ -3717,7 +3717,7 @@
       <widget class="QLabel" name="label_41">
        <property name="geometry">
         <rect>
-         <x>100</x>
+         <x>80</x>
          <y>70</y>
          <width>121</width>
          <height>16</height>
@@ -3753,14 +3753,14 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>230</x>
+         <x>220</x>
          <y>70</y>
-         <width>41</width>
+         <width>51</width>
          <height>24</height>
         </rect>
        </property>
        <property name="buttonSymbols">
-        <enum>QAbstractSpinBox::NoButtons</enum>
+        <enum>QAbstractSpinBox::UpDownArrows</enum>
        </property>
        <property name="correctionMode">
         <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
@@ -3787,7 +3787,7 @@
       <widget class="QCheckBox" name="dfb_checkBox_auto">
        <property name="geometry">
         <rect>
-         <x>20</x>
+         <x>10</x>
          <y>40</y>
          <width>61</width>
          <height>20</height>
@@ -3806,14 +3806,23 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>230</x>
+         <x>220</x>
          <y>40</y>
-         <width>41</width>
+         <width>51</width>
          <height>24</height>
         </rect>
        </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="whatsThis">
+        <string/>
+       </property>
        <property name="buttonSymbols">
-        <enum>QAbstractSpinBox::NoButtons</enum>
+        <enum>QAbstractSpinBox::UpDownArrows</enum>
        </property>
        <property name="correctionMode">
         <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
