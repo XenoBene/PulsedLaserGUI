@@ -32,8 +32,6 @@ class WorkerBBO(QtCore.QObject):
                 the uv power gets measured.
         """
         super().__init__()
-        self.debug = True
-
         self.wlm = wlm
         self.rp = rp
         self.stage = stage
@@ -446,6 +444,8 @@ class BBO(QtCore.QObject):
                 are daisy-chained together. Either 1 or 2 depending on the controller.
         """
         super().__init__()
+        self.debug = True
+
         self.axis = axis
         self.addrFront = addrFront
         self.addrBack = addrBack
