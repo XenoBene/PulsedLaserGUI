@@ -204,9 +204,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 checkBox=self.dfb_checkBox_activateSignals.isChecked()))
         self.dfb_button_laserBusy.clicked.connect(self.bbo.generate_signal2)
         self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
-        self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(
-            lambda: self.dfb_lineEdit_numberOfLasersteps.setText(str(0))
-        )
+        self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(self.reset_dfb_lasercounter)
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
@@ -252,8 +250,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                                               self.bbo_lineEdit_ipRedPitaya, self.bbo_button_stopUvScan,
                                                               self.bbo_button_stopUvScan_double,
                                                               self.bbo_button_stopDiodeVoltage]))
-        self.bbo_button_generateSignal.clicked.connect(self.bbo.generate_signal)
-        self.bbo_button_generateSignal2.clicked.connect(self.bbo.generate_signal2)
 
         # Second/Back BBO:
         self.bbo_button_forwards.clicked.connect(
@@ -672,6 +668,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.laser_step_timer.start(int(timer * 1000))
             if self.dfb.counter_laser_steps == number_of_steps - 1:
                 self.automation_running.emit(False)
+                self.reset_dfb_lasercounter()
+                self.update_textBox.emit("Lasersteps finished!")
         else:
-            self.dfb.counter_laser_steps = 0
-            self.dfb.counter_laser_steps_signal.emit(self.dfb.counter_laser_steps)
+            return
+
+    def reset_dfb_lasercounter(self):
+        self.dfb.counter_laser_steps = 0
+        self.dfb.counter_laser_steps_signal.emit(self.dfb.counter_laser_steps)

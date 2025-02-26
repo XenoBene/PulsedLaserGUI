@@ -2116,44 +2116,6 @@
        <string>Stop UV Measurement</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="bbo_button_generateSignal">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>290</y>
-        <width>131</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: green</string>
-      </property>
-      <property name="text">
-       <string>Generate Signal</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="bbo_button_generateSignal2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>320</y>
-        <width>131</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: green</string>
-      </property>
-      <property name="text">
-       <string>Generate Signal 2</string>
-      </property>
-     </widget>
     </widget>
     <widget class="QWidget" name="LBO_tab">
      <attribute name="title">
