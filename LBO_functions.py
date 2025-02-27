@@ -57,7 +57,7 @@ class WorkerLBO(QtCore.QObject):
                         needed_temperature = np.round(self.offset - wl * self.slope, 2)
                         # The temperature rate for scanning is written in "str(0.0...)" in units of °C/s
                         #self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
-                        self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.025)+";0;0;BF")
+                        self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.009)+";0;0;BF")
                         self.update_set_temperature.emit(needed_temperature)
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
                     self.update_act_temperature.emit(actual_temperature)
@@ -152,7 +152,7 @@ class LBO(QtCore.QObject):
             ValueError: Gets raised if the input values are not in the allowed bounds.
         """
         try:
-            if (set_temp <= 200) and (set_temp >= 15) and (0 < rate <= 2):
+            if (set_temp <= 230) and (set_temp >= 15) and (0 < rate <= 2):
                 self.oc.write("!i191;"+str(set_temp)+";0;0;" +
                               str(np.round(float(rate)/60, 3))+";0;0;BF")
                 self.update_textBox.emit("It worked!")
