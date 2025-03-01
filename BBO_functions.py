@@ -60,15 +60,17 @@ class WorkerBBO(QtCore.QObject):
             self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
             buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
             self.update_diodeVoltage.emit(np.round(np.mean(buff), 4))
-            time.sleep(0.15)
+            time.sleep(0.1)
 
             # ÄNDERUNG FÜR STRAHLZEIT:
-            self.rp.tx_txt('ACQ:SOUR2:DATA:STA:N? 1,3000')
+            self.rp.tx_txt('ACQ:SOUR2:DATA:STA:N? 1,100')
             buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
-            self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
+            # self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
             if np.round(np.mean(buff), 4) < -0.4:
                 self.extraction_signal_detected.emit()
-            time.sleep(0.15)
+                self.update_textBox.emit("Extraktion!")
+                time.sleep(0.5)
+            time.sleep(0.1)
         self.status_measurement.emit(False)
         self.cleanup()
         self.finished.emit()
@@ -151,6 +153,15 @@ class WorkerBBO(QtCore.QObject):
                     self.iterator_steps = 0
 
                 new_pos = correct_position_if_needed(wl, uv_power, new_pos)  # Rettungsalgorithmus
+
+                # ÄNDERUNG FÜR STRAHLZEIT:
+                self.rp.tx_txt('ACQ:SOUR2:DATA:STA:N? 1,100')
+                buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+                # self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
+                if np.round(np.mean(buff), 4) < -0.4:
+                    self.extraction_signal_detected.emit()
+                    self.update_textBox.emit("Extraktion!")
+                    time.sleep(0.5)
 
                 # self.update_textBox.emit(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")  # Debugging
         except Newport.base.NewportBackendError as e:

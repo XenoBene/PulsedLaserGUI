@@ -68,8 +68,9 @@ class MainWindow(QtWidgets.QMainWindow):
             ignored_widgets=[self.dfb_button_wl_step_forward, self.dfb_button_wl_step_back, self.dfb_lineEdit_wl_step,
                              self.dfb_checkBox_auto, self.dfb_checkBox_activateSignals, self.dfb_button_laserBusy,
                              self.dfb_button_nextLaserstep, self.dfb_pushButton_resetNumberOfLasersteps,
-                             self.dfb_pushButton_resetNumberOfInjections, self.dfb_lineEdit_numberOfLasersteps_auto,
-                             self.dfb_lineEdit_timePerLaserstep_auto]))
+                             self.dfb_pushButton_resetNumberOfExtractions, self.dfb_lineEdit_numberOfLasersteps_auto,
+                             self.dfb_lineEdit_timePerLaserstep_auto, self.dfb_lineEdit_numberOfExtractions_auto,
+                             self.dfb_checkBox_auto_extractions, self.dfb_checkBox_wl_forward]))
         self.dfb.update_wl_current.connect(lambda values: (
             self.dfb_label_currentWL.setText(f"Wavelength IR: {values[0]}"),
             self.dfb_label_currentWL_uv.setText(f"Wavelength UV: {values[0] / 4}"),
@@ -91,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
             delta_wl=self.dfb_lineEdit_wl_step.value(),
             checkBox=self.dfb_checkBox_activateSignals.isChecked(),
-            checkBox_extraction=self.dfb_checkBox_auto_extraction.isChecked(),
+            checkBox_extraction=self.dfb_checkBox_auto_extractions.isChecked(),
             extractions_counter=self.dfb_lineEdit_numberOfExtractions_auto.value(),
             laserstep_counter=self.dfb_lineEdit_numberOfLasersteps_auto.value(),
             step_forward=self.dfb_checkBox_wl_forward.isChecked()))
