@@ -19,6 +19,7 @@ class DFB(QtCore.QObject):
     send_signal_nextLaserstep = QtCore.pyqtSignal()
     counter_laser_steps_signal = QtCore.pyqtSignal(int)
     counter_extractions_signal = QtCore.pyqtSignal(int)
+    extraction_signal_detected = QtCore.pyqtSignal()
     extraction_automation_finished = QtCore.pyqtSignal(bool)
 
     def __init__(self):
@@ -387,3 +388,7 @@ class DFB(QtCore.QObject):
     def generate_signal2(self):
         self.send_signal_laserBusy.emit()
         self.update_textBox.emit("DEBUG: Laser Busy")
+
+    def fake_Extraction(self):
+        self.extraction_signal_detected.emit()
+        self.update_textBox.emit("Extraktion!")

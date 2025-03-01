@@ -89,6 +89,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.counter_extractions_signal.connect(lambda extr: self.dfb_lineEdit_numberOfExtractions.setText(str(extr)))
         self.dfb.extraction_automation_finished.connect(self.dfb_checkBox_auto_extractions.setChecked)
 
+        self.dfb.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
+            delta_wl=self.dfb_lineEdit_wl_step.value(),
+            checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+            checkBox_extraction=self.dfb_checkBox_auto_extractions.isChecked(),
+            extractions_counter=self.dfb_lineEdit_numberOfExtractions_auto.value(),
+            laserstep_counter=self.dfb_lineEdit_numberOfLasersteps_auto.value(),
+            step_forward=self.dfb_checkBox_wl_forward.isChecked()))
         self.bbo.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
             delta_wl=self.dfb_lineEdit_wl_step.value(),
             checkBox=self.dfb_checkBox_activateSignals.isChecked(),
@@ -217,6 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
         self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(self.reset_dfb_lasercounter)
         self.dfb_pushButton_resetNumberOfExtractions.clicked.connect(self.reset_extractioncounter)
+        self.dfb_button_fakeExtraction.clicked.connect(self.dfb.fake_Extraction)
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
