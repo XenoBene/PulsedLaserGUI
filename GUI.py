@@ -85,11 +85,16 @@ class MainWindow(QtWidgets.QMainWindow):
             number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto.value()))
         self.automation_running.connect(self.dfb_checkBox_auto.setChecked)
         self.dfb.counter_laser_steps_signal.connect(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
+        self.dfb.counter_extractions_signal.connect(lambda extr: self.dfb_lineEdit_numberOfExtractions.setText(str(extr)))
+        self.dfb.extraction_automation_finished.connect(self.dfb_checkBox_auto_extractions.setChecked)
 
         self.bbo.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
             delta_wl=self.dfb_lineEdit_wl_step.value(),
             checkBox=self.dfb_checkBox_activateSignals.isChecked(),
-            step_forward=CHECKBOX.isChecked()))
+            checkBox_extraction=self.dfb_checkBox_auto_extraction.isChecked(),
+            extractions_counter=self.dfb_lineEdit_numberOfExtractions_auto.value(),
+            laserstep_counter=self.dfb_lineEdit_numberOfLasersteps_auto.value(),
+            step_forward=self.dfb_checkBox_wl_forward.isChecked()))
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -210,6 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_laserBusy.clicked.connect(self.bbo.generate_signal2)
         self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
         self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(self.reset_dfb_lasercounter)
+        self.dfb_pushButton_resetNumberOfExtractions.clicked.connect(self.reset_extractioncounter)
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
@@ -677,21 +683,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.update_textBox.emit("Lasersteps finished!")
         else:
             return
-    
-    def change_target_wavelength_with_extraction(self, checkBox_ticked, delta_wl, timer, number_of_steps):
-        if checkBox_ticked:
-            self.laser_step_timer = QtCore.QTimer()
-            self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
-            self.laser_step_timer.timeout.connect(lambda: self.dfb.change_target_wavelength(
-                delta_wl=delta_wl, checkBox=self.dfb_checkBox_activateSignals.isChecked()))
-            self.laser_step_timer.start(int(timer * 1000))
-            if self.dfb.counter_laser_steps == number_of_steps - 1:
-                self.automation_running.emit(False)
-                self.reset_dfb_lasercounter()
-                self.update_textBox.emit("Lasersteps finished!")
-        else:
-            return
 
     def reset_dfb_lasercounter(self):
         self.dfb.counter_laser_steps = 0
         self.dfb.counter_laser_steps_signal.emit(self.dfb.counter_laser_steps)
+
+    def reset_extractioncounter(self):
+        self.dfb.counter_extractions = 0
+        self.dfb.counter_extractions_signal.emit(self.dfb.counter_extractions)

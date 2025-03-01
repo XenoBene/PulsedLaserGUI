@@ -18,6 +18,8 @@ class DFB(QtCore.QObject):
     send_signal_laserBusy = QtCore.pyqtSignal()
     send_signal_nextLaserstep = QtCore.pyqtSignal()
     counter_laser_steps_signal = QtCore.pyqtSignal(int)
+    counter_extractions_signal = QtCore.pyqtSignal(int)
+    extraction_automation_finished = QtCore.pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
@@ -27,6 +29,7 @@ class DFB(QtCore.QObject):
         self.current_set_current = None
 
         self.counter_laser_steps = 0
+        self.counter_extractions = 0
 
         self.target_wavelength = 0.0
         self.wl_history = []
@@ -351,22 +354,31 @@ class DFB(QtCore.QObject):
         self.counter_laser_steps += 1
         self.update_target_wavelength.emit(self.target_wavelength)
         self.counter_laser_steps_signal.emit(self.counter_laser_steps)
-    
-    def change_target_wavelength_advanced(self, delta_wl, checkBox, step_forward=True):
-        if checkBox:
-            self.send_signal_laserBusy.emit()
-        elif self.debug:
-            self.generate_signal2()
-        self.temp_step = False
-        self.wavelength_ready = False
-        self.wl_history = []
-        if step_forward:
-            self.target_wavelength = self.target_wavelength + delta_wl
+
+    def change_target_wavelength_advanced(self, delta_wl, checkBox, checkBox_extraction, extractions_counter, laserstep_counter, step_forward=True):
+        if checkBox_extraction:
+            self.counter_extractions += 1
+            if self.counter_extractions < extractions_counter:
+                return
+            else:
+                if checkBox:
+                    self.send_signal_laserBusy.emit()
+                elif self.debug:
+                    self.generate_signal2()
+                self.temp_step = False
+                self.wavelength_ready = False
+                self.wl_history = []
+                if step_forward:
+                    self.target_wavelength = self.target_wavelength + delta_wl
+                else:
+                    self.target_wavelength = self.target_wavelength - delta_wl
+                self.counter_laser_steps += 1
+                self.update_target_wavelength.emit(self.target_wavelength)
+                self.counter_laser_steps_signal.emit(self.counter_laser_steps)
+                if self.counter_laser_steps == laserstep_counter:
+                    self.extraction_automation_finished.emit(False)
         else:
-            self.target_wavelength = self.target_wavelength - delta_wl
-        self.counter_laser_steps += 1
-        self.update_target_wavelength.emit(self.target_wavelength)
-        self.counter_laser_steps_signal.emit(self.counter_laser_steps)
+            return
 
     def generate_signal(self):
         self.send_signal_nextLaserstep.emit()

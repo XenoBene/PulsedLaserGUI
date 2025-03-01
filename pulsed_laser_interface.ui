@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>761</width>
-    <height>786</height>
+    <width>922</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <rect>
       <x>0</x>
       <y>10</y>
-      <width>601</width>
+      <width>731</width>
       <height>561</height>
      </rect>
     </property>
@@ -3421,7 +3421,7 @@
      <widget class="QFrame" name="frame_22">
       <property name="geometry">
        <rect>
-        <x>300</x>
+        <x>440</x>
         <y>320</y>
         <width>281</width>
         <height>211</height>
@@ -3491,7 +3491,7 @@
         <bool>true</bool>
        </property>
       </widget>
-      <widget class="QPushButton" name="dfb_pushButton_resetNumberOfInjections">
+      <widget class="QPushButton" name="dfb_pushButton_resetNumberOfExtractions">
        <property name="geometry">
         <rect>
          <x>220</x>
@@ -3630,7 +3630,7 @@
        <rect>
         <x>10</x>
         <y>400</y>
-        <width>281</width>
+        <width>421</width>
         <height>131</height>
        </rect>
       </property>
@@ -3643,7 +3643,7 @@
       <widget class="QLabel" name="label_35">
        <property name="geometry">
         <rect>
-         <x>90</x>
+         <x>230</x>
          <y>40</y>
          <width>111</width>
          <height>16</height>
@@ -3656,7 +3656,7 @@
       <widget class="QLabel" name="label_36">
        <property name="geometry">
         <rect>
-         <x>30</x>
+         <x>170</x>
          <y>100</y>
          <width>191</width>
          <height>16</height>
@@ -3666,23 +3666,10 @@
         <string>Number of injections per step:</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="dfb_lineEdit_numberOfLasersteps_auto_2">
-       <property name="geometry">
-        <rect>
-         <x>230</x>
-         <y>100</y>
-         <width>41</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
       <widget class="QLabel" name="label_41">
        <property name="geometry">
         <rect>
-         <x>80</x>
+         <x>220</x>
          <y>70</y>
          <width>121</width>
          <height>16</height>
@@ -3718,7 +3705,7 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>220</x>
+         <x>360</x>
          <y>70</y>
          <width>51</width>
          <height>24</height>
@@ -3752,14 +3739,14 @@
       <widget class="QCheckBox" name="dfb_checkBox_auto">
        <property name="geometry">
         <rect>
-         <x>190</x>
-         <y>10</y>
-         <width>61</width>
+         <x>10</x>
+         <y>30</y>
+         <width>191</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
-        <string>Auto?</string>
+        <string>Automate with timed steps</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -3771,7 +3758,7 @@
        </property>
        <property name="geometry">
         <rect>
-         <x>220</x>
+         <x>360</x>
          <y>40</y>
          <width>51</width>
          <height>24</height>
@@ -3815,13 +3802,75 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>40</y>
+         <y>80</y>
          <width>51</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
         <string>+Δλ</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="dfb_lineEdit_numberOfExtractions_auto">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>360</x>
+         <y>100</y>
+         <width>51</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="whatsThis">
+        <string/>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::UpDownArrows</enum>
+       </property>
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>300.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="dfb_checkBox_auto_extractions">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>181</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Automate with Extractions</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -3843,8 +3892,8 @@
    <widget class="QFrame" name="frame_6">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>30</y>
+      <x>740</x>
+      <y>20</y>
       <width>131</width>
       <height>201</height>
      </rect>
