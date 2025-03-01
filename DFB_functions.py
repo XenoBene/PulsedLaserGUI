@@ -336,7 +336,7 @@ class DFB(QtCore.QObject):
         self.wl_stabil_status.emit(False)
         self.wl_stabil_timer.stop()
 
-    def change_target_wavelength(self, delta_wl, checkBox):
+    def change_target_wavelength(self, delta_wl, checkBox, step_forward=True):
         if checkBox:
             self.send_signal_laserBusy.emit()
         elif self.debug:
@@ -344,7 +344,26 @@ class DFB(QtCore.QObject):
         self.temp_step = False
         self.wavelength_ready = False
         self.wl_history = []
-        self.target_wavelength = self.target_wavelength + delta_wl
+        if step_forward:
+            self.target_wavelength = self.target_wavelength + delta_wl
+        else:
+            self.target_wavelength = self.target_wavelength - delta_wl
+        self.counter_laser_steps += 1
+        self.update_target_wavelength.emit(self.target_wavelength)
+        self.counter_laser_steps_signal.emit(self.counter_laser_steps)
+    
+    def change_target_wavelength_advanced(self, delta_wl, checkBox, step_forward=True):
+        if checkBox:
+            self.send_signal_laserBusy.emit()
+        elif self.debug:
+            self.generate_signal2()
+        self.temp_step = False
+        self.wavelength_ready = False
+        self.wl_history = []
+        if step_forward:
+            self.target_wavelength = self.target_wavelength + delta_wl
+        else:
+            self.target_wavelength = self.target_wavelength - delta_wl
         self.counter_laser_steps += 1
         self.update_target_wavelength.emit(self.target_wavelength)
         self.counter_laser_steps_signal.emit(self.counter_laser_steps)

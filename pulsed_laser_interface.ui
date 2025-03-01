@@ -2559,7 +2559,7 @@
         <double>0.100000000000000</double>
        </property>
        <property name="value">
-        <double>1.139600000000000</double>
+        <double>1.442900000000000</double>
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="lbo_lineEdit_offset">
@@ -2593,7 +2593,7 @@
         <double>0.100000000000000</double>
        </property>
        <property name="value">
-        <double>1359.230000000000018</double>
+        <double>1682.560000000000018</double>
        </property>
       </widget>
       <widget class="QLabel" name="label_27">

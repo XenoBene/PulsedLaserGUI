@@ -14,6 +14,7 @@ class WorkerBBO(QtCore.QObject):
     update_diodeVoltage = QtCore.pyqtSignal(float)
     update_motorSteps = QtCore.pyqtSignal(int)
     update_textBox = QtCore.pyqtSignal(str)
+    extraction_signal_detected = QtCore.pyqtSignal()
 
     def __init__(self, wlm, rp, stage, axis, addr, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -59,6 +60,14 @@ class WorkerBBO(QtCore.QObject):
             self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
             buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
             self.update_diodeVoltage.emit(np.round(np.mean(buff), 4))
+            time.sleep(0.15)
+
+            # ÄNDERUNG FÜR STRAHLZEIT:
+            self.rp.tx_txt('ACQ:SOUR2:DATA:STA:N? 1,3000')
+            buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+            self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
+            if np.round(np.mean(buff), 4) < -0.4:
+                self.extraction_signal_detected.emit()
             time.sleep(0.15)
         self.status_measurement.emit(False)
         self.cleanup()
@@ -433,6 +442,7 @@ class BBO(QtCore.QObject):
     stepsUpdatedFront = QtCore.pyqtSignal(int)
     stepsUpdatedBack = QtCore.pyqtSignal(int)
     update_textBox = QtCore.pyqtSignal(str)
+    extraction_signal_detected = QtCore.pyqtSignal()
 
     def __init__(self, axis, addrFront, addrBack):
         """This class controls the picomotor which controls the angle
@@ -444,7 +454,7 @@ class BBO(QtCore.QObject):
                 are daisy-chained together. Either 1 or 2 depending on the controller.
         """
         super().__init__()
-        self.debug = True
+        self.debug = False
 
         self.axis = axis
         self.addrFront = addrFront
@@ -561,6 +571,7 @@ class BBO(QtCore.QObject):
             self.workerBBO.status_measurement.connect(self.measurement_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.update_textBox.connect(self.update_textBox.emit)
+            self.workerBBO.extraction_signal_detected.connect(self.extraction_signal_detected.emit)  # ÄNDERUNG VON STRAHLZEIT
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)

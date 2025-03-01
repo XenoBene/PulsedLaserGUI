@@ -55,8 +55,8 @@ class WorkerLBO(QtCore.QObject):
                     if abs(old_wl - wl) > 0.001:
                         # Empirical data to calculate the needed LBO temperature for the current wavelength:
                         
-                        #needed_temperature = np.round(self.offset - wl * self.slope, 2) 'real version. Change when QtDesigner available!!! TODO
-                        needed_temperature = np.round(1682.56 - wl * 1.4429, 2)
+                        needed_temperature = np.round(self.offset - wl * self.slope, 2) # TODO real params not default in QtDesigner!!!
+                        
                         # The temperature rate for scanning is written in "str(0.0...)" in units of °C/s
                         #self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                         self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.009)+";0;0;BF")
@@ -64,7 +64,7 @@ class WorkerLBO(QtCore.QObject):
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
                     self.update_act_temperature.emit(actual_temperature)
                     old_wl = wl
-                    time.sleep(0.9)  # Sleep timer so that the needed CPU runtime is not as high.
+                    time.sleep(1.4)  # Sleep timer so that the needed CPU runtime is not as high.
         except pyvisa.errors.InvalidSession as e:
             self.update_textBox.emit(f"LBO scan stopped working: {e}")
         except pyvisa.errors.VisaIOError as e:

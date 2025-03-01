@@ -86,6 +86,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.automation_running.connect(self.dfb_checkBox_auto.setChecked)
         self.dfb.counter_laser_steps_signal.connect(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
 
+        self.bbo.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
+            delta_wl=self.dfb_lineEdit_wl_step.value(),
+            checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+            step_forward=CHECKBOX.isChecked()))
+
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
                                         self.bbo_label_diodeVoltage.setText(f"UV Diode Voltage [V]: {value}"))
@@ -96,8 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.autoscan_status_double.connect(
             lambda bool: self.status_label_bbo.setText("U[V] =") if not bool else None)
         self.bbo.autoscan_status_single.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan,
-            ignored_widgets=[self.bbo_button_generateSignal, self.bbo_button_generateSignal2]))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopUvScan))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
         self.bbo.autoscan_status_single.connect(lambda: self.bbo_button_stopDiodeVoltage.setDisabled(True))
         self.bbo.autoscan_status_double.connect(lambda bool: self.disable_tab_widgets(
@@ -111,8 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bbo.stepsUpdatedFront.connect(lambda value: setattr(self, "data_steps_front", value))
         self.bbo.stepsUpdatedBack.connect(lambda value: setattr(self, "data_steps_back", value))
         self.bbo.measurement_status.connect(lambda bool: self.disable_tab_widgets(
-            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage,
-            ignored_widgets=[self.bbo_button_generateSignal, self.bbo_button_generateSignal2]))
+            "BBO_tab", bool, excluded_widget=self.bbo_button_stopDiodeVoltage))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan.setDisabled(True))
         self.bbo.measurement_status.connect(lambda: self.bbo_button_stopUvScan_double.setDisabled(True))
 
@@ -197,11 +200,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb_button_wl_step_forward.clicked.connect(
             lambda: self.dfb.change_target_wavelength(
                 delta_wl=self.dfb_lineEdit_wl_step.value(),
-                checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+                checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+                step_forward=True))
         self.dfb_button_wl_step_back.clicked.connect(
             lambda: self.dfb.change_target_wavelength(
-                delta_wl=-self.dfb_lineEdit_wl_step.value(),
-                checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+                delta_wl=self.dfb_lineEdit_wl_step.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+                step_forward=False))
         self.dfb_button_laserBusy.clicked.connect(self.bbo.generate_signal2)
         self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
         self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(self.reset_dfb_lasercounter)
@@ -660,6 +665,20 @@ class MainWindow(QtWidgets.QMainWindow):
             self.update_textBox("File not found!")
 
     def delay_change_target_wavelength(self, checkBox_ticked, delta_wl, timer, number_of_steps):
+        if checkBox_ticked:
+            self.laser_step_timer = QtCore.QTimer()
+            self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
+            self.laser_step_timer.timeout.connect(lambda: self.dfb.change_target_wavelength(
+                delta_wl=delta_wl, checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+            self.laser_step_timer.start(int(timer * 1000))
+            if self.dfb.counter_laser_steps == number_of_steps - 1:
+                self.automation_running.emit(False)
+                self.reset_dfb_lasercounter()
+                self.update_textBox.emit("Lasersteps finished!")
+        else:
+            return
+    
+    def change_target_wavelength_with_extraction(self, checkBox_ticked, delta_wl, timer, number_of_steps):
         if checkBox_ticked:
             self.laser_step_timer = QtCore.QTimer()
             self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
