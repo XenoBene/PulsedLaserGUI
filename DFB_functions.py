@@ -359,9 +359,12 @@ class DFB(QtCore.QObject):
     def change_target_wavelength_advanced(self, delta_wl, checkBox, checkBox_extraction, extractions_counter, laserstep_counter, step_forward=True):
         if checkBox_extraction:
             self.counter_extractions += 1
+            self.counter_extractions_signal.emit(self.counter_extractions)
             if self.counter_extractions < extractions_counter:
                 return
             else:
+                self.counter_extractions = 0
+                self.counter_extractions_signal.emit(self.counter_extractions)
                 if checkBox:
                     self.send_signal_laserBusy.emit()
                 elif self.debug:

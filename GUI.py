@@ -70,7 +70,8 @@ class MainWindow(QtWidgets.QMainWindow):
                              self.dfb_button_nextLaserstep, self.dfb_pushButton_resetNumberOfLasersteps,
                              self.dfb_pushButton_resetNumberOfExtractions, self.dfb_lineEdit_numberOfLasersteps_auto,
                              self.dfb_lineEdit_timePerLaserstep_auto, self.dfb_lineEdit_numberOfExtractions_auto,
-                             self.dfb_checkBox_auto_extractions, self.dfb_checkBox_wl_forward]))
+                             self.dfb_checkBox_auto_extractions, self.dfb_checkBox_wl_forward,
+                             self.dfb_button_fakeExtraction]))
         self.dfb.update_wl_current.connect(lambda values: (
             self.dfb_label_currentWL.setText(f"Wavelength IR: {values[0]}"),
             self.dfb_label_currentWL_uv.setText(f"Wavelength UV: {values[0] / 4}"),
@@ -86,8 +87,9 @@ class MainWindow(QtWidgets.QMainWindow):
             number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto.value()))
         self.automation_running.connect(self.dfb_checkBox_auto.setChecked)
         self.dfb.counter_laser_steps_signal.connect(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
-        self.dfb.counter_extractions_signal.connect(lambda extr: self.dfb_lineEdit_numberOfExtractions.setText(str(extr)))
+        self.dfb.counter_extractions_signal.connect(lambda extr: self.dfb_lineEdit_numberOfInjections.setText(str(extr)))
         self.dfb.extraction_automation_finished.connect(self.dfb_checkBox_auto_extractions.setChecked)
+        self.dfb.extraction_automation_finished.connect(self.reset_dfb_lasercounter)
 
         self.dfb.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
             delta_wl=self.dfb_lineEdit_wl_step.value(),
