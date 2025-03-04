@@ -98,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
             extractions_counter=self.dfb_lineEdit_numberOfExtractions_auto.value(),
             laserstep_counter=self.dfb_lineEdit_numberOfLasersteps_auto.value(),
             step_forward=self.dfb_checkBox_wl_forward.isChecked()))
+        self.bbo.extraction_signal_detected.connect(lambda: self.update_textBox.emit("Extraktion automatisch erkannt"))
         self.bbo.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
             delta_wl=self.dfb_lineEdit_wl_step.value(),
             checkBox=self.dfb_checkBox_activateSignals.isChecked(),

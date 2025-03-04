@@ -14,7 +14,7 @@ class WorkerBBO(QtCore.QObject):
     update_diodeVoltage = QtCore.pyqtSignal(float)
     update_motorSteps = QtCore.pyqtSignal(int)
     update_textBox = QtCore.pyqtSignal(str)
-    extraction_signal_detected = QtCore.pyqtSignal()
+    extraction_signal_detected_worker = QtCore.pyqtSignal()
 
     def __init__(self, wlm, rp, stage, axis, addr, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -67,7 +67,7 @@ class WorkerBBO(QtCore.QObject):
             buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
             # self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
             if np.round(np.mean(buff), 4) < -0.4:
-                self.extraction_signal_detected.emit()
+                self.extraction_signal_detected_worker.emit()
                 self.update_textBox.emit("Extraktion!")
                 time.sleep(0.5)
             time.sleep(0.1)
@@ -159,8 +159,7 @@ class WorkerBBO(QtCore.QObject):
                 buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
                 # self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
                 if np.round(np.mean(buff), 4) < -0.4:
-                    self.extraction_signal_detected.emit()
-                    self.update_textBox.emit("Extraktion!")
+                    self.extraction_signal_detected_worker.emit()
                     time.sleep(0.5)
 
                 # self.update_textBox.emit(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")  # Debugging
@@ -582,7 +581,7 @@ class BBO(QtCore.QObject):
             self.workerBBO.status_measurement.connect(self.measurement_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.update_textBox.connect(self.update_textBox.emit)
-            self.workerBBO.extraction_signal_detected.connect(self.extraction_signal_detected.emit)  # ÄNDERUNG VON STRAHLZEIT
+            self.workerBBO.extraction_signal_detected_worker.connect(self.extraction_signal_detected.emit)  # ÄNDERUNG VON STRAHLZEIT
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)
@@ -619,6 +618,7 @@ class BBO(QtCore.QObject):
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.update_motorSteps.connect(self.stepsUpdatedBack.emit)
             self.workerBBO.update_textBox.connect(self.update_textBox.emit)
+            self.workerBBO.extraction_signal_detected_worker.connect(self.extraction_signal_detected.emit)  # ÄNDERUNG VON STRAHLZEIT
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)
