@@ -16,6 +16,7 @@ from datetime import datetime
 class MainWindow(QtWidgets.QMainWindow):
     update_textBox = QtCore.pyqtSignal(str)
     measurement_status = QtCore.pyqtSignal(bool)
+    automation_running = QtCore.pyqtSignal(bool)
 
     def __init__(self,
                  rm: pyvisa.ResourceManager,
@@ -62,6 +63,49 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dfb.update_progressbar.connect(lambda values: self.update_widescan_progressbar(*values))
         self.dfb.update_actTemp.connect(lambda value: self.dfb_label_actTemp.setText(f"Actual temperature: {value} °C"))
         self.dfb.update_actTemp.connect(lambda value: self.status_label_wideScan.setText(f"T[°C] = {value}"))
+        self.dfb.wl_stabil_status.connect(lambda bool: self.disable_tab_widgets(
+            "DFB_tab", bool, excluded_widget=self.dfb_button_stop_wl_stabil,
+            ignored_widgets=[self.dfb_button_wl_step_forward, self.dfb_button_wl_step_back, self.dfb_lineEdit_wl_step,
+                             self.dfb_checkBox_auto, self.dfb_checkBox_activateSignals, self.dfb_button_laserBusy,
+                             self.dfb_button_nextLaserstep, self.dfb_pushButton_resetNumberOfLasersteps,
+                             self.dfb_pushButton_resetNumberOfExtractions, self.dfb_lineEdit_numberOfLasersteps_auto,
+                             self.dfb_lineEdit_timePerLaserstep_auto, self.dfb_lineEdit_numberOfExtractions_auto,
+                             self.dfb_checkBox_auto_extractions, self.dfb_checkBox_wl_forward,
+                             self.dfb_button_fakeExtraction]))
+        self.dfb.update_wl_current.connect(lambda values: (
+            self.dfb_label_currentWL.setText(f"Wavelength IR: {values[0]}"),
+            self.dfb_label_currentWL_uv.setText(f"Wavelength UV: {values[0] / 4}"),
+            self.dfb_label_injectionCurrent.setText(f"Injection Current: {values[1]}")
+            ))
+        self.dfb.update_target_wavelength.connect(lambda wl: self.dfb_lineEdit_wl_stabil.setValue(wl))
+        self.dfb.send_signal_laserBusy.connect(self.bbo.generate_signal2)
+        self.dfb.send_signal_nextLaserstep.connect(self.bbo.generate_signal)
+        self.dfb.send_signal_nextLaserstep.connect(lambda: self.delay_change_target_wavelength(
+            checkBox_ticked=self.dfb_checkBox_auto.isChecked(),
+            delta_wl=self.dfb_lineEdit_wl_step.value(),
+            timer=self.dfb_lineEdit_timePerLaserstep_auto.value(),
+            number_of_steps=self.dfb_lineEdit_numberOfLasersteps_auto.value()))
+        self.automation_running.connect(self.dfb_checkBox_auto.setChecked)
+        self.dfb.counter_laser_steps_signal.connect(lambda steps: self.dfb_lineEdit_numberOfLasersteps.setText(str(steps)))
+        self.dfb.counter_extractions_signal.connect(lambda extr: self.dfb_lineEdit_numberOfInjections.setText(str(extr)))
+        self.dfb.extraction_automation_finished.connect(self.dfb_checkBox_auto_extractions.setChecked)
+        self.dfb.extraction_automation_finished.connect(self.reset_dfb_lasercounter)
+
+        self.dfb.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
+            delta_wl=self.dfb_lineEdit_wl_step.value(),
+            checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+            checkBox_extraction=self.dfb_checkBox_auto_extractions.isChecked(),
+            extractions_counter=self.dfb_lineEdit_numberOfExtractions_auto.value(),
+            laserstep_counter=self.dfb_lineEdit_numberOfLasersteps_auto.value(),
+            step_forward=self.dfb_checkBox_wl_forward.isChecked()))
+        self.bbo.extraction_signal_detected.connect(lambda: self.update_textBox.emit("Extraktion automatisch erkannt"))
+        self.bbo.extraction_signal_detected.connect(lambda: self.dfb.change_target_wavelength_advanced(
+            delta_wl=self.dfb_lineEdit_wl_step.value(),
+            checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+            checkBox_extraction=self.dfb_checkBox_auto_extractions.isChecked(),
+            extractions_counter=self.dfb_lineEdit_numberOfExtractions_auto.value(),
+            laserstep_counter=self.dfb_lineEdit_numberOfLasersteps_auto.value(),
+            step_forward=self.dfb_checkBox_wl_forward.isChecked()))
 
         # Signal/Slot connection for BBO tab:
         self.bbo.voltageUpdated.connect(lambda value:
@@ -141,6 +185,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """Connect the buttons/lineEdits/etc of the DFB tab to the methods that should be performed"""
         self.dfb_button_connectDfb.clicked.connect(
             lambda: self.dfb.connect_dfb(ip=str(self.dfb_lineEdit_ip.text())))
+        self.dfb_button_connectDfb.clicked.connect(
+            lambda: setattr(self.dfb, "target_wavelength", self.dfb_lineEdit_wl_stabil.value()))
         self.dfb_button_readValues.clicked.connect(
             lambda: self.dfb_update_values(*self.dfb.read_actual_dfb_values()))
         self.dfb_spinBox_setTemp.valueChanged.connect(
@@ -157,7 +203,31 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.disable_tab_widgets("DFB_tab",
                                              disable=not self.dfb._connect_button_is_checked,
                                              ignored_widgets=[self.dfb_button_connectDfb, self.dfb_lineEdit_ip,
-                                                              self.dfb_button_abortScan]))
+                                                              self.dfb_button_abortScan, self.dfb_button_stop_wl_stabil]))
+        self.dfb_button_start_wl_stabil.clicked.connect(
+            lambda: setattr(self.dfb, "target_wavelength", self.dfb_lineEdit_wl_stabil.value()))
+        self.dfb_button_start_wl_stabil.clicked.connect(
+            lambda: self.dfb.start_wl_stabilisation(
+                wlm=self.wlm, kp=self.dfb_lineEdit_kp.value(),
+                ki=self.dfb_lineEdit_ki.value(), kd=self.dfb_lineEdit_kd.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+        self.dfb_button_stop_wl_stabil.clicked.connect(
+            lambda: self.dfb.stop_wl_stabilisation())
+        self.dfb_button_wl_step_forward.clicked.connect(
+            lambda: self.dfb.change_target_wavelength(
+                delta_wl=self.dfb_lineEdit_wl_step.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+                step_forward=True))
+        self.dfb_button_wl_step_back.clicked.connect(
+            lambda: self.dfb.change_target_wavelength(
+                delta_wl=self.dfb_lineEdit_wl_step.value(),
+                checkBox=self.dfb_checkBox_activateSignals.isChecked(),
+                step_forward=False))
+        self.dfb_button_laserBusy.clicked.connect(self.bbo.generate_signal2)
+        self.dfb_button_nextLaserstep.clicked.connect(self.bbo.generate_signal)
+        self.dfb_pushButton_resetNumberOfLasersteps.clicked.connect(self.reset_dfb_lasercounter)
+        self.dfb_pushButton_resetNumberOfExtractions.clicked.connect(self.reset_extractioncounter)
+        self.dfb_button_fakeExtraction.clicked.connect(self.dfb.fake_Extraction)
 
     def connect_lbo_buttons(self):
         """Connect the buttons/lineEdits/etc of the LBO tab to the methods that should be performed"""
@@ -556,8 +626,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
             autocal_msg_str = (previous_cal +
                                "To perform the calibration of the rotation stage, please place "
-                               "the desired powermeter directly after the first fibre amplifier. "
-                               "Ensure that the WLM and rotation stage are connected beforehand. "
+                               "the desired powermeter directly after the first fibre amplifier and the roataion stage with the ASE filters. "
+                               "Ensure that the WLM and rotation stage are connected beforehand als well as the DFB laser. "
                                "Please connect the required powermeter with the 'PM1' button. "
                                "Then, please click 'Yes'.")
             autocal_request = QtWidgets.QMessageBox.question(self,
@@ -611,3 +681,25 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_textBox("Please select a valid file with the motor calibration parameters!")
         except FileNotFoundError:
             self.update_textBox("File not found!")
+
+    def delay_change_target_wavelength(self, checkBox_ticked, delta_wl, timer, number_of_steps):
+        if checkBox_ticked:
+            self.laser_step_timer = QtCore.QTimer()
+            self.laser_step_timer.setSingleShot(True)  # Timer soll nur einmal ablaufen
+            self.laser_step_timer.timeout.connect(lambda: self.dfb.change_target_wavelength(
+                delta_wl=delta_wl, checkBox=self.dfb_checkBox_activateSignals.isChecked()))
+            self.laser_step_timer.start(int(timer * 1000))
+            if self.dfb.counter_laser_steps == number_of_steps - 1:
+                self.automation_running.emit(False)
+                self.reset_dfb_lasercounter()
+                self.update_textBox.emit("Lasersteps finished!")
+        else:
+            return
+
+    def reset_dfb_lasercounter(self):
+        self.dfb.counter_laser_steps = 0
+        self.dfb.counter_laser_steps_signal.emit(self.dfb.counter_laser_steps)
+
+    def reset_extractioncounter(self):
+        self.dfb.counter_extractions = 0
+        self.dfb.counter_extractions_signal.emit(self.dfb.counter_extractions)

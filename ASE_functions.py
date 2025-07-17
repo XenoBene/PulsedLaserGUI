@@ -320,7 +320,7 @@ class ASE(QtCore.QObject):
                     self.calculate_autocalibration(showplots=True, bounds=calibration_bounds)
                     powermeter.enable_autorange(True)
                     self.update_textBox.emit("Auto calibration finished! Please select the new calibration"
-                                             f"parameters located in the {self.cal_folderpath[:-8]} folder."
+                                             f"parameters located in the {self.cal_folderpath[:-8]} folder as calibration log."
                                              "Ensure none of the fits diverge.")
                     self.autocalibration_loop_timer.stop()
                     self.autocalibration_progress.emit(0)

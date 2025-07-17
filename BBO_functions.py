@@ -14,6 +14,7 @@ class WorkerBBO(QtCore.QObject):
     update_diodeVoltage = QtCore.pyqtSignal(float)
     update_motorSteps = QtCore.pyqtSignal(int)
     update_textBox = QtCore.pyqtSignal(str)
+    extraction_signal_detected_worker = QtCore.pyqtSignal()
 
     def __init__(self, wlm, rp, stage, axis, addr, steps, velocity, wait):
         """Class that handles the logic of the UV autoscan. Needs to be an extra
@@ -59,7 +60,17 @@ class WorkerBBO(QtCore.QObject):
             self.rp.tx_txt('ACQ:SOUR1:DATA:STA:N? 1,3000')
             buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
             self.update_diodeVoltage.emit(np.round(np.mean(buff), 4))
-            time.sleep(0.15)
+            time.sleep(0.1)
+
+            # ÄNDERUNG FÜR STRAHLZEIT:
+            self.rp.tx_txt('ACQ:SOUR2:DATA:STA:N? 1,100')
+            buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+            # self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
+            if np.round(np.mean(buff), 4) < -0.4:
+                self.extraction_signal_detected_worker.emit()
+                self.update_textBox.emit("Extraktion!")
+                time.sleep(0.5)
+            time.sleep(0.1)
         self.status_measurement.emit(False)
         self.cleanup()
         self.finished.emit()
@@ -104,7 +115,7 @@ class WorkerBBO(QtCore.QObject):
             return new_pos
 
         def correct_position_if_needed(wl, uv_power, new_pos):
-            if self.threshold_power * 0.8 > uv_power > 0 and (1028 < wl < 1032):
+            if self.threshold_power * 0.6 > uv_power > 0 and (1028 < wl < 1032):
                 delta_wl = wl - self.delta_wl_start
                 calculated_steps = -delta_wl * (3233 if delta_wl > 0 else 3500)
                 delta_pos = calculated_steps - (new_pos - self.start_pos)
@@ -142,6 +153,14 @@ class WorkerBBO(QtCore.QObject):
                     self.iterator_steps = 0
 
                 new_pos = correct_position_if_needed(wl, uv_power, new_pos)  # Rettungsalgorithmus
+
+                # ÄNDERUNG FÜR STRAHLZEIT:
+                self.rp.tx_txt('ACQ:SOUR2:DATA:STA:N? 1,100')
+                buff = list(map(float, self.rp.rx_txt().strip('{}\n\r').replace("  ", "").split(',')))
+                # self.update_textBox.emit(f"Spannung Input 2: {np.round(np.mean(buff), 4)}")
+                if np.round(np.mean(buff), 4) < -0.4:
+                    self.extraction_signal_detected_worker.emit()
+                    time.sleep(0.5)
 
                 # self.update_textBox.emit(f"Delta wl: {wl - self.delta_wl_start}, Finished in: {time.time() - start_time}")  # Debugging
         except Newport.base.NewportBackendError as e:
@@ -257,7 +276,6 @@ class WorkerBBO_Double(QtCore.QObject):
         try:
             while self.keep_running:
                 # Makes a number of steps (self.steps) in one direction:
-                # TODO: addr1 and addr2 ? (class stage)
 
                 # Move BBO 1
                 # -------------------------------------------------------------------------
@@ -276,68 +294,18 @@ class WorkerBBO_Double(QtCore.QObject):
                 new_pos_front = update_position_and_measure(self.addrFront)
 
                 # Signal for the GUI or writing data:
-                # self.update_motorSteps1.emit(new_pos_front) # TODO: pos1 und pos2 wegschreiben
+                # self.update_motorSteps1.emit(new_pos_front)
 
                 # Calculate the slope for BBO 1 (i.e. calculate if the power got higher
                 # or not). The direction of the next step depends on the slope:
                 slope1 = (uv_power - self.old_power) / (new_pos_front - self.old_pos_front)
                 self.going_right1 = slope1 > 0
-                # self.going_right1 = not self.going_right1  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                 # Assign the newest values to attributes for the next iteration:
                 self.old_power, self.old_pos_front = uv_power, new_pos_front
 
                 # Measure the current wavelength:
                 wl = np.round(self.wlm.GetWavelength(1), 6)
-
-                """ --> for testing 2 BBO Greedy off
-                Here starts the implementation of a kind of power failsafe:
-                If the output power suddenly drops down a certain threshold, the picomotor
-                will not just take the usual steps in one direction. Instead, the wavelength difference
-                between the last checkpoint and the current wavelength gets converted to the needed
-                steps for this wavelength difference (based on empirical data).
-                """
-                """
-                # Checkpoint: Every 20 iterations, the current values get saved to the
-                # instance attributes and the iteration counter gets resetted.
-                self.iterator_steps1 += 1
-                if self.iterator_steps1 > 20:
-                    self.delta_wl_start = wl
-                    self.start_pos1 = new_pos1
-                    self.threshold_power1 = uv_power
-                    self.iterator_steps1 = 0
-                    print("Iteratorsteps reset")
-
-                # Calculates the difference between the current wavelength and the wl at the last checkpoint
-                delta_wl = wl - self.delta_wl_start
-                print(f"Delta wl: {delta_wl}")
-
-                # compare steps to calculated steps and move the necessary steps to the theoretical position,
-                # if current power is a lot lower than control power
-                if (self.threshold_power1 * 0.8 > uv_power > 0):
-                    if delta_wl > 0:
-                        print(f"Position vor Korr1: {new_pos}")
-                        calculated_steps1 = -delta_wl * 3233  # Empirical data
-                    elif delta_wl < 0:
-                        print(f"Position vor Korr2: {new_pos}")
-                        calculated_steps1 = -delta_wl * 3500  # Empirical data
-
-                    # Calculates and moves the motor to the theoretical position:
-                    delta_pos = (calculated_steps1 - (new_pos1 - self.start_pos1))
-                    self.stage.move_by(axis=self.axis, addrFront
-    =self.addr1, steps=int(delta_pos))  # TODO addr1
-                    time.sleep(float(abs(delta_pos) / self.velocity))
-
-                    new_pos1 = self.stage.get_position(axis=self.axis, addrFront
-    =self.addr1) # TODO addr1
-                    print(f"Position nach Korrektur: {new_pos}")
-
-                    # Reset the old values:
-                    self.old_pos1 = new_pos1
-                    self.iterator_steps1 = 0
-                    self.threshold_power1 = uv_power
-                print(f"Fertig: {time.time() - start_time}")
-                """
 
                 # Move BBO 2
                 # -------------------------------------------------------------------------
@@ -356,51 +324,15 @@ class WorkerBBO_Double(QtCore.QObject):
                 new_pos_back = update_position_and_measure(self.addrBack)
 
                 # Signal for the GUI or writing data:
-                # self.update_motorSteps2.emit(new_pos_back)  # TODO: pos1 und pos2 wegschreiben
+                # self.update_motorSteps2.emit(new_pos_back)
 
                 # Calculate the slope for BBO 2 (i.e. calculate if the power got higher
                 # or not). The direction of the next step depends on the slope:
                 slope2 = (uv_power - self.old_power) / (new_pos_back - self.old_pos_back)
                 self.going_right2 = slope2 > 0
-                # self.going_right2 = not self.going_right2  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                 # Assign the newest values to attributes for the next iteration:
                 self.old_power, self.old_pos_back = uv_power, new_pos_back
-
-                '''
-                # Alternative algorithm: the second BBO makes two steps according to measured slopes, and the first BBO only makes one step
-
-                # Second movement of BBO 2 - identical to first step
-
-                direction = self.steps if self.going_right2 else -self.steps
-                self.stage.move_by(axis=self.axis, addr=self.addrBack, steps=direction)
-                time.sleep(float(self.steps / self.velocity) + self.wait)
-
-                # Measure the voltage of the uv diode (proportional
-                # to the uv output power):
-
-                uv_power = measure_uv_power()
-
-                # Signal for the GUI:
-                self.update_diodeVoltage.emit(uv_power)
-
-                # Measure the current position (absolute steps):
-                new_pos_back = update_position_and_measure(self.addrBack)
-
-                # Signal for the GUI or writing data:
-                # self.update_motorSteps2.emit(new_pos_back)  
-
-                # Calculate the slope for BBO 2 (i.e. calculate if the power got higher
-                # or not). The direction of the next step depends on the slope:
-
-                slope2 = (uv_power - self.old_power) / (new_pos_back - self.old_pos_back)
-                self.going_right2 = slope2 > 0
-                # self.going_right2 = not self.going_right2  # DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                # Assign the newest values to attributes for the next iteration:
-                self.old_power, self.old_pos_back = uv_power, new_pos_back
-                
-                '''
             # TODO nach Test noch failsafe für 2 BBOs implementieren
         except Newport.base.NewportBackendError as e:
             self.update_textBox.emit(f"USB connection to Newport motors lost: {e}")
@@ -433,6 +365,7 @@ class BBO(QtCore.QObject):
     stepsUpdatedFront = QtCore.pyqtSignal(int)
     stepsUpdatedBack = QtCore.pyqtSignal(int)
     update_textBox = QtCore.pyqtSignal(str)
+    extraction_signal_detected = QtCore.pyqtSignal()
 
     def __init__(self, axis, addrFront, addrBack):
         """This class controls the picomotor which controls the angle
@@ -444,6 +377,8 @@ class BBO(QtCore.QObject):
                 are daisy-chained together. Either 1 or 2 depending on the controller.
         """
         super().__init__()
+        self.debug = False
+
         self.axis = axis
         self.addrFront = addrFront
         self.addrBack = addrBack
@@ -559,6 +494,7 @@ class BBO(QtCore.QObject):
             self.workerBBO.status_measurement.connect(self.measurement_status.emit)
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.update_textBox.connect(self.update_textBox.emit)
+            self.workerBBO.extraction_signal_detected_worker.connect(self.extraction_signal_detected.emit)  # ÄNDERUNG VON STRAHLZEIT
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)
@@ -584,7 +520,7 @@ class BBO(QtCore.QObject):
             self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
                                        axis=self.axis, addr=self.addrBack, steps=self.autoscan_steps,
                                        velocity=self.autoscan_velocity, wait=self.autoscan_wait)
-            #self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
+            # self.workerBBO = WorkerBBO(wlm=wlm, rp=self.rp, stage=self.stage,
             #                           axis=self.axis, addr=self.addrFront, steps=self.autoscan_steps,
             #                           velocity=self.autoscan_velocity, wait=self.autoscan_wait)
             self.workerBBO.moveToThread(self.threadBBO)
@@ -595,6 +531,7 @@ class BBO(QtCore.QObject):
             self.workerBBO.update_diodeVoltage.connect(self.voltageUpdated.emit)
             self.workerBBO.update_motorSteps.connect(self.stepsUpdatedBack.emit)
             self.workerBBO.update_textBox.connect(self.update_textBox.emit)
+            self.workerBBO.extraction_signal_detected_worker.connect(self.extraction_signal_detected.emit)  # ÄNDERUNG VON STRAHLZEIT
             self.workerBBO.finished.connect(self.threadBBO.quit)
             self.workerBBO.finished.connect(self.workerBBO.deleteLater)
             self.threadBBO.finished.connect(self.threadBBO.deleteLater)
@@ -643,3 +580,55 @@ class BBO(QtCore.QObject):
         """
         self.update_textBox.emit("Stop Autoscan")
         self.workerBBO2.stop()
+
+    # Ab hier neue Funktionen für die Strahlzeit 2025:
+
+    def generate_signal(self, output=1):
+        """Generiert ein Signal am Ouput 1 des RedPitaya.
+        """
+        wave_form = 'pwm'
+        freq = 1
+        ampl = 0.5
+        offset = 0.5
+        duty = 0.0005
+
+        if not self.debug:
+            self.rp.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
+            self.rp.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
+            self.rp.tx_txt('SOUR1:VOLT ' + str(ampl))
+            self.rp.tx_txt('SOUR1:VOLT:OFFS ' + str(offset))
+            self.rp.tx_txt('SOUR1:DCYC ' + str(duty))
+            self.rp.tx_txt('SOUR1:BURS:STAT BURST')                # activate Burst mode
+            self.rp.tx_txt('SOUR1:BURS:NCYC 1')                    # Signal periods in a Burst pulse
+            self.rp.tx_txt('SOUR1:BURS:NOR 1')                # Total number of bursts (set to 65536 for INF pulses)
+            # rp.tx_txt('SOUR1:BURS:INT:PER 5000')             # Burst period (time between two bursts (signal + delay in microseconds))
+
+            self.rp.tx_txt('OUTPUT1:STATE ON')
+            self.rp.tx_txt('SOUR1:TRig:INT')
+
+        self.update_textBox.emit("Next Laserstep Signal sent")
+
+    def generate_signal2(self, output=2):
+        """Generiert ein Signal am Ouput 2 des RedPitaya.
+        """
+        wave_form = 'pwm'
+        freq = 1
+        ampl = 0.5
+        offset = 0.5
+        duty = 0.0005
+
+        if not self.debug:
+            self.rp.tx_txt('SOUR2:FUNC ' + str(wave_form).upper())
+            self.rp.tx_txt('SOUR2:FREQ:FIX ' + str(freq))
+            self.rp.tx_txt('SOUR2:VOLT ' + str(ampl))
+            self.rp.tx_txt('SOUR2:VOLT:OFFS ' + str(offset))
+            self.rp.tx_txt('SOUR2:DCYC ' + str(duty))
+            self.rp.tx_txt('SOUR2:BURS:STAT BURST')                # activate Burst mode
+            self.rp.tx_txt('SOUR2:BURS:NCYC 1')                    # Signal periods in a Burst pulse
+            self.rp.tx_txt('SOUR2:BURS:NOR 1')                # Total number of bursts (set to 65536 for INF pulses)
+            # rp.tx_txt('SOUR2:BURS:INT:PER 5000')             # Burst period (time between two bursts (signal + delay in microseconds))
+
+            self.rp.tx_txt('OUTPUT2:STATE ON')
+            self.rp.tx_txt('SOUR2:TRig:INT')
+
+        self.update_textBox.emit("Laser Busy Signal sent")
