@@ -58,8 +58,7 @@ class WorkerLBO(QtCore.QObject):
                         needed_temperature = np.round(self.offset - wl * self.slope, 2) # TODO real params not default in QtDesigner!!!
                         
                         # The temperature rate for scanning is written in "str(0.0...)" in units of °C/s
-                        #self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
-                        self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.009)+";0;0;BF")
+                        self.oc.write("!i191;"+str(needed_temperature) + ";0;0;"+str(0.033)+";0;0;BF")
                         self.update_set_temperature.emit(needed_temperature)
                     actual_temperature = float(self.oc.query("!j00CB").split(";")[1])
                     self.update_act_temperature.emit(actual_temperature)
