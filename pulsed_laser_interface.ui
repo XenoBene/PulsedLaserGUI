@@ -1677,7 +1677,7 @@
         <item>
          <widget class="QLineEdit" name="bbo_lineEdit_ipRedPitaya">
           <property name="text">
-           <string>169.254.204.79</string>
+           <string>192.168.12.69</string>
           </property>
          </widget>
         </item>
@@ -2962,7 +2962,7 @@
         <item>
          <widget class="QLineEdit" name="dfb_lineEdit_ip">
           <property name="text">
-           <string>140.181.91.46</string>
+           <string>192.168.12.38</string>
           </property>
          </widget>
         </item>
@@ -3621,7 +3621,7 @@
         <bool>true</bool>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
       <widget class="QPushButton" name="dfb_button_fakeExtraction">
